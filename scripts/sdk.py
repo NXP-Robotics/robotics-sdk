@@ -122,6 +122,8 @@ class Sdk(WestCommand):
                         help="Parallel build jobs.")
         bd.add_argument("--no-update", action="store_true",
                         help="Skip 'west update' (assume sources already cloned).")
+        bd.add_argument("--skip-preflight", action="store_true",
+                        help="Skip the toolchain/dependency preflight checks.")
         return parser
 
     def do_run(self, args, unknown):
@@ -181,20 +183,47 @@ class Sdk(WestCommand):
 
         log.inf(f"=== build: platform={args.platform} stack={stack} kind={kind} ===")
 
-        # Point the workspace manifest at the (stack, platform) file, update.
+        # Fail fast on a clean system: verify the required toolchain/system
+        # dependencies exist before cloning or building anything.
+        if not args.skip_preflight:
+            self._preflight(kind)
+        else:
+            log.wrn("Skipping preflight checks (--skip-preflight).")
+
+        # Point the workspace manifest at the (stack, platform) file, update,
+        # then build. The platform manifests use ``import: true``; if left
+        # active after the build, west can no longer discover this 'sdk'
+        # extension command whenever the imported sources are absent. So we
+        # always restore manifest.file to the import-free bootstrap west.yml
+        # afterwards, leaving the workspace in a usable state.
         manifest_rel = manifest_for(stack, args.platform)
         self._set_manifest(manifest_rel)
-        if not args.no_update:
-            self._west(["update"], cwd=self.topdir)
-        else:
-            log.inf("Skipping 'west update' (--no-update).")
+        try:
+            if not args.no_update:
+                self._west(["update"], cwd=self.topdir)
+            else:
+                log.inf("Skipping 'west update' (--no-update).")
 
-        if kind == "px4":
-            self._build_px4(cfg, args.jobs)
-        elif kind in ("zephyr", "cerebri"):
-            self._build_zephyr(cfg, args.jobs)
-        else:
-            log.die(f"Unsupported build kind '{kind}'.")
+            if kind == "px4":
+                self._build_px4(cfg, args.jobs)
+            elif kind in ("zephyr", "cerebri"):
+                self._build_zephyr(cfg, args.jobs)
+            else:
+                log.die(f"Unsupported build kind '{kind}'.")
+        finally:
+            self._restore_bootstrap_manifest()
+
+    def _restore_bootstrap_manifest(self):
+        """Point manifest.file back at the import-free bootstrap west.yml.
+
+        Keeps the 'sdk' extension command discoverable for subsequent
+        invocations regardless of whether upstream sources are cloned.
+        """
+        try:
+            self._west(["config", "manifest.file", "west.yml"], cwd=self.topdir)
+        except SystemExit:
+            # log.die raises SystemExit; don't mask the original failure.
+            pass
 
     def _set_manifest(self, manifest_rel):
         """Configure west's manifest.path/manifest.file for this build."""
@@ -309,6 +338,101 @@ class Sdk(WestCommand):
                 cmd.append(app)
             log.inf(f"--- west build -b {board} (build-dir {build_dir}) ---")
             self._west(cmd, cwd=self.topdir)
+
+    # ------------------------------------------------------------------ #
+    # preflight: fail fast on a clean system with a clear, actionable msg
+    # ------------------------------------------------------------------ #
+    def _preflight(self, kind):
+        """Verify required toolchains/system deps exist before building.
+
+        Installs nothing (many build hosts have no passwordless sudo). It only
+        checks and, on failure, prints exactly what is missing and how to
+        install it. Use --skip-preflight to bypass.
+        """
+        log.inf("--- preflight: checking build prerequisites ---")
+
+        if kind == "px4":
+            # NuttX/PX4 firmware needs the ARM bare-metal GCC + CMake/Ninja.
+            self._check_tools(
+                kind="PX4 (NuttX firmware)",
+                tools=[
+                    ("arm-none-eabi-gcc", "ARM bare-metal GCC toolchain"),
+                    ("cmake", "CMake (>= 3.20)"),
+                    ("ninja", "Ninja build tool"),
+                    ("make", "GNU make"),
+                    ("git", "Git"),
+                ],
+                remedy=(
+                    "Install PX4's dependencies with its own setup script:\n"
+                    "         bash PX4-Autopilot/Tools/setup/ubuntu.sh\n"
+                    "       (or see the Prerequisites section in "
+                    "docs/getting_started.rst)"
+                ),
+            )
+        elif kind in ("zephyr", "cerebri"):
+            self._check_tools(
+                kind="Zephyr / Cerebri",
+                tools=[
+                    ("cmake", "CMake (>= 3.20)"),
+                    ("ninja", "Ninja build tool"),
+                    ("dtc", "Device Tree Compiler"),
+                    ("git", "Git"),
+                ],
+                remedy=(
+                    "Install the Zephyr SDK and host tools per the Zephyr "
+                    "getting-started guide, then export ZEPHYR_SDK_INSTALL_DIR "
+                    "(or ZEPHYR_TOOLCHAIN_VARIANT). See the Prerequisites "
+                    "section in docs/getting_started.rst."
+                ),
+            )
+            # The Zephyr SDK is not a PATH tool; check it is discoverable.
+            self._check_zephyr_sdk()
+        else:  # pragma: no cover
+            log.wrn(f"No preflight defined for kind '{kind}'; continuing.")
+            return
+
+        log.inf("--- preflight: OK ---")
+
+    def _check_tools(self, kind, tools, remedy):
+        """Ensure each (executable, description) is on PATH; die if any missing."""
+        import shutil
+        missing = [(exe, desc) for exe, desc in tools if not shutil.which(exe)]
+        if missing:
+            lines = [f"Missing {kind} build prerequisites:"]
+            for exe, desc in missing:
+                lines.append(f"  - {exe:<20} ({desc})")
+            lines.append("")
+            lines.append(f"Remedy: {remedy}")
+            lines.append("")
+            lines.append("Re-run with --skip-preflight to bypass this check "
+                         "(build may still fail).")
+            log.die("\n".join(lines))
+
+    def _check_zephyr_sdk(self):
+        """Warn (do not die) if no Zephyr SDK location is discoverable.
+
+        west build can still auto-discover an installed SDK, so a missing env
+        var is not necessarily fatal -- surface it as guidance, not an error.
+        """
+        if os.environ.get("ZEPHYR_SDK_INSTALL_DIR") or \
+                os.environ.get("ZEPHYR_TOOLCHAIN_VARIANT"):
+            return
+        # Common install locations. The SDK typically unpacks as a versioned
+        # dir (e.g. ~/zephyr-sdk-0.16.5), so glob for those too.
+        import glob as _glob
+        candidates = []
+        for base in (os.path.expanduser("~"),
+                     os.path.expanduser("~/.local/opt"),
+                     "/opt"):
+            candidates += _glob.glob(os.path.join(base, "zephyr-sdk*"))
+        if any(os.path.isdir(c) for c in candidates):
+            return
+        log.wrn(
+            "No Zephyr SDK detected (ZEPHYR_SDK_INSTALL_DIR / "
+            "ZEPHYR_TOOLCHAIN_VARIANT unset and no ~/zephyr-sdk found). "
+            "west build will try to auto-discover one; if the build fails, "
+            "install the Zephyr SDK (see docs/getting_started.rst)."
+        )
 
     # ------------------------------------------------------------------ #
     # low-level helpers

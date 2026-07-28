@@ -10,19 +10,33 @@ artifacts through Nexus.
 
 | Platform      | PX4 | Cerebri | Zephyr | Prebuilt artifacts                                   |
 |---------------|:---:|:-------:|:------:|------------------------------------------------------|
-| `navq95_m7`   |     |   ✅    |   ✅   | `navq95.elf/.bin`, `navq95_ddr.elf/.bin` (+ Ubuntu `.wic`) |
-| `tropic`      | ✅  |         |   ✅   | `mr-tropic.bin`, `mr-tropic.bootloader.bin`          |
-| `vmu-rt1176`  | ✅  |   ✅    |   ✅   | `vmu-rt1176.elf/.bin`                                |
+| `navq95_m7`   | ✅  |         |   ✅   | `nxp_imx95_default.elf/.bin`, `nxp_imx95_ddr.elf/.bin` (+ Ubuntu `.wic`) |
+| `tropic`      | ✅  |         |   ✅   | `nxp_mr-tropic_default.bin`, `nxp_mr-tropic_bootloader.bin` |
+| `vmu-rt1176`  | ✅  |   ✅    |   ✅   | `nxp_fmurt1176_default.elf/.bin`                     |
 
 > The Ubuntu WIC image is specific to the NavQ95 A-core and is only available
 > for `navq95_m7`.
 
 ## Prerequisites
 
-- Python 3.10+ and `west` (`pip install west pyyaml`)
-- A host toolchain:
-  - **Zephyr SDK** for Zephyr / Cerebri targets
-  - **ARM GCC** for PX4 targets
+`west sdk build` shells out to the native build systems (PX4's `make`, Zephyr's
+`west build`), so the required toolchains must **already be installed** — the
+SDK manages only the Python layer (a per-workspace venv with PX4's
+`requirements.txt`), not system compilers or SDKs.
+
+Before building, `west sdk build` runs a **preflight check** that verifies the
+required tools and fails fast (with the exact remedy) if any are missing. Pass
+`--skip-preflight` to bypass it.
+
+- **Common:** Python 3.10+, `west` (`pip install west pyyaml`), `git` (with SSH
+  access to any private forks a manifest pins), `cmake` (>= 3.20), `ninja`.
+- **PX4 targets:** ARM bare-metal GCC (`arm-none-eabi-gcc`), `make`. Easiest on
+  Ubuntu: `bash PX4-Autopilot/Tools/setup/ubuntu.sh` (after sources are cloned).
+- **Zephyr / Cerebri targets:** the **Zephyr SDK** + `dtc`; export
+  `ZEPHYR_SDK_INSTALL_DIR` or `ZEPHYR_TOOLCHAIN_VARIANT` so it is discoverable.
+
+See `docs/getting_started.rst` for full details. Preflight installs nothing —
+on hosts without passwordless `sudo`, install the toolchains out of band.
 
 ## Quick Start
 

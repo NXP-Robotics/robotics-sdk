@@ -1,14 +1,70 @@
 Getting Started
 ===============
 
+.. _Prerequisites:
+
 Prerequisites
 -------------
 
-* Python 3.10+ and ``west`` (``pip install west pyyaml``)
-* A host toolchain:
+``west sdk build`` shells out to the native build systems (PX4's ``make`` and
+Zephyr's ``west build``), so the corresponding toolchains and host packages
+**must already be installed**. The SDK manages only the Python layer (a
+per-workspace virtualenv with PX4's ``requirements.txt``); it does **not**
+install system compilers or SDKs for you.
 
-  * **Zephyr SDK** for Zephyr / Cerebri targets
-  * **ARM GCC** for PX4 targets
+Before building, ``west sdk build`` runs a **preflight check** that verifies the
+required tools are present and, if any are missing, fails fast with the exact
+package/remedy. Bypass it with ``--skip-preflight`` (the build may then fail
+later with a less obvious error).
+
+Common (all stacks)
+~~~~~~~~~~~~~~~~~~~~
+
+* **Python 3.10+** and ``west`` (``pip install west pyyaml``)
+* **Git** (with SSH access to any private forks a manifest pins, e.g. the
+  NavQ95 PX4 fork ``git@github.com:NXP-Robotics/PX4-Autopilot-NXP.git``)
+* **CMake** (>= 3.20) and **Ninja**
+
+PX4 targets (NuttX firmware)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Preflight checks for: ``arm-none-eabi-gcc``, ``cmake``, ``ninja``, ``make``,
+``git``.
+
+The simplest way to install everything PX4 needs on Ubuntu is PX4's own setup
+script (run once, after the sources are cloned):
+
+.. code-block:: console
+
+   bash PX4-Autopilot/Tools/setup/ubuntu.sh
+
+This installs the ARM bare-metal GCC toolchain, build tools, and system
+packages. (It uses ``apt`` and therefore needs ``sudo``.)
+
+Zephyr / Cerebri targets
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Preflight checks for: ``cmake``, ``ninja``, ``dtc``, ``git``, and attempts to
+detect a **Zephyr SDK**.
+
+Install the **Zephyr SDK** and host tools per the upstream Zephyr
+getting-started guide, then make the SDK discoverable by exporting one of:
+
+.. code-block:: console
+
+   export ZEPHYR_SDK_INSTALL_DIR=$HOME/zephyr-sdk-<version>
+   # or
+   export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+
+If neither is set and no SDK is found in a default location, preflight prints a
+warning (not a hard error) because ``west build`` can still auto-discover an
+installed SDK.
+
+.. note::
+
+   Preflight installs nothing -- it only verifies. On hosts without
+   passwordless ``sudo`` you must install the toolchains out of band using the
+   commands above.
 
 Bootstrap the Workspace (Required First Step)
 ---------------------------------------------
@@ -59,11 +115,14 @@ clone the pinned PX4 / Zephyr / Cerebri sources, then builds the artifacts:
 .. code-block:: console
 
    west sdk build --platform tropic                    # PX4 (default stack)
-   west sdk build --platform navq95_m7                 # Cerebri (default stack)
+   west sdk build --platform navq95_m7                 # PX4 (default stack)
    west sdk build --platform navq95_m7 --stack zephyr  # plain Zephyr
    west sdk build --platform vmu-rt1176 --stack cerebri
 
 ``--stack`` is optional; each platform has a sensible default.
+
+A toolchain **preflight check** runs first (see :ref:`Prerequisites`); pass
+``--skip-preflight`` to bypass it.
 
 Under the hood
 --------------
