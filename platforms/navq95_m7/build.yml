@@ -1,0 +1,43 @@
+# Build + artifact definition for the navq95_m7 platform (NavQ95, i.MX95 M7).
+#
+# This file is the single source of truth for how each stack builds this
+# platform and what artifacts it produces. `west sdk build` / `west sdk
+# download` read it generically; sdk.py contains no platform-specific logic.
+
+platform: navq95_m7
+default_stack: px4
+
+stacks:
+  # NavQ95 PX4 support is NOT public: it lives on NXP's private PX4 fork as the
+  # `imx95` board (see manifests/px4/navq95_m7.yml for the pinned remote/SHA).
+  px4:
+    kind: px4
+    targets:
+      - nxp_imx95_default
+      - nxp_imx95_ddr
+    # Built outputs (relative to PX4-Autopilot/build/) collected into
+    # bin/realtime/. Filenames are preserved as-is (rename upstream in PX4).
+    artifacts:
+      - nxp_imx95_default/nxp_imx95_default.elf
+      - nxp_imx95_default/nxp_imx95_default.bin
+      - nxp_imx95_ddr/nxp_imx95_ddr.elf
+      - nxp_imx95_ddr/nxp_imx95_ddr.bin
+
+  # NavQ95 (MR-NavQ95B) is also its own Zephyr board on the i.MX95 Cortex-M7.
+  # One `--stack zephyr` builds ALL boards below. Currently on Zephyr 'main'
+  # (targeting the 4.4 release).
+  zephyr:
+    kind: zephyr
+    boards:
+      - mr_navq95b/mimx9596/m7
+      - mr_navq95b/mimx9596/m7/ddr
+    app: samples/hello_world
+
+# Prebuilt artifacts for `west sdk download` (hosted on Nexus).
+# The Ubuntu A-core WIC image is specific to NavQ95.
+download:
+  - {name: nxp_imx95_default.elf, dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_default.bin, dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_ddr.elf,     dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_ddr.bin,     dest: bin/realtime/, sha256: TODO}
+  - {name: navq95-ubuntu.wic,     dest: ubuntu/,       sha256: TODO}

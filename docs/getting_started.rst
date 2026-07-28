@@ -46,7 +46,8 @@ verified automatically.
 .. note::
 
    The Nexus backend is not wired up yet. ``download`` currently resolves and
-   prints exactly what it *would* fetch (from ``scripts/artifacts.yml``); the
+   prints exactly what it *would* fetch (from each platform's
+   ``platforms/<platform>/build.yml`` ``download:`` section); the
    transfer itself is stubbed.
 
 Build From Source

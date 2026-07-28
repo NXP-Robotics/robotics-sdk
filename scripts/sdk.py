@@ -1,18 +1,19 @@
 """NXP Robotics SDK west extension commands: ``download`` and ``build``.
 
-These are exposed under a single ``sdk`` command group so the customer uses a
-uniform, stack-agnostic interface:
+Uniform, stack-agnostic interface:
 
-    west sdk download --platform <platform>
+    west sdk download --platform <platform> | all
     west sdk build    --platform <platform> [--stack <stack>]
 
-Both commands require a west workspace to already exist (i.e. the customer must
-have run ``west init -m <sdk-url> ws`` once), because west only discovers these
-extension commands after a workspace is initialized.
+Both require an initialized west workspace (run ``west init -l nxp-robotics-sdk``
+once) because west only discovers extension commands after init.
 
-NOTE: The Nexus download backend is not wired yet. ``download`` resolves the
-artifact list from scripts/artifacts.yml and prints exactly what it *would*
-fetch; the actual transfer is a clearly marked TODO.
+sdk.py contains NO platform-specific knowledge. Each platform owns a single
+definition file ``platforms/<platform>/build.yml`` describing its stacks
+(kind, targets/boards, app, artifacts) and its ``download`` catalog.
+
+NOTE: The Nexus download backend is not wired yet; ``download`` resolves the
+catalog and prints what it *would* fetch (clearly marked TODO).
 """
 
 import os
@@ -29,72 +30,62 @@ except ImportError:  # pragma: no cover
 
 
 # --------------------------------------------------------------------------- #
-# Registry: which stacks are valid per platform, and how to build each combo.
-#
-# For PX4 platforms we store the PX4 make target.
-# For Zephyr/Cerebri platforms we store the Zephyr board name (+ optional app).
+# Generic platform discovery. Each platform owns platforms/<platform>/build.yml.
 # --------------------------------------------------------------------------- #
-PLATFORMS = {
-    "navq95_m7": {
-        "stacks": {
-            "cerebri": {"kind": "zephyr", "board": "navq95_m7", "app": "app/cerebri"},
-            "zephyr":  {"kind": "zephyr", "board": "navq95_m7", "app": None},
-        },
-        "default_stack": "cerebri",
-    },
-    "tropic": {
-        "stacks": {
-            "px4": {
-                "kind": "px4",
-                # PX4 make targets to build, in order (app first, bootloader next).
-                "targets": ["nxp_mr-tropic_default", "nxp_mr-tropic_bootloader"],
-                # PX4 build outputs to collect into bin/realtime/. Names are kept
-                # identical to PX4's output; rename upstream in PX4 if needed.
-                "artifacts": [
-                    "nxp_mr-tropic_default/nxp_mr-tropic_default.bin",
-                    "nxp_mr-tropic_bootloader/nxp_mr-tropic_bootloader.bin",
-                ],
-            },
-            "zephyr": {"kind": "zephyr", "board": "mr_tropic", "app": None},
-        },
-        "default_stack": "px4",
-    },
-    "vmu-rt1176": {
-        "stacks": {
-            "px4": {
-                "kind": "px4",
-                "targets": ["nxp_fmurt1176_default"],
-                "artifacts": [
-                    "nxp_fmurt1176_default/nxp_fmurt1176_default.elf",
-                    "nxp_fmurt1176_default/nxp_fmurt1176_default.bin",
-                ],
-            },
-            "cerebri": {"kind": "zephyr", "board": "vmu_rt1176", "app": "app/cerebri"},
-            "zephyr":  {"kind": "zephyr", "board": "vmu_rt1176", "app": None},
-        },
-        "default_stack": "px4",
-    },
-}
+SDK_REPO = "nxp-robotics-sdk"
 
-# Manifest file for a given (stack, platform), relative to the SDK repo root.
-def manifest_for(stack, platform):
-    return os.path.join("manifests", stack, f"{platform}.yml")
+# Nexus location for prebuilt artifacts (download). TODO: wire real backend.
+NEXUS_REPO = "https://nexus.example.nxp.com/repository/nxp-robotics-sdk-raw"
 
 
-def all_platforms():
-    return list(PLATFORMS.keys())
+def _sdk_root(topdir):
+    return os.path.join(topdir, SDK_REPO)
 
 
-def resolve_stack(platform, stack):
+def platforms_dir(topdir):
+    return os.path.join(_sdk_root(topdir), "platforms")
+
+
+def all_platforms(topdir):
+    """Discover platforms by scanning platforms/<name>/build.yml."""
+    root = platforms_dir(topdir)
+    if not os.path.isdir(root):
+        return []
+    return sorted(
+        name for name in os.listdir(root)
+        if os.path.isfile(os.path.join(root, name, "build.yml"))
+    )
+
+
+def load_platform(topdir, platform):
+    """Load and return (data, path) for a platform's build.yml."""
+    if yaml is None:
+        log.die("PyYAML is required. Install with: pip install pyyaml")
+    path = os.path.join(platforms_dir(topdir), platform, "build.yml")
+    if not os.path.isfile(path):
+        log.die(f"Unknown platform '{platform}': {path} not found.")
+    with open(path) as f:
+        return (yaml.safe_load(f) or {}), path
+
+
+def resolve_stack(pdata, platform, stack):
     """Return the validated stack name for a platform, or exit with an error."""
-    entry = PLATFORMS[platform]
+    stacks = pdata.get("stacks", {})
     if stack is None:
-        stack = entry["default_stack"]
-    if stack not in entry["stacks"]:
-        valid = ", ".join(entry["stacks"])
+        stack = pdata.get("default_stack")
+        if stack is None:
+            log.die(f"Platform '{platform}' defines no default_stack; "
+                    f"pass --stack explicitly.")
+    if stack not in stacks:
+        valid = ", ".join(stacks) or "(none)"
         log.die(f"Stack '{stack}' is not valid for platform '{platform}'. "
                 f"Valid stacks: {valid}")
     return stack
+
+
+def manifest_for(stack, platform):
+    """Manifest path (relative to SDK repo root) for a (stack, platform)."""
+    return os.path.join("manifests", stack, f"{platform}.yml")
 
 
 class Sdk(WestCommand):
@@ -113,39 +104,24 @@ class Sdk(WestCommand):
         sub = parser.add_subparsers(dest="action", metavar="<action>")
         sub.required = True
 
-        # -- download --
         dl = sub.add_parser(
             "download",
             help="Download prebuilt artifacts (firmware, and Ubuntu WIC for navq95) from Nexus",
         )
-        dl.add_argument(
-            "-p", "--platform", required=True,
-            choices=all_platforms() + ["all"],
-            help="Platform to download artifacts for, or 'all'.",
-        )
+        dl.add_argument("-p", "--platform", required=True,
+                        help="Platform to download for, or 'all'.")
 
-        # -- build --
         bd = sub.add_parser(
             "build",
             help="Init manifest, clone pinned sources (west update), then build",
         )
-        bd.add_argument(
-            "-p", "--platform", required=True, choices=all_platforms(),
-            help="Platform to build.",
-        )
-        bd.add_argument(
-            "-s", "--stack", default=None,
-            help="Stack to build (px4 | cerebri | zephyr). Defaults to the "
-                 "platform's default stack.",
-        )
-        bd.add_argument(
-            "-j", "--jobs", default=str(os.cpu_count() or 1),
-            help="Parallel build jobs (PX4 make -j).",
-        )
-        bd.add_argument(
-            "--no-update", action="store_true",
-            help="Skip 'west update' (assume sources already cloned).",
-        )
+        bd.add_argument("-p", "--platform", required=True, help="Platform to build.")
+        bd.add_argument("-s", "--stack", default=None,
+                        help="Stack to build. Defaults to the platform's default_stack.")
+        bd.add_argument("-j", "--jobs", default=str(os.cpu_count() or 1),
+                        help="Parallel build jobs.")
+        bd.add_argument("--no-update", action="store_true",
+                        help="Skip 'west update' (assume sources already cloned).")
         return parser
 
     def do_run(self, args, unknown):
@@ -153,257 +129,202 @@ class Sdk(WestCommand):
             self._do_download(args)
         elif args.action == "build":
             self._do_build(args)
-        else:  # pragma: no cover - argparse enforces this
+        else:  # pragma: no cover
             log.die(f"Unknown action: {args.action}")
 
-    # ----------------------------------------------------------------------- #
+    # ------------------------------------------------------------------ #
     # download
-    # ----------------------------------------------------------------------- #
-    def _load_artifacts(self):
-        path = os.path.join(self.topdir, "nxp-robotics-sdk",
-                            "scripts", "artifacts.yml")
-        if not os.path.exists(path):
-            # Fallback: SDK repo may be the topdir itself (rare) or a sibling.
-            alt = os.path.join(os.path.dirname(__file__), "artifacts.yml")
-            path = alt if os.path.exists(alt) else path
-        if yaml is None:
-            log.die("PyYAML is required. Install with: pip install pyyaml")
-        if not os.path.exists(path):
-            log.die(f"artifacts manifest not found: {path}")
-        with open(path) as f:
-            return yaml.safe_load(f), path
-
+    # ------------------------------------------------------------------ #
     def _do_download(self, args):
-        data, path = self._load_artifacts()
-        platforms = all_platforms() if args.platform == "all" else [args.platform]
-
-        repo = data.get("repo", "<unset>")
-        version = data.get("version", "<unset>")
-        catalog = data.get("platforms", {})
-
-        log.inf(f"Nexus repo   : {repo}")
-        log.inf(f"SDK version  : {version}")
-        log.inf(f"Artifact map : {path}")
-        log.inf("")
-
-        total = 0
-        for plat in platforms:
-            items = catalog.get(plat, [])
-            if not items:
-                log.wrn(f"[{plat}] no artifacts declared in artifacts.yml")
-                continue
-            log.inf(f"[{plat}] {len(items)} artifact(s):")
-            for a in items:
-                name = a.get("name")
-                dest = a.get("dest", "bin/realtime/")
-                dest_path = os.path.join(self.topdir, dest, name)
-                log.inf(f"    - {name}  ->  {dest}")
-                # TODO(nexus): replace this stub with the real Nexus fetch:
-                #   1. GET {repo}/{version}/{plat}/{name}
-                #   2. write to dest_path
-                #   3. verify sha256 against a['sha256']
-                self._download_stub(repo, version, plat, name, dest_path,
-                                    a.get("sha256"))
-                total += 1
-            log.inf("")
-
-        log.inf(f"Planned {total} download(s). "
-                f"NOTE: Nexus backend not yet implemented (stubbed).")
-
-    def _download_stub(self, repo, version, platform, name, dest_path, sha256):
-        # Placeholder until Nexus is available. Intentionally does NOT create
-        # files, so nothing looks 'downloaded' when it was not.
-        url = f"{repo.rstrip('/')}/{version}/{platform}/{name}"
-        log.dbg(f"      would fetch: {url}")
-        log.dbg(f"      would write: {dest_path}")
-        log.dbg(f"      would verify sha256: {sha256}")
-
-    # ----------------------------------------------------------------------- #
-    # build
-    # ----------------------------------------------------------------------- #
-    def _do_build(self, args):
-        platform = args.platform
-        stack = resolve_stack(platform, args.stack)
-        cfg = PLATFORMS[platform]["stacks"][stack]
-        mf = manifest_for(stack, platform)
-
-        log.inf(f"Platform : {platform}")
-        log.inf(f"Stack    : {stack}")
-        log.inf(f"Manifest : {mf}")
-
-        # 1. Point the workspace at the platform/stack manifest.
-        self._run(self._west("config", "manifest.path", "nxp-robotics-sdk"))
-        self._run(self._west("config", "manifest.file", mf))
-
-        # 2. Clone / sync the pinned sources.
-        if args.no_update:
-            log.inf("Skipping 'west update' (--no-update).")
+        if args.platform == "all":
+            targets = all_platforms(self.topdir)
+            if not targets:
+                log.die("No platforms discovered under platforms/*/build.yml.")
         else:
-            log.inf("Cloning pinned sources: west update ...")
-            self._run(self._west("update"))
+            targets = [args.platform]
 
-        # 3. Dispatch to the correct build system.
-        if cfg["kind"] == "px4":
+        for platform in targets:
+            pdata, _ = load_platform(self.topdir, platform)
+            entries = pdata.get("download", []) or []
+            if not entries:
+                log.wrn(f"[{platform}] no download entries defined; skipping.")
+                continue
+            log.inf(f"=== download: {platform} ===")
+            for entry in entries:
+                self._download_stub(platform, entry)
+
+    def _download_stub(self, platform, entry):
+        """Print what would be fetched. Creates NO files (backend not wired)."""
+        name = entry.get("name", "<unnamed>")
+        src = entry.get("src") or name
+        dest = entry.get("dest", os.path.join("bin", "realtime", ""))
+        # A dest ending in '/' (or a bare dir) is a destination directory.
+        if dest.endswith("/") or dest.endswith(os.sep) or not os.path.splitext(dest)[1]:
+            dest = os.path.join(dest, name)
+        url = f"{NEXUS_REPO}/{platform}/{src}"
+        log.inf(f"  - {name}")
+        log.inf(f"    TODO would fetch : {url}")
+        log.inf(f"    TODO would write : {os.path.join(self.topdir, dest)}")
+        if entry.get("sha256"):
+            log.inf(f"    TODO would verify: sha256={entry['sha256']}")
+
+    # ------------------------------------------------------------------ #
+    # build
+    # ------------------------------------------------------------------ #
+    def _do_build(self, args):
+        pdata, ppath = load_platform(self.topdir, args.platform)
+        stack = resolve_stack(pdata, args.platform, args.stack)
+        cfg = dict(pdata["stacks"][stack])
+        kind = cfg.get("kind")
+        if not kind:
+            log.die(f"Stack '{stack}' in {ppath} has no 'kind'.")
+
+        log.inf(f"=== build: platform={args.platform} stack={stack} kind={kind} ===")
+
+        # Point the workspace manifest at the (stack, platform) file, update.
+        manifest_rel = manifest_for(stack, args.platform)
+        self._set_manifest(manifest_rel)
+        if not args.no_update:
+            self._west(["update"], cwd=self.topdir)
+        else:
+            log.inf("Skipping 'west update' (--no-update).")
+
+        if kind == "px4":
             self._build_px4(cfg, args.jobs)
-        elif cfg["kind"] == "zephyr":
-            self._build_zephyr(cfg["board"], cfg.get("app"))
-        else:  # pragma: no cover
-            log.die(f"Unknown build kind: {cfg['kind']}")
+        elif kind in ("zephyr", "cerebri"):
+            self._build_zephyr(cfg, args.jobs)
+        else:
+            log.die(f"Unsupported build kind '{kind}'.")
 
+    def _set_manifest(self, manifest_rel):
+        """Configure west's manifest.path/manifest.file for this build."""
+        self._west(["config", "manifest.path", SDK_REPO], cwd=self.topdir)
+        self._west(["config", "manifest.file", manifest_rel], cwd=self.topdir)
+        log.inf(f"manifest -> {SDK_REPO}/{manifest_rel}")
+
+    # ------------------------------------------------------------------ #
+    # PX4 build (native make via shell-out)
+    # ------------------------------------------------------------------ #
     def _build_px4(self, cfg, jobs):
-        px4_dir = os.path.join(self.topdir, "PX4-Autopilot")
-        if not os.path.isdir(px4_dir):
-            log.die(f"PX4-Autopilot not found at {px4_dir}. "
-                    f"Did 'west update' run?")
-        # Ensure PX4's Python dependencies are available in an isolated venv,
-        # then build with that venv on PATH so `make` picks up `em`, jinja2, etc.
-        env = self._ensure_px4_venv(px4_dir)
-        # PX4 (and its nested cyclonedds/idlc host build) use `ccache` as a
-        # compiler launcher. If real ccache is not installed and cannot be
-        # installed (no sudo), provide a passthrough shim in the venv bin so the
-        # nested builds -- which ignore USE_CCACHE -- still find a `ccache`.
-        self._ensure_ccache(env)
-        targets = cfg.get("targets") or [cfg["target"]]
-        for target in targets:
-            log.inf(f"PX4 build: make {target} -j{jobs}")
-            self._run(["make", target, f"-j{jobs}"], cwd=px4_dir, env=env)
+        px4_src = os.path.join(self.topdir, "PX4-Autopilot")
+        if not os.path.isdir(px4_src):
+            log.die(f"PX4 sources not found at {px4_src}. Run without --no-update.")
 
-        # Collect built firmware into <topdir>/bin/realtime/, keeping the exact
-        # PX4 output filenames (no renaming here).
-        self._collect_artifacts(
-            src_root=os.path.join(px4_dir, "build"),
-            artifacts=cfg.get("artifacts", []),
-        )
+        env = os.environ.copy()
+        venv_bin = self._ensure_px4_venv(px4_src)
+        self._ensure_ccache(venv_bin)
+        env["PATH"] = venv_bin + os.pathsep + env.get("PATH", "")
+
+        targets = cfg.get("targets") or []
+        if not targets:
+            log.die("PX4 stack defines no 'targets'.")
+
+        for target in targets:
+            log.inf(f"--- px4 make {target} (-j{jobs}) ---")
+            self._run(["make", target, f"-j{jobs}"], cwd=px4_src, env=env)
+
+        self._collect_artifacts(os.path.join(px4_src, "build"),
+                                cfg.get("artifacts", []) or [])
 
     def _collect_artifacts(self, src_root, artifacts):
-        """Copy built outputs to <topdir>/bin/realtime/, preserving filenames.
-
-        `artifacts` is a list of paths relative to `src_root`. The basename of
-        each is kept as-is; rename upstream in PX4 if a different name is wanted.
-        """
+        """Copy built artifacts into bin/realtime/, preserving basenames."""
         import shutil
-        if not artifacts:
-            log.wrn("No artifacts defined for this target; nothing to collect.")
-            return
-        dest_dir = os.path.join(self.topdir, "bin", "realtime")
-        os.makedirs(dest_dir, exist_ok=True)
-        for rel_src in artifacts:
-            src = os.path.join(src_root, rel_src)
-            name = os.path.basename(rel_src)
-            dst = os.path.join(dest_dir, name)
-            if not os.path.isfile(src):
-                log.die(f"Expected build output not found: {src}")
-            shutil.copy2(src, dst)
-            log.inf(f"Collected: {name}  ->  bin/realtime/")
+        out_dir = os.path.join(self.topdir, "bin", "realtime")
+        os.makedirs(out_dir, exist_ok=True)
+        for rel in artifacts:
+            candidate = rel if os.path.isabs(rel) else os.path.join(src_root, rel)
+            if not os.path.isfile(candidate):
+                log.wrn(f"artifact not found (skipped): {candidate}")
+                continue
+            dest = os.path.join(out_dir, os.path.basename(candidate))
+            shutil.copy2(candidate, dest)
+            log.inf(f"collected -> {dest}")
 
-    def _ensure_ccache(self, env):
-        """Guarantee a usable `ccache` on PATH for the build.
+    def _ensure_px4_venv(self, px4_src):
+        """Create/refresh a per-workspace venv with PX4's Python requirements.
 
-        If real ccache exists, do nothing. Otherwise install a passthrough shim
-        into the venv's bin/ (already on PATH) that simply execs its arguments,
-        so build systems that hardcode ccache as a launcher keep working.
-        """
-        import shutil, stat
-        if shutil.which("ccache", path=env.get("PATH")):
-            return
-        venv_bin = os.path.join(env["VIRTUAL_ENV"], "bin")
-        os.makedirs(venv_bin, exist_ok=True)
-        shim = os.path.join(venv_bin, "ccache")
-        if not os.path.exists(shim):
-            log.inf(f"ccache not available; installing passthrough shim: {shim}")
-            with open(shim, "w") as f:
-                f.write('#!/bin/sh\n'
-                        '# Passthrough ccache shim (no caching) added by the\n'
-                        '# NXP Robotics SDK because real ccache is unavailable.\n'
-                        'exec "$@"\n')
-            os.chmod(shim, os.stat(shim).st_mode | stat.S_IEXEC |
-                     stat.S_IXGRP | stat.S_IXOTH)
-
-    def _ensure_px4_venv(self, px4_dir):
-        """Create (once) a venv with PX4's Python requirements and return an
-        environment dict with that venv activated (venv/bin prepended to PATH,
-        VIRTUAL_ENV set). Idempotent via a stamp file keyed on the requirements
-        file contents.
+        Returns the venv's bin directory. Idempotent via a requirements hash
+        stamp so we only reinstall when requirements.txt changes.
         """
         import hashlib
+        venv = os.path.join(self.topdir, ".px4-venv")
+        venv_bin = os.path.join(venv, "bin")
+        py = os.path.join(venv_bin, "python")
+        if not os.path.isfile(py):
+            log.inf(f"Creating PX4 venv at {venv}")
+            self._run([sys.executable, "-m", "venv", venv], cwd=self.topdir)
+            self._run([py, "-m", "pip", "install", "--upgrade", "pip", "wheel"],
+                      cwd=self.topdir)
 
-        venv_dir = os.path.join(self.topdir, ".px4-venv")
-        req = os.path.join(px4_dir, "Tools", "setup", "requirements.txt")
-        if not os.path.exists(req):
-            # Older/newer PX4 layouts: fall back to a top-level requirements.txt.
-            alt = os.path.join(px4_dir, "requirements.txt")
-            req = alt if os.path.exists(alt) else req
-
-        venv_py = os.path.join(venv_dir, "bin", "python")
-
-        # Build the activated environment up-front (used whether or not we
-        # (re)install below).
-        env = dict(os.environ)
-        env["VIRTUAL_ENV"] = venv_dir
-        env["PATH"] = os.path.join(venv_dir, "bin") + os.pathsep + env.get("PATH", "")
-        # Avoid the user site-packages leaking in / out.
-        env.pop("PYTHONHOME", None)
-
-        # Compute a stamp from the requirements file so we reinstall only when
-        # requirements change.
-        stamp = os.path.join(venv_dir, ".requirements.sha256")
-        want = ""
-        if os.path.exists(req):
+        req = os.path.join(px4_src, "Tools", "setup", "requirements.txt")
+        if os.path.isfile(req):
             with open(req, "rb") as f:
-                want = hashlib.sha256(f.read()).hexdigest()
-
-        have = ""
-        if os.path.exists(stamp):
-            with open(stamp) as f:
-                have = f.read().strip()
-
-        if os.path.isfile(venv_py) and want and want == have:
-            log.inf(f"PX4 venv up to date: {venv_dir}")
-            return env
-
-        if not os.path.isfile(venv_py):
-            log.inf(f"Creating PX4 venv: {venv_dir}")
-            self._run([sys.executable, "-m", "venv", venv_dir])
-
-        # Upgrade pip tooling, then install PX4 requirements into the venv.
-        self._run([venv_py, "-m", "pip", "install", "--upgrade",
-                   "pip", "setuptools", "wheel"])
-        if os.path.exists(req):
-            log.inf(f"Installing PX4 requirements: {req}")
-            self._run([venv_py, "-m", "pip", "install", "-r", req])
-            with open(stamp, "w") as f:
-                f.write(want)
+                digest = hashlib.sha256(f.read()).hexdigest()
+            stamp = os.path.join(venv, ".requirements.sha256")
+            prev = None
+            if os.path.isfile(stamp):
+                with open(stamp) as f:
+                    prev = f.read().strip()
+            if prev != digest:
+                log.inf("Installing PX4 Python requirements into venv")
+                self._run([py, "-m", "pip", "install", "-r", req], cwd=self.topdir)
+                with open(stamp, "w") as f:
+                    f.write(digest)
+            else:
+                log.inf("PX4 venv requirements up to date")
         else:
-            log.wrn(f"PX4 requirements file not found ({req}); "
-                    f"venv created but no packages installed.")
-        return env
+            log.wrn(f"PX4 requirements.txt not found at {req}")
+        return venv_bin
 
-    def _build_zephyr(self, board, app):
-        cmd = self._west("build", "-b", board)
-        if app:
-            cmd.append(app)
-        log.inf(f"Zephyr build: {' '.join(cmd)}")
-        self._run(cmd)
+    def _ensure_ccache(self, venv_bin):
+        """Provide a ccache passthrough shim if real ccache is absent.
 
-    # ----------------------------------------------------------------------- #
-    # helpers
-    # ----------------------------------------------------------------------- #
-    def _west(self, *args):
-        """Invoke west portably.
-
-        Prefer a bare 'west' executable if it is on PATH; otherwise fall back
-        to 'python3 -m west' (some hosts install west as a module only).
+        PX4's nested cyclonedds/idlc invocation ignores USE_CCACHE, so we drop
+        a shim named 'ccache' on PATH that just execs its arguments. No-op if a
+        real ccache is already available.
         """
         import shutil
+        if shutil.which("ccache", path=venv_bin + os.pathsep + os.environ.get("PATH", "")):
+            return
+        shim = os.path.join(venv_bin, "ccache")
+        with open(shim, "w") as f:
+            f.write('#!/bin/sh\nexec "$@"\n')
+        os.chmod(shim, 0o755)
+        log.inf(f"Wrote ccache passthrough shim at {shim}")
+
+    # ------------------------------------------------------------------ #
+    # Zephyr / Cerebri build (native west build)
+    # ------------------------------------------------------------------ #
+    def _build_zephyr(self, cfg, jobs):
+        boards = cfg.get("boards") or []
+        if not boards:
+            log.die("Zephyr/Cerebri stack defines no 'boards'.")
+        app = cfg.get("app")
+
+        for board in boards:
+            slug = board.replace("/", "_")
+            build_dir = os.path.join(self.topdir, "build", slug)
+            cmd = ["build", "-b", board, "--build-dir", build_dir]
+            if app:
+                cmd.append(app)
+            log.inf(f"--- west build -b {board} (build-dir {build_dir}) ---")
+            self._west(cmd, cwd=self.topdir)
+
+    # ------------------------------------------------------------------ #
+    # low-level helpers
+    # ------------------------------------------------------------------ #
+    def _west(self, argv, cwd=None, env=None):
+        """Invoke west portably: bare 'west' if on PATH, else python -m west."""
+        import shutil
         if shutil.which("west"):
-            return ["west", *args]
-        return [sys.executable, "-m", "west", *args]
+            cmd = ["west", *argv]
+        else:
+            cmd = [sys.executable, "-m", "west", *argv]
+        self._run(cmd, cwd=cwd, env=env)
 
     def _run(self, cmd, cwd=None, env=None):
-        log.dbg(f"$ {' '.join(cmd)}" + (f"  (cwd={cwd})" if cwd else ""))
+        log.dbg(f"run: {' '.join(cmd)} (cwd={cwd})")
         try:
-            subprocess.check_call(cmd, cwd=cwd, env=env)
-        except FileNotFoundError:
-            log.die(f"Command not found: {cmd[0]}")
+            subprocess.run(cmd, cwd=cwd, env=env, check=True)
         except subprocess.CalledProcessError as e:
             log.die(f"Command failed ({e.returncode}): {' '.join(cmd)}")

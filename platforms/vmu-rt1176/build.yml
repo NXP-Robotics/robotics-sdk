@@ -1,0 +1,29 @@
+# Build + artifact definition for the vmu-rt1176 platform (CogniPilot VMU, RT1176).
+
+platform: vmu-rt1176
+default_stack: px4
+
+stacks:
+  px4:
+    kind: px4
+    targets:
+      - nxp_fmurt1176_default
+    artifacts:
+      - nxp_fmurt1176_default/nxp_fmurt1176_default.elf
+      - nxp_fmurt1176_default/nxp_fmurt1176_default.bin
+
+  cerebri:
+    kind: zephyr
+    boards:
+      - vmu_rt1176
+    app: app/cerebri
+
+  zephyr:
+    kind: zephyr
+    boards:
+      - vmu_rt1176
+    app: null
+
+download:
+  - {name: nxp_fmurt1176_default.elf, dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_fmurt1176_default.bin, dest: bin/realtime/, sha256: TODO}

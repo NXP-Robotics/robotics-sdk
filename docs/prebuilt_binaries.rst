@@ -17,7 +17,8 @@ Artifacts are placed in:
 * ``bin/realtime/`` -- firmware binaries (all platforms)
 * ``ubuntu/``       -- NavQ95 Ubuntu WIC image (``navq95_m7`` only)
 
-The artifact catalog is defined in ``scripts/artifacts.yml``.
+The artifact catalog is defined per platform in the ``download:`` section of
+``platforms/<platform>/build.yml``.
 
 .. note::
 

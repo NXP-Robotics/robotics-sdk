@@ -1,0 +1,25 @@
+# Build + artifact definition for the tropic platform (mr-tropic).
+
+platform: tropic
+default_stack: px4
+
+stacks:
+  px4:
+    kind: px4
+    # App first, bootloader next.
+    targets:
+      - nxp_mr-tropic_default
+      - nxp_mr-tropic_bootloader
+    artifacts:
+      - nxp_mr-tropic_default/nxp_mr-tropic_default.bin
+      - nxp_mr-tropic_bootloader/nxp_mr-tropic_bootloader.bin
+
+  zephyr:
+    kind: zephyr
+    boards:
+      - mr_tropic
+    app: null
+
+download:
+  - {name: nxp_mr-tropic_default.bin,    dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_mr-tropic_bootloader.bin, dest: bin/realtime/, sha256: TODO}

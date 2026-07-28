@@ -54,9 +54,9 @@ Artifacts land in `bin/realtime/` (and `ubuntu/` for NavQ95); checksums are
 verified.
 
 > **Status:** the Nexus backend is not wired up yet. `download` currently
-> resolves and prints exactly what it *would* fetch (from
-> `scripts/artifacts.yml`); the transfer itself is a stub. See the TODO in
-> `scripts/sdk.py`.
+> resolves and prints exactly what it *would* fetch (from each platform's
+> `platforms/<platform>/build.yml` `download:` section); the transfer itself
+> is a stub. See the TODO in `scripts/sdk.py`.
 
 ### 2b. Build from source
 
@@ -65,7 +65,7 @@ Selects the platform/stack manifest, clones the pinned sources
 
 ```console
 west sdk build --platform tropic                    # PX4 (default stack)
-west sdk build --platform navq95_m7                 # Cerebri (default stack)
+west sdk build --platform navq95_m7                 # PX4 (default stack)
 west sdk build --platform navq95_m7 --stack zephyr  # plain Zephyr
 west sdk build --platform vmu-rt1176 --stack cerebri
 ```
@@ -76,23 +76,29 @@ west sdk build --platform vmu-rt1176 --stack cerebri
 
 - **Manifests** (`manifests/<stack>/<platform>.yml`) pin the exact upstream
   revision for each stack/platform combination.
+- **Build definitions** (`platforms/<platform>/build.yml`) are the single
+  source of truth for how each platform builds under each stack (kind,
+  targets/boards, app, artifacts) and its Nexus `download:` catalog. `sdk.py`
+  is a generic dispatcher with no platform-specific knowledge — it discovers
+  platforms by scanning `platforms/*/build.yml`.
 - **`west sdk build`** sets `manifest.file` to the chosen manifest, runs
-  `west update`, then dispatches:
+  `west update`, then dispatches on the `build.yml` `kind`:
   - **PX4** → shells out to PX4's native `make <target>`
   - **Zephyr / Cerebri** → native `west build -b <board>`
-- **`west sdk download`** reads `scripts/artifacts.yml` and pulls the matching
-  prebuilt artifacts from Nexus (WIC included only for `navq95_m7`).
+- **`west sdk download`** reads each platform's `build.yml` `download:` section
+  and pulls the matching prebuilt artifacts from Nexus (WIC included only for
+  `navq95_m7`).
 
 ## Repository layout
 
 ```
 nxp-robotics-sdk/
 ├── manifests/{px4,cerebri,zephyr}/<platform>.yml   # revision pinning
+├── platforms/<platform>/build.yml                  # build + download catalog
 ├── scripts/
-│   ├── sdk.py               # `west sdk download` + `west sdk build`
-│   ├── west-commands.yml     # registers the `sdk` command
-│   └── artifacts.yml         # Nexus artifact catalog (per platform)
-└── docs/                     # Sphinx (reStructuredText) documentation
+│   ├── sdk.py                # `west sdk download` + `west sdk build`
+│   └── west-commands.yml      # registers the `sdk` command
+└── docs/                      # Sphinx (reStructuredText) documentation
 ```
 
 Prebuilt binaries and the Ubuntu WIC are **not** committed to git; they are

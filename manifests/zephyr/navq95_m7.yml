@@ -1,7 +1,7 @@
-# NXP Robotics SDK - plain Zephyr stack - navq95_m7 platform (i.MX95 M7)
+# NXP Robotics SDK - Zephyr stack - navq95_m7 platform (MR-NavQ95B, i.MX95 M7)
 #
-# Vanilla Zephyr workspace: import Zephyr's own manifest at a pinned revision.
-# Board definitions not yet upstream are provided by this SDK under boards/.
+# NavQ95 (board target mr_navq95b/mimx9596/m7) is currently supported only on
+# Zephyr 'main' (targeting the 4.4 release), not yet in a tagged stable release.
 manifest:
   version: "1.0"
 
@@ -16,7 +16,8 @@ manifest:
   projects:
     - name: zephyr
       remote: zephyr
-      # TODO: pin to the exact SHA/tag validated for this SDK release.
+      # NavQ95 (mr_navq95b) lives on Zephyr 'main' for now.
+      # TODO: pin to the exact SHA validated for this SDK release.
       revision: main
       path: zephyr
       import: true

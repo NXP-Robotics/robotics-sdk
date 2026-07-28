@@ -1,0 +1,28 @@
+# NXP Robotics SDK - PX4 stack - navq95_m7 platform (NavQ95, i.MX95 M7)
+#
+# NavQ95 PX4 support is NOT public: it lives on NXP's private PX4 fork
+# (NXP-Robotics/PX4-Autopilot-NXP) as the `imx95` board. This manifest pins the
+# exact fork remote + revision validated for this SDK release.
+#
+# NOTE: the remote uses SSH (git@github.com); the builder must have SSH access
+# to the NXP-Robotics organization.
+manifest:
+  version: "1.0"
+
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml
+
+  remotes:
+    - name: nxp-robotics
+      url-base: git@github.com:NXP-Robotics
+
+  projects:
+    - name: PX4-Autopilot
+      remote: nxp-robotics
+      repo-path: PX4-Autopilot-NXP.git
+      # Pinned to the validated NavQ95 (imx95) commit on branch
+      # pr-nuttx-12-12-0-imx95.
+      revision: 36c6c23a7e982dd7019cf98a028df1b227bb5e8d
+      submodules: true
+      path: PX4-Autopilot

@@ -11,7 +11,10 @@ Release Notes
 * ``west sdk build`` -- manifest select + ``west update`` + build dispatch
   (PX4 ``make`` shell-out / native Zephyr ``west build``).
 * ``west sdk download`` -- prebuilt artifact retrieval from Nexus
-  (backend stubbed; catalog in ``scripts/artifacts.yml``).
+  (backend stubbed; per-platform catalog in ``platforms/<platform>/build.yml``).
+* Per-platform build configuration lives in ``platforms/<platform>/build.yml``;
+  ``scripts/sdk.py`` is a generic loader/dispatcher that discovers platforms by
+  scanning ``platforms/*/build.yml`` (no platform-specific logic).
 
 .. todo::
 
