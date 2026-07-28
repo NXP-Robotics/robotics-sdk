@@ -1,0 +1,19 @@
+# NXP Robotics SDK - plain Zephyr stack - tropic platform
+manifest:
+  version: "1.0"
+
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml
+
+  remotes:
+    - name: zephyr
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      remote: zephyr
+      # TODO: pin to the exact SHA/tag validated for this SDK release.
+      revision: main
+      path: zephyr
+      import: true

@@ -1,0 +1,14 @@
+# Bootstrap manifest for the NXP Robotics SDK.
+#
+# Intentionally minimal: it registers the 'sdk' west extension command and
+# declares NO projects/imports, so 'west sdk' is available immediately after
+# 'west init' WITHOUT needing 'west update' first.
+#
+# 'west sdk build' switches manifest.file to the chosen
+# manifests/<stack>/<platform>.yml (which DO import upstream) and then runs
+# 'west update'.
+manifest:
+  version: "1.0"
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml

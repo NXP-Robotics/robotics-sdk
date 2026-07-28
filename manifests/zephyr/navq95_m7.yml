@@ -1,0 +1,22 @@
+# NXP Robotics SDK - plain Zephyr stack - navq95_m7 platform (i.MX95 M7)
+#
+# Vanilla Zephyr workspace: import Zephyr's own manifest at a pinned revision.
+# Board definitions not yet upstream are provided by this SDK under boards/.
+manifest:
+  version: "1.0"
+
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml
+
+  remotes:
+    - name: zephyr
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      remote: zephyr
+      # TODO: pin to the exact SHA/tag validated for this SDK release.
+      revision: main
+      path: zephyr
+      import: true

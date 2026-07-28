@@ -1,0 +1,21 @@
+# NXP Robotics SDK - PX4 stack - vmu-rt1176 platform (CogniPilot VMU on RT1176)
+#
+# Pins the exact PX4-Autopilot revision used to build the vmu-rt1176 artifacts.
+manifest:
+  version: "1.0"
+
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml
+
+  remotes:
+    - name: px4
+      url-base: https://github.com/PX4
+
+  projects:
+    - name: PX4-Autopilot
+      remote: px4
+      # TODO: pin to the exact SHA/tag validated for this SDK release.
+      revision: main
+      submodules: true
+      path: PX4-Autopilot

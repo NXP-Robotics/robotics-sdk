@@ -1,0 +1,10 @@
+# West extension commands provided by the NXP Robotics SDK.
+# Discovered by west via each manifest's `self.west-commands` entry.
+west-commands:
+  - file: scripts/sdk.py
+    commands:
+      - name: sdk
+        class: Sdk
+        help: >
+          NXP Robotics SDK: download prebuilt artifacts from Nexus, or build
+          firmware from pinned sources, for a supported platform.

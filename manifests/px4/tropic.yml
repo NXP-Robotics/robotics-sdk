@@ -1,0 +1,23 @@
+# NXP Robotics SDK - PX4 stack - mr-tropic platform
+#
+# Pins the exact PX4-Autopilot revision used to build the tropic artifacts.
+# PX4 is cloned as a standalone west project (with submodules) and built via
+# its own make system, dispatched by `west sdk build` (see scripts/sdk.py).
+manifest:
+  version: "1.0"
+
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml
+
+  remotes:
+    - name: px4
+      url-base: https://github.com/PX4
+
+  projects:
+    - name: PX4-Autopilot
+      remote: px4
+      # TODO: pin to the exact SHA/tag validated for this SDK release.
+      revision: main
+      submodules: true
+      path: PX4-Autopilot
