@@ -255,6 +255,97 @@ class Sdk(WestCommand):
         self._collect_artifacts(os.path.join(px4_src, "build"),
                                 cfg.get("artifacts", []) or [])
 
+        # Optional per-platform post-build signing (navq95 uses MCUboot).
+        # No-op unless the platform's build.yml defines a 'sign' block, so
+        # sdk.py stays generic.
+        self._sign_px4(px4_src, cfg.get("sign"), env, venv_bin)
+
+    def _sign_px4(self, px4_src, sign, env, venv_bin):
+        """Sign collected .bin images with MCUboot imgtool (config-driven).
+
+        The 'sign' block comes from the platform's build.yml (present only for
+        navq95). imgtool.py lives in the PX4 tree (scripts/imgtool.py) and does
+        ``from imgtool import main``, so it must run with PX4-Autopilot/scripts
+        importable. Inputs/outputs are basenames inside bin/realtime/.
+        """
+        if not sign:
+            return
+
+        out_dir = os.path.join(self.topdir, "bin", "realtime")
+        scripts_dir = os.path.join(px4_src, "scripts")
+        tool_rel = sign.get("tool", "scripts/imgtool.py")
+        tool = tool_rel if os.path.isabs(tool_rel) else os.path.join(px4_src, tool_rel)
+        if not os.path.isfile(tool):
+            log.die(f"imgtool not found for signing: {tool}")
+
+        images = sign.get("images") or []
+        if not images:
+            log.wrn("sign: no images listed; nothing to sign.")
+            return
+
+        # imgtool needs a few third-party deps (click, cryptography, intelhex,
+        # pyyaml) that are NOT in PX4's requirements.txt. Install them into the
+        # workspace venv (idempotent) before signing.
+        py = os.path.join(venv_bin, "python")
+        py = py if os.path.isfile(py) else sys.executable
+        self._ensure_imgtool_deps(py)
+
+        # imgtool imports its sibling package; make it importable.
+        sign_env = dict(env)
+        sign_env["PYTHONPATH"] = (
+            scripts_dir + os.pathsep + sign_env.get("PYTHONPATH", "")
+        ).rstrip(os.pathsep)
+
+        log.inf("--- post-build: MCUboot signing (imgtool) ---")
+        for img in images:
+            in_name = img.get("in")
+            out_name = img.get("out")
+            if not in_name or not out_name:
+                log.wrn(f"sign: skipping malformed image entry: {img}")
+                continue
+            in_path = os.path.join(out_dir, in_name)
+            out_path = os.path.join(out_dir, out_name)
+            if not os.path.isfile(in_path):
+                log.wrn(f"sign: input not found (skipped): {in_path}")
+                continue
+
+            cmd = [py, tool, "sign",
+                   "--version", str(sign.get("version", "1.0.0")),
+                   "--header-size", str(sign.get("header_size", "0x800")),
+                   "--slot-size", str(sign.get("slot_size", "0x700000"))]
+            if sign.get("pad_header", True):
+                cmd.append("--pad-header")
+            # Optional signing key (unsigned/hash-only if omitted).
+            key = sign.get("key")
+            if key:
+                key = key if os.path.isabs(key) else os.path.join(px4_src, key)
+                cmd += ["--key", key]
+            cmd += [in_path, out_path]
+
+            log.inf(f"sign: {in_name} -> {out_name}")
+            self._run(cmd, cwd=scripts_dir, env=sign_env)
+            log.inf(f"signed -> {out_path}")
+
+    # imgtool's third-party deps (absent from PX4's requirements.txt).
+    _IMGTOOL_DEPS = ["click", "cryptography", "intelhex", "pyyaml", "cbor2"]
+
+    def _ensure_imgtool_deps(self, py):
+        """Install MCUboot imgtool's Python deps into the venv (idempotent)."""
+        venv = os.path.join(self.topdir, ".px4-venv")
+        stamp = os.path.join(venv, ".imgtool-deps.ok")
+        if os.path.isfile(stamp):
+            log.inf("imgtool deps already installed")
+            return
+        log.inf("Installing imgtool dependencies into venv "
+                f"({', '.join(self._IMGTOOL_DEPS)})")
+        self._run([py, "-m", "pip", "install", *self._IMGTOOL_DEPS],
+                  cwd=self.topdir)
+        try:
+            with open(stamp, "w") as f:
+                f.write("ok\n")
+        except OSError:
+            pass
+
     def _collect_artifacts(self, src_root, artifacts):
         """Copy built artifacts into bin/realtime/, preserving basenames."""
         import shutil

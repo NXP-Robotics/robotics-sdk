@@ -23,6 +23,22 @@ stacks:
       - nxp_imx95_ddr/nxp_imx95_ddr.elf
       - nxp_imx95_ddr/nxp_imx95_ddr.bin
 
+    # NavQ95-only post-build step: sign the collected .bin images with
+    # MCUboot's imgtool (shipped inside the PX4 tree at scripts/imgtool.py).
+    # Runs after artifacts land in bin/realtime/; 'in'/'out' are basenames
+    # within that directory. Producing <name>.mcuboot.bin alongside the raw
+    # .bin. Because this key exists only for navq95_m7, signing is applied to
+    # this platform only -- sdk.py stays generic.
+    # NOTE: only the default (TCM) image is signed; the DDR image is NOT.
+    sign:
+      tool: scripts/imgtool.py     # relative to the PX4-Autopilot source tree
+      version: "1.0.0"
+      header_size: "0x800"
+      slot_size: "0x700000"
+      pad_header: true
+      images:
+        - {in: nxp_imx95_default.bin, out: nxp_imx95_default.mcuboot.bin}
+
   # NavQ95 (MR-NavQ95B) is also its own Zephyr board on the i.MX95 Cortex-M7.
   # One `--stack zephyr` builds ALL boards below. Currently on Zephyr 'main'
   # (targeting the 4.4 release).
@@ -36,8 +52,9 @@ stacks:
 # Prebuilt artifacts for `west sdk download` (hosted on Nexus).
 # The Ubuntu A-core WIC image is specific to NavQ95.
 download:
-  - {name: nxp_imx95_default.elf, dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_default.bin, dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_ddr.elf,     dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_ddr.bin,     dest: bin/realtime/, sha256: TODO}
-  - {name: navq95-ubuntu.wic,     dest: ubuntu/,       sha256: TODO}
+  - {name: nxp_imx95_default.elf,         dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_default.bin,         dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_default.mcuboot.bin, dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_ddr.elf,             dest: bin/realtime/, sha256: TODO}
+  - {name: nxp_imx95_ddr.bin,             dest: bin/realtime/, sha256: TODO}
+  - {name: navq95-ubuntu.wic,             dest: ubuntu/,       sha256: TODO}
