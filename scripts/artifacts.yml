@@ -19,9 +19,9 @@ platforms:
     - {name: navq95-ubuntu.wic, dest: ubuntu/,       sha256: TODO}   # navq95 only
 
   tropic:
-    - {name: mr-tropic.bin,            dest: bin/realtime/, sha256: TODO}
-    - {name: mr-tropic.bootloader.bin, dest: bin/realtime/, sha256: TODO}
+    - {name: nxp_mr-tropic_default.bin,    dest: bin/realtime/, sha256: TODO}
+    - {name: nxp_mr-tropic_bootloader.bin, dest: bin/realtime/, sha256: TODO}
 
   vmu-rt1176:
-    - {name: vmu-rt1176.elf, dest: bin/realtime/, sha256: TODO}
-    - {name: vmu-rt1176.bin, dest: bin/realtime/, sha256: TODO}
+    - {name: nxp_fmurt1176_default.elf, dest: bin/realtime/, sha256: TODO}
+    - {name: nxp_fmurt1176_default.bin, dest: bin/realtime/, sha256: TODO}
