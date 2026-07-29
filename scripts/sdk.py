@@ -245,6 +245,15 @@ class Sdk(WestCommand):
         venv_bin = self._ensure_px4_venv(px4_src)
         self._ensure_ccache(venv_bin)
         env["PATH"] = venv_bin + os.pathsep + env.get("PATH", "")
+        # PX4's CMake resolves Python via find_package/PATH and runs
+        # "${PYTHON_EXECUTABLE} -c 'import menuconfig'" (kconfiglib). Point it
+        # explicitly at the venv interpreter (which has PX4's requirements
+        # incl. kconfiglib) so a system python without kconfiglib is not used.
+        venv_py = os.path.join(venv_bin, "python")
+        if os.path.isfile(venv_py):
+            env["PYTHON_EXECUTABLE"] = venv_py
+            env["VIRTUAL_ENV"] = os.path.dirname(venv_bin)
+            env.pop("PYTHONHOME", None)
 
         targets = cfg.get("targets") or []
         if not targets:
@@ -397,16 +406,39 @@ class Sdk(WestCommand):
             if os.path.isfile(stamp):
                 with open(stamp) as f:
                     prev = f.read().strip()
-            if prev != digest:
+            # Reinstall if requirements changed OR a sentinel package is
+            # missing. The sentinel guards against a stamp that was written
+            # after an interrupted/partial install (kconfiglib provides the
+            # 'menuconfig' module PX4's kconfig.cmake needs).
+            need_install = (prev != digest) or not self._venv_has_sentinel(py)
+            if need_install:
                 log.inf("Installing PX4 Python requirements into venv")
                 self._run([py, "-m", "pip", "install", "-r", req], cwd=self.topdir)
-                with open(stamp, "w") as f:
-                    f.write(digest)
+                # Only stamp AFTER verifying the sentinel imports, so a failed
+                # install never gets cached as 'up to date'.
+                if self._venv_has_sentinel(py):
+                    with open(stamp, "w") as f:
+                        f.write(digest)
+                else:
+                    log.wrn("PX4 requirements installed but 'menuconfig' "
+                            "(kconfiglib) still not importable; not stamping.")
             else:
                 log.inf("PX4 venv requirements up to date")
         else:
             log.wrn(f"PX4 requirements.txt not found at {req}")
         return venv_bin
+
+    @staticmethod
+    def _venv_has_sentinel(py):
+        """True if the venv python can import kconfiglib's 'menuconfig'."""
+        try:
+            subprocess.run([py, "-c", "import menuconfig"],
+                           check=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+            return True
+        except (subprocess.CalledProcessError, OSError):
+            return False
 
     def _ensure_ccache(self, venv_bin):
         """Provide a ccache passthrough shim if real ccache is absent.
