@@ -80,8 +80,8 @@ verified.
 
 ### 2b. Build from source
 
-Selects the platform/stack manifest, clones the pinned sources
-(`west update`), then builds:
+Selects the platform/stack manifest, fetches the pinned sources **when they are
+missing** (smart auto-fetch), then builds:
 
 ```console
 west sdk build --platform tropic                    # PX4 (default stack)
@@ -93,6 +93,18 @@ west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
 
 `--stack` is optional; each platform has a sensible default (see table).
 
+**Fetching sources.** By default `build` runs `west update` **only when the
+manifest's project directories are missing**, so local edits to already-cloned
+sources are preserved across rebuilds. Pass `--update` to force a refetch
+(resets sources to the manifest revision, **overwriting local changes**). To
+fetch/refresh sources without building, use the dedicated verb:
+
+```console
+west sdk update --platform tropic                   # clone/update sources only
+west sdk build  --platform tropic                   # first build auto-clones; later builds keep your edits
+west sdk build  --platform tropic --update          # discard edits, rebuild pinned revision
+```
+
 ## How it works
 
 - **Manifests** (`manifests/<stack>/<platform>.yml`) pin the exact upstream
@@ -103,11 +115,15 @@ west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
   is a generic dispatcher with no platform-specific knowledge — it discovers
   platforms by scanning `platforms/*/build.yml`.
 - **`west sdk build`** sets `manifest.file` to the chosen manifest, runs
-  `west update`, then dispatches on the `build.yml` `kind`:
+- **`west sdk build`** sets `manifest.file` to the chosen manifest, runs
+  `west update` (only when sources are missing, or always with `--update`),
+  then dispatches on the `build.yml` `kind`:
   - **PX4** → shells out to PX4's native `make <target>`
   - **Zephyr / Cerebri** → native `west build -b <board>`
   - **AM32** → GNU `make <target>` (after a one-time `make arm_sdk_install`
     that downloads the xPack ARM toolchain)
+- **`west sdk update`** sets the platform manifest and runs `west update` to
+  clone/refresh its sources **without building**.
 - **`west sdk download`** reads each platform's `build.yml` `download:` section
   and pulls the matching prebuilt artifacts from Nexus (WIC included only for
   `navq95_m7`).

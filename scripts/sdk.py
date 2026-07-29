@@ -4,7 +4,11 @@ Uniform, stack-agnostic interface:
 
     west sdk download --platform <platform> | all
     west sdk update   --platform <platform> [--stack <stack>]
-    west sdk build    --platform <platform> [--stack <stack>]
+    west sdk build    --platform <platform> [--stack <stack>] [--update]
+
+``build`` fetches sources automatically only when they are missing, so local
+edits survive rebuilds; pass ``--update`` to force a refetch (which resets
+sources to the manifest revision and discards local changes).
 
 Both require an initialized west workspace (run ``west init -l nxp-robotics-sdk``
 once) because west only discovers extension commands after init.
@@ -132,8 +136,13 @@ class Sdk(WestCommand):
                         help="Stack to build. Defaults to the platform's default_stack.")
         bd.add_argument("-j", "--jobs", default=str(os.cpu_count() or 1),
                         help="Parallel build jobs.")
-        bd.add_argument("--no-update", action="store_true",
-                        help="Skip 'west update' (assume sources already cloned).")
+        bd.add_argument("--update", action="store_true",
+                        help="Force a 'west update' before building, even when "
+                             "sources are already present. This resets sources "
+                             "to the manifest revision and OVERWRITES local "
+                             "changes. By default sources are fetched only when "
+                             "missing, so local edits are preserved across "
+                             "rebuilds.")
         bd.add_argument("--skip-preflight", action="store_true",
                         help="Skip the toolchain/dependency preflight checks.")
         return parser
@@ -228,16 +237,32 @@ class Sdk(WestCommand):
         else:
             log.wrn("Skipping preflight checks (--skip-preflight).")
 
-        # Point the workspace manifest at the (stack, platform) file and clone/
-        # update its sources -- the SAME operation performed by 'sdk update'.
+        # Point the workspace manifest at the (stack, platform) file and, when
+        # needed, clone/update its sources -- the SAME fetch performed by 'sdk
+        # update'. Smart-fetch policy: by default we run 'west update' ONLY
+        # when the manifest's project dirs are missing, so repeat builds never
+        # clobber local edits. '--update' forces a refetch (resets sources to
+        # the manifest revision, discarding local changes).
+        #
         # The platform manifests use ``import: true``; if left active after the
         # build, west can no longer discover this 'sdk' extension command
         # whenever the imported sources are absent. So we always restore
         # manifest.file to the import-free bootstrap west.yml afterwards,
         # leaving the workspace in a usable state.
+        present = self._sources_present(stack, args.platform)
+        do_update = args.update or not present
+        if args.update and present:
+            log.inf("--update: refetching sources "
+                    "(local changes will be reset to the manifest revision).")
+        elif not present:
+            log.inf("Sources not found; fetching automatically "
+                    "(use --update later to refresh).")
+        else:
+            log.inf("Sources present; skipping fetch "
+                    "(use --update to refresh to the manifest revision).")
+
         try:
-            self._fetch_sources(stack, args.platform,
-                                 do_update=not args.no_update)
+            self._fetch_sources(stack, args.platform, do_update=do_update)
 
             if kind == "px4":
                 self._build_px4(cfg, args.jobs)
@@ -264,7 +289,52 @@ class Sdk(WestCommand):
         if do_update:
             self._west(["update"], cwd=self.topdir)
         else:
-            log.inf("Skipping 'west update' (--no-update).")
+            log.inf("Skipping 'west update' (sources already present).")
+
+    def _manifest_project_paths(self, stack, platform):
+        """Return the workspace-relative project dirs declared in the
+        (stack, platform) manifest -- i.e. where west clones each project.
+
+        Excludes 'self' (the SDK repo itself). west defaults a project's path
+        to its 'name' when 'path' is omitted, so we mirror that. This reads the
+        manifest (the authoritative "what gets cloned and where"), keeping
+        sdk.py free of any per-platform source-layout knowledge.
+        """
+        manifest_rel = manifest_for(stack, platform)
+        manifest_abs = os.path.join(_sdk_root(self.topdir), manifest_rel)
+        with open(manifest_abs) as f:
+            data = (yaml.safe_load(f) or {}).get("manifest", {}) or {}
+        paths = []
+        for proj in data.get("projects", []) or []:
+            p = proj.get("path") or proj.get("name")
+            if p:
+                paths.append(p)
+        return paths
+
+    def _sources_present(self, stack, platform):
+        """True only if every manifest-declared project dir exists and is
+        non-empty in the workspace.
+
+        Used by the smart-fetch policy: build fetches automatically only when
+        this is False. On any error reading the manifest we conservatively
+        return False so the caller fetches (never silently skip a needed
+        update -- worst case degrades to always-fetch).
+        """
+        try:
+            paths = self._manifest_project_paths(stack, platform)
+        except Exception as exc:  # noqa: BLE001 - defensive: force a fetch
+            log.wrn(f"Could not determine source presence ({exc}); "
+                    f"will fetch to be safe.")
+            return False
+        if not paths:  # nothing declared -> nothing to fetch
+            return True
+        for rel in paths:
+            d = os.path.join(self.topdir, rel)
+            # An empty dir means an interrupted/partial clone -> treat as
+            # missing so we (re)fetch and self-heal.
+            if not os.path.isdir(d) or not os.listdir(d):
+                return False
+        return True
 
     def _restore_bootstrap_manifest(self):
         """Point manifest.file back at the import-free bootstrap west.yml.
@@ -290,7 +360,8 @@ class Sdk(WestCommand):
     def _build_px4(self, cfg, jobs):
         px4_src = os.path.join(self.topdir, "PX4-Autopilot")
         if not os.path.isdir(px4_src):
-            log.die(f"PX4 sources not found at {px4_src}. Run without --no-update.")
+            log.die(f"PX4 sources not found at {px4_src}. "
+                    f"Run 'west sdk update' (or 'west sdk build --update') first.")
 
         env = os.environ.copy()
         venv_bin = self._ensure_px4_venv(px4_src)
@@ -531,7 +602,8 @@ class Sdk(WestCommand):
     def _build_am32(self, cfg, jobs):
         am32_src = os.path.join(self.topdir, "AM32")
         if not os.path.isdir(am32_src):
-            log.die(f"AM32 sources not found at {am32_src}. Run without --no-update.")
+            log.die(f"AM32 sources not found at {am32_src}. "
+                    f"Run 'west sdk update' (or 'west sdk build --update') first.")
 
         targets = cfg.get("targets") or []
         if not targets:

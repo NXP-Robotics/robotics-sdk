@@ -6,10 +6,16 @@ Release Notes
 
 * Initial NXP Robotics SDK superproject scaffold.
 * Platforms: ``navq95_m7`` (i.MX95 M7), ``tropic`` (mr-tropic),
-  ``vmu-rt1176`` (CogniPilot VMU on RT1176).
-* Stacks: PX4, CogniPilot Cerebri, plain Zephyr (selectable per platform).
-* ``west sdk build`` -- manifest select + ``west update`` + build dispatch
-  (PX4 ``make`` shell-out / native Zephyr ``west build``).
+  ``vmu-rt1176`` (CogniPilot VMU on RT1176), ``mr-esc-mcxa`` (AM32 ESC on
+  FRDM-MCXA153).
+* Stacks: PX4, CogniPilot Cerebri, plain Zephyr, AM32 (selectable per
+  platform).
+* ``west sdk build`` -- manifest select + smart source fetch + build dispatch
+  (PX4/AM32 ``make`` shell-out / native Zephyr ``west build``). Sources are
+  fetched via ``west update`` only when missing, preserving local edits across
+  rebuilds; ``--update`` forces a refetch to the manifest revision.
+* ``west sdk update`` -- set the platform manifest and fetch/refresh its
+  sources (``west update``) without building.
 * ``west sdk download`` -- prebuilt artifact retrieval from Nexus
   (backend stubbed; per-platform catalog in ``platforms/<platform>/build.yml``).
 * Per-platform build configuration lives in ``platforms/<platform>/build.yml``;
