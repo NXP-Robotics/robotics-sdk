@@ -1,0 +1,33 @@
+# Build + artifact definition for the mr-esc-mcxa platform.
+#
+# AM32 open-source ESC / motor-controller firmware built for NXP MCXA targets.
+# This file is the single source of truth for how the platform builds and what
+# artifacts it produces; sdk.py contains no platform-specific logic.
+
+platform: mr-esc-mcxa
+default_stack: am32
+
+stacks:
+  # AM32 uses a GNU Makefile build. Each board is a make target (e.g.
+  # 'make FRDM_A153'). A one-time 'make arm_sdk_install' downloads the xPack
+  # arm-none-eabi-gcc toolchain into the AM32 tree (handled as a prebuild step
+  # by sdk.py). Currently only the FRDM-MCXA153 board is supported.
+  am32:
+    kind: am32
+    targets:
+      - FRDM_A153
+    # AM32 emits versioned outputs into obj/ (AM32_<board>_<version>.{elf,bin,hex}).
+    # Collected AS-IS (version kept in the filename) into bin/realtime/.
+    # Globs are resolved at collect time.
+    artifacts:
+      - "obj/AM32_FRDM_A153_*.elf"
+      - "obj/AM32_FRDM_A153_*.bin"
+      - "obj/AM32_FRDM_A153_*.hex"
+
+# Prebuilt artifacts for `west sdk download` (hosted on Nexus).
+# Filenames carry the AM32 version; '*' is a version placeholder resolved
+# against the Nexus listing. (Backend is stubbed for now.)
+download:
+  - {name: "AM32_FRDM_A153_*.elf", dest: bin/realtime/, sha256: TODO}
+  - {name: "AM32_FRDM_A153_*.bin", dest: bin/realtime/, sha256: TODO}
+  - {name: "AM32_FRDM_A153_*.hex", dest: bin/realtime/, sha256: TODO}

@@ -1,0 +1,28 @@
+# NXP Robotics SDK - AM32 stack - mr-esc-mcxa platform
+#
+# AM32 is an open-source ESC / motor-controller firmware. This platform builds
+# it for NXP MCXA targets (currently the FRDM-MCXA153 board -> make target
+# FRDM_A153).
+#
+# NOTE: intentionally NOT pinned yet -- we track upstream 'main' directly for
+# development. Pin to an exact tag/SHA at release time (replace 'revision').
+manifest:
+  version: "1.0"
+
+  self:
+    path: nxp-robotics-sdk
+    west-commands: scripts/west-commands.yml
+
+  remotes:
+    - name: am32-firmware
+      url-base: https://github.com/am32-firmware
+
+  projects:
+    - name: AM32
+      remote: am32-firmware
+      repo-path: AM32.git
+      # Floating on upstream default branch (no release pin yet).
+      revision: main
+      # AM32 pulls its MCU HAL/CMSIS via git submodules.
+      submodules: true
+      path: AM32

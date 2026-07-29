@@ -208,6 +208,8 @@ class Sdk(WestCommand):
                 self._build_px4(cfg, args.jobs)
             elif kind in ("zephyr", "cerebri"):
                 self._build_zephyr(cfg, args.jobs)
+            elif kind == "am32":
+                self._build_am32(cfg, args.jobs)
             else:
                 log.die(f"Unsupported build kind '{kind}'.")
         finally:
@@ -347,18 +349,28 @@ class Sdk(WestCommand):
             pass
 
     def _collect_artifacts(self, src_root, artifacts):
-        """Copy built artifacts into bin/realtime/, preserving basenames."""
+        """Copy built artifacts into bin/realtime/, preserving basenames.
+
+        Each entry may be an exact path or a glob pattern (e.g. containing
+        '*'); globs are expanded relative to src_root and every match is
+        collected.
+        """
         import shutil
+        import glob as _glob
         out_dir = os.path.join(self.topdir, "bin", "realtime")
         os.makedirs(out_dir, exist_ok=True)
         for rel in artifacts:
-            candidate = rel if os.path.isabs(rel) else os.path.join(src_root, rel)
-            if not os.path.isfile(candidate):
-                log.wrn(f"artifact not found (skipped): {candidate}")
+            pattern = rel if os.path.isabs(rel) else os.path.join(src_root, rel)
+            matches = _glob.glob(pattern)
+            if not matches:
+                log.wrn(f"artifact not found (skipped): {pattern}")
                 continue
-            dest = os.path.join(out_dir, os.path.basename(candidate))
-            shutil.copy2(candidate, dest)
-            log.inf(f"collected -> {dest}")
+            for candidate in sorted(matches):
+                if not os.path.isfile(candidate):
+                    continue
+                dest = os.path.join(out_dir, os.path.basename(candidate))
+                shutil.copy2(candidate, dest)
+                log.inf(f"collected -> {dest}")
 
     def _ensure_px4_venv(self, px4_src):
         """Create/refresh a per-workspace venv with PX4's Python requirements.
@@ -431,6 +443,40 @@ class Sdk(WestCommand):
             self._west(cmd, cwd=self.topdir)
 
     # ------------------------------------------------------------------ #
+    # AM32 build (GNU make via shell-out; xPack toolchain via arm_sdk_install)
+    # ------------------------------------------------------------------ #
+    def _build_am32(self, cfg, jobs):
+        am32_src = os.path.join(self.topdir, "AM32")
+        if not os.path.isdir(am32_src):
+            log.die(f"AM32 sources not found at {am32_src}. Run without --no-update.")
+
+        targets = cfg.get("targets") or []
+        if not targets:
+            log.die("AM32 stack defines no 'targets'.")
+
+        # One-time prebuild: AM32 downloads its own xPack arm-none-eabi-gcc
+        # toolchain into the tree via 'make arm_sdk_install'. Idempotent -- the
+        # target no-ops once the SDK is present, but we also stamp it to avoid
+        # re-running the network step on every build.
+        stamp = os.path.join(am32_src, ".arm_sdk_installed")
+        if not os.path.isfile(stamp):
+            log.inf("--- am32 prebuild: make arm_sdk_install (download toolchain) ---")
+            self._run(["make", "arm_sdk_install"], cwd=am32_src)
+            try:
+                open(stamp, "w").write("ok\n")
+            except OSError:
+                pass
+        else:
+            log.inf("am32 toolchain already installed (arm_sdk_install)")
+
+        for target in targets:
+            log.inf(f"--- am32 make {target} (-j{jobs}) ---")
+            self._run(["make", target, f"-j{jobs}"], cwd=am32_src)
+
+        # AM32 emits versioned files into obj/; collect as-is (globs supported).
+        self._collect_artifacts(am32_src, cfg.get("artifacts", []) or [])
+
+    # ------------------------------------------------------------------ #
     # preflight: fail fast on a clean system with a clear, actionable msg
     # ------------------------------------------------------------------ #
     def _preflight(self, kind):
@@ -478,6 +524,27 @@ class Sdk(WestCommand):
             )
             # The Zephyr SDK is not a PATH tool; check it is discoverable.
             self._check_zephyr_sdk()
+        elif kind == "am32":
+            # AM32 downloads its own xPack arm-none-eabi-gcc via
+            # 'make arm_sdk_install', so no host ARM GCC is required -- but the
+            # download + build needs make/git/wget/tar and python3.
+            self._check_tools(
+                kind="AM32 (MCXA firmware)",
+                tools=[
+                    ("make", "GNU make"),
+                    ("git", "Git"),
+                    ("wget", "wget (fetches the xPack toolchain)"),
+                    ("tar", "tar (unpacks the xPack toolchain)"),
+                    ("python3", "Python 3 (binary post-processing)"),
+                ],
+                remedy=(
+                    "Install the listed host tools (e.g. on Ubuntu: "
+                    "sudo apt install make git wget tar python3). The ARM "
+                    "toolchain itself is downloaded automatically by "
+                    "'make arm_sdk_install'. See the Prerequisites section "
+                    "in docs/getting_started.rst."
+                ),
+            )
         else:  # pragma: no cover
             log.wrn(f"No preflight defined for kind '{kind}'; continuing.")
             return
