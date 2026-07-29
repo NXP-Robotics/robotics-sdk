@@ -3,6 +3,7 @@
 Uniform, stack-agnostic interface:
 
     west sdk download --platform <platform> | all
+    west sdk update   --platform <platform> [--stack <stack>]
     west sdk build    --platform <platform> [--stack <stack>]
 
 Both require an initialized west workspace (run ``west init -l nxp-robotics-sdk``
@@ -111,6 +112,17 @@ class Sdk(WestCommand):
         dl.add_argument("-p", "--platform", required=True,
                         help="Platform to download for, or 'all'.")
 
+        up = sub.add_parser(
+            "update",
+            help="Set the platform's manifest and clone/update its sources "
+                 "(west update) without building",
+        )
+        up.add_argument("-p", "--platform", required=True,
+                        help="Platform whose sources to fetch/update.")
+        up.add_argument("-s", "--stack", default=None,
+                        help="Stack to update. Defaults to the platform's "
+                             "default_stack.")
+
         bd = sub.add_parser(
             "build",
             help="Init manifest, clone pinned sources (west update), then build",
@@ -129,6 +141,8 @@ class Sdk(WestCommand):
     def do_run(self, args, unknown):
         if args.action == "download":
             self._do_download(args)
+        elif args.action == "update":
+            self._do_update(args)
         elif args.action == "build":
             self._do_build(args)
         else:  # pragma: no cover
@@ -171,6 +185,30 @@ class Sdk(WestCommand):
             log.inf(f"    TODO would verify: sha256={entry['sha256']}")
 
     # ------------------------------------------------------------------ #
+    # update: fetch/update a platform's sources only (no build)
+    # ------------------------------------------------------------------ #
+    def _do_update(self, args):
+        """Set the platform's manifest, run 'west update', then restore the
+        import-free bootstrap manifest.
+
+        This is the "just bring in the sources" operation: it clones (or
+        updates to the manifest-pinned revision) the upstream projects for the
+        selected (stack, platform) without building anything. As with build,
+        the bootstrap manifest is always restored afterwards so the 'sdk'
+        extension command remains discoverable even if sources are absent.
+        """
+        pdata, _ppath = load_platform(self.topdir, args.platform)
+        stack = resolve_stack(pdata, args.platform, args.stack)
+
+        log.inf(f"=== update: platform={args.platform} stack={stack} ===")
+
+        try:
+            self._fetch_sources(stack, args.platform, do_update=True)
+        finally:
+            self._restore_bootstrap_manifest()
+        log.inf(f"--- update: sources ready under {self.topdir} ---")
+
+    # ------------------------------------------------------------------ #
     # build
     # ------------------------------------------------------------------ #
     def _do_build(self, args):
@@ -190,19 +228,16 @@ class Sdk(WestCommand):
         else:
             log.wrn("Skipping preflight checks (--skip-preflight).")
 
-        # Point the workspace manifest at the (stack, platform) file, update,
-        # then build. The platform manifests use ``import: true``; if left
-        # active after the build, west can no longer discover this 'sdk'
-        # extension command whenever the imported sources are absent. So we
-        # always restore manifest.file to the import-free bootstrap west.yml
-        # afterwards, leaving the workspace in a usable state.
-        manifest_rel = manifest_for(stack, args.platform)
-        self._set_manifest(manifest_rel)
+        # Point the workspace manifest at the (stack, platform) file and clone/
+        # update its sources -- the SAME operation performed by 'sdk update'.
+        # The platform manifests use ``import: true``; if left active after the
+        # build, west can no longer discover this 'sdk' extension command
+        # whenever the imported sources are absent. So we always restore
+        # manifest.file to the import-free bootstrap west.yml afterwards,
+        # leaving the workspace in a usable state.
         try:
-            if not args.no_update:
-                self._west(["update"], cwd=self.topdir)
-            else:
-                log.inf("Skipping 'west update' (--no-update).")
+            self._fetch_sources(stack, args.platform,
+                                 do_update=not args.no_update)
 
             if kind == "px4":
                 self._build_px4(cfg, args.jobs)
@@ -214,6 +249,22 @@ class Sdk(WestCommand):
                 log.die(f"Unsupported build kind '{kind}'.")
         finally:
             self._restore_bootstrap_manifest()
+
+    def _fetch_sources(self, stack, platform, do_update=True):
+        """Set the platform manifest and (optionally) run 'west update'.
+
+        Shared by both 'sdk update' and 'sdk build' so the manifest-selection
+        and source-fetch logic has a single implementation. Does NOT restore
+        the bootstrap manifest -- the caller owns that (build must keep the
+        manifest active through compilation), so restore happens in the
+        caller's ``finally``.
+        """
+        manifest_rel = manifest_for(stack, platform)
+        self._set_manifest(manifest_rel)
+        if do_update:
+            self._west(["update"], cwd=self.topdir)
+        else:
+            log.inf("Skipping 'west update' (--no-update).")
 
     def _restore_bootstrap_manifest(self):
         """Point manifest.file back at the import-free bootstrap west.yml.
