@@ -286,11 +286,11 @@ class Sdk(WestCommand):
             self._fetch_sources(stack, args.platform, do_update=do_update)
 
             if kind == "px4":
-                self._build_px4(cfg, args.jobs, use_venv=args.use_venv)
+                self._build_px4(cfg, args.jobs, args.platform, use_venv=args.use_venv)
             elif kind in ("zephyr", "cerebri"):
-                self._build_zephyr(cfg, args.jobs)
+                self._build_zephyr(cfg, args.jobs, args.platform)
             elif kind == "am32":
-                self._build_am32(cfg, args.jobs)
+                self._build_am32(cfg, args.jobs, args.platform)
             else:
                 log.die(f"Unsupported build kind '{kind}'.")
         finally:
@@ -378,7 +378,7 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # PX4 build (native make via shell-out)
     # ------------------------------------------------------------------ #
-    def _build_px4(self, cfg, jobs, use_venv=True):
+    def _build_px4(self, cfg, jobs, platform, use_venv=True):
         px4_src = os.path.join(self.topdir, "PX4-Autopilot")
         if not os.path.isdir(px4_src):
             log.die(f"PX4 sources not found at {px4_src}. "
@@ -419,14 +419,14 @@ class Sdk(WestCommand):
             self._run(["make", target, f"-j{jobs}"], cwd=px4_src, env=env)
 
         self._collect_artifacts(os.path.join(px4_src, "build"),
-                                cfg.get("artifacts", []) or [])
+                                cfg.get("artifacts", []) or [], platform)
 
         # Optional per-platform post-build signing (navq95 uses MCUboot).
         # No-op unless the platform's build.yml defines a 'sign' block, so
         # sdk.py stays generic.
-        self._sign_px4(px4_src, cfg.get("sign"), env, venv_bin)
+        self._sign_px4(px4_src, cfg.get("sign"), env, venv_bin, platform)
 
-    def _sign_px4(self, px4_src, sign, env, venv_bin):
+    def _sign_px4(self, px4_src, sign, env, venv_bin, platform):
         """Sign collected .bin images with MCUboot imgtool (config-driven).
 
         The 'sign' block comes from the platform's build.yml (present only for
@@ -437,7 +437,7 @@ class Sdk(WestCommand):
         if not sign:
             return
 
-        out_dir = os.path.join(self.topdir, "bin", "realtime")
+        out_dir = os.path.join(self.topdir, "bin", platform, "realtime")
         scripts_dir = os.path.join(px4_src, "scripts")
         tool_rel = sign.get("tool", "scripts/imgtool.py")
         tool = tool_rel if os.path.isabs(tool_rel) else os.path.join(px4_src, tool_rel)
@@ -512,7 +512,7 @@ class Sdk(WestCommand):
         except OSError:
             pass
 
-    def _collect_artifacts(self, src_root, artifacts):
+    def _collect_artifacts(self, src_root, artifacts, platform):
         """Copy built artifacts into bin/realtime/, preserving basenames.
 
         Each entry may be an exact path or a glob pattern (e.g. containing
@@ -521,7 +521,7 @@ class Sdk(WestCommand):
         """
         import shutil
         import glob as _glob
-        out_dir = os.path.join(self.topdir, "bin", "realtime")
+        out_dir = os.path.join(self.topdir, "bin", platform, "realtime")
         os.makedirs(out_dir, exist_ok=True)
         for rel in artifacts:
             pattern = rel if os.path.isabs(rel) else os.path.join(src_root, rel)
@@ -614,7 +614,7 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # Zephyr / Cerebri build (native west build)
     # ------------------------------------------------------------------ #
-    def _build_zephyr(self, cfg, jobs):
+    def _build_zephyr(self, cfg, jobs, platform):
         boards = cfg.get("boards") or []
         if not boards:
             log.die("Zephyr/Cerebri stack defines no 'boards'.")
@@ -632,7 +632,7 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # AM32 build (GNU make via shell-out; xPack toolchain via arm_sdk_install)
     # ------------------------------------------------------------------ #
-    def _build_am32(self, cfg, jobs):
+    def _build_am32(self, cfg, jobs, platform):
         am32_src = os.path.join(self.topdir, "AM32")
         if not os.path.isdir(am32_src):
             log.die(f"AM32 sources not found at {am32_src}. "
@@ -662,7 +662,7 @@ class Sdk(WestCommand):
             self._run(["make", target, f"-j{jobs}"], cwd=am32_src)
 
         # AM32 emits versioned files into obj/; collect as-is (globs supported).
-        self._collect_artifacts(am32_src, cfg.get("artifacts", []) or [])
+        self._collect_artifacts(am32_src, cfg.get("artifacts", []) or [], platform)
 
     # ------------------------------------------------------------------ #
     # preflight: fail fast on a clean system with a clear, actionable msg
