@@ -145,6 +145,14 @@ class Sdk(WestCommand):
                              "rebuilds.")
         bd.add_argument("--skip-preflight", action="store_true",
                         help="Skip the toolchain/dependency preflight checks.")
+        bd.add_argument("--no-venv", dest="use_venv", action="store_false",
+                        default=True,
+                        help="Do NOT create/use a per-workspace Python venv "
+                             "for the PX4 build. Uses the current Python "
+                             "environment instead (you are responsible for "
+                             "having PX4's Python requirements, e.g. "
+                             "kconfiglib, installed). By default a dedicated "
+                             ".px4-venv is created and populated.")
         return parser
 
     def do_run(self, args, unknown):
@@ -265,7 +273,7 @@ class Sdk(WestCommand):
             self._fetch_sources(stack, args.platform, do_update=do_update)
 
             if kind == "px4":
-                self._build_px4(cfg, args.jobs)
+                self._build_px4(cfg, args.jobs, use_venv=args.use_venv)
             elif kind in ("zephyr", "cerebri"):
                 self._build_zephyr(cfg, args.jobs)
             elif kind == "am32":
@@ -357,25 +365,37 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # PX4 build (native make via shell-out)
     # ------------------------------------------------------------------ #
-    def _build_px4(self, cfg, jobs):
+    def _build_px4(self, cfg, jobs, use_venv=True):
         px4_src = os.path.join(self.topdir, "PX4-Autopilot")
         if not os.path.isdir(px4_src):
             log.die(f"PX4 sources not found at {px4_src}. "
                     f"Run 'west sdk update' (or 'west sdk build --update') first.")
 
         env = os.environ.copy()
-        venv_bin = self._ensure_px4_venv(px4_src)
-        self._ensure_ccache(venv_bin)
-        env["PATH"] = venv_bin + os.pathsep + env.get("PATH", "")
-        # PX4's CMake resolves Python via find_package/PATH and runs
-        # "${PYTHON_EXECUTABLE} -c 'import menuconfig'" (kconfiglib). Point it
-        # explicitly at the venv interpreter (which has PX4's requirements
-        # incl. kconfiglib) so a system python without kconfiglib is not used.
-        venv_py = os.path.join(venv_bin, "python")
-        if os.path.isfile(venv_py):
-            env["PYTHON_EXECUTABLE"] = venv_py
-            env["VIRTUAL_ENV"] = os.path.dirname(venv_bin)
-            env.pop("PYTHONHOME", None)
+        if use_venv:
+            venv_bin = self._ensure_px4_venv(px4_src)
+            self._ensure_ccache(venv_bin)
+            env["PATH"] = venv_bin + os.pathsep + env.get("PATH", "")
+            # PX4's CMake resolves Python via find_package/PATH and runs
+            # "${PYTHON_EXECUTABLE} -c 'import menuconfig'" (kconfiglib). Point it
+            # explicitly at the venv interpreter (which has PX4's requirements
+            # incl. kconfiglib) so a system python without kconfiglib is not used.
+            venv_py = os.path.join(venv_bin, "python")
+            if os.path.isfile(venv_py):
+                env["PYTHON_EXECUTABLE"] = venv_py
+                env["VIRTUAL_ENV"] = os.path.dirname(venv_bin)
+                env.pop("PYTHONHOME", None)
+        else:
+            # --no-venv: build against the current Python environment as-is.
+            # The caller is responsible for having PX4's Python requirements
+            # (e.g. kconfiglib, which provides the 'menuconfig' module PX4's
+            # kconfig.cmake needs) installed. Point PX4's CMake at the current
+            # interpreter so it does not fall back to an unrelated python.
+            log.wrn("--no-venv: skipping PX4 venv; using the current Python "
+                    "environment. Ensure PX4's Python requirements "
+                    "(e.g. kconfiglib) are installed.")
+            venv_bin = None
+            env["PYTHON_EXECUTABLE"] = sys.executable
 
         targets = cfg.get("targets") or []
         if not targets:
@@ -419,8 +439,8 @@ class Sdk(WestCommand):
         # imgtool needs a few third-party deps (click, cryptography, intelhex,
         # pyyaml) that are NOT in PX4's requirements.txt. Install them into the
         # workspace venv (idempotent) before signing.
-        py = os.path.join(venv_bin, "python")
-        py = py if os.path.isfile(py) else sys.executable
+        py = os.path.join(venv_bin, "python") if venv_bin else None
+        py = py if (py and os.path.isfile(py)) else sys.executable
         self._ensure_imgtool_deps(py)
 
         # imgtool imports its sibling package; make it importable.

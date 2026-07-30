@@ -93,6 +93,18 @@ west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
 
 `--stack` is optional; each platform has a sensible default (see table).
 
+**Python venv (PX4 only).** By default a PX4 build creates and uses a
+per-workspace virtual environment (`.px4-venv`) populated with PX4's Python
+requirements. Pass `--no-venv` to skip it and build against the current Python
+environment instead — in that case you are responsible for having PX4's Python
+requirements (e.g. `kconfiglib`) installed:
+
+```console
+west sdk build --platform tropic                    # default: create/use .px4-venv
+west sdk build --platform tropic --no-venv          # use the current Python env
+```
+
+
 **Fetching sources.** By default `build` runs `west update` **only when the
 manifest's project directories are missing**, so local edits to already-cloned
 sources are preserved across rebuilds. Pass `--update` to force a refetch
