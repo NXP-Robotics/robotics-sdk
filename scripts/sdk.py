@@ -153,6 +153,9 @@ class Sdk(WestCommand):
                              "having PX4's Python requirements, e.g. "
                              "kconfiglib, installed). By default a dedicated "
                              ".px4-venv is created and populated.")
+
+        lst = sub.add_parser("list", help="List all supported platforms")
+
         return parser
 
     def do_run(self, args, unknown):
@@ -162,8 +165,18 @@ class Sdk(WestCommand):
             self._do_update(args)
         elif args.action == "build":
             self._do_build(args)
+        elif args.action == "list":
+            self._do_list(args)
         else:  # pragma: no cover
             log.die(f"Unknown action: {args.action}")
+
+    def _do_list(self, args):
+        platforms = all_platforms(self.topdir)
+        if not platforms:
+            log.die("No platforms discovered under platforms/*/build.yml.")
+
+        for plat in platforms:
+            log.inf(plat)
 
     # ------------------------------------------------------------------ #
     # download
