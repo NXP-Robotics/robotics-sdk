@@ -21,8 +21,8 @@ Common (all stacks)
 ~~~~~~~~~~~~~~~~~~~~
 
 * **Python 3.10+** and ``west`` (``pip install west pyyaml``)
-* **Git** (with SSH access to any private forks a manifest pins, e.g. the
-  NavQ95 PX4 fork ``git@github.com:NXP-Robotics/PX4-Autopilot-NXP.git``)
+* **Git** (all manifests pin public remotes cloned over HTTPS, e.g. the
+  NavQ95 PX4 fork ``https://github.com/NXP-Robotics/PX4-Autopilot.git``)
 * **CMake** (>= 3.20) and **Ninja**
 
 PX4 targets (NuttX firmware)

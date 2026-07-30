@@ -31,8 +31,8 @@ Before building, `west sdk build` runs a **preflight check** that verifies the
 required tools and fails fast (with the exact remedy) if any are missing. Pass
 `--skip-preflight` to bypass it.
 
-- **Common:** Python 3.10+, `west` (`pip install west pyyaml`), `git` (with SSH
-  access to any private forks a manifest pins), `cmake` (>= 3.20), `ninja`.
+- **Common:** Python 3.10+, `west` (`pip install west pyyaml`), `git` (all
+  manifests pin public remotes cloned over HTTPS), `cmake` (>= 3.20), `ninja`.
 - **PX4 targets:** ARM bare-metal GCC (`arm-none-eabi-gcc`), `make`. Easiest on
   Ubuntu: `bash PX4-Autopilot/Tools/setup/ubuntu.sh` (after sources are cloned).
 - **Zephyr / Cerebri targets:** the **Zephyr SDK** + `dtc`; export

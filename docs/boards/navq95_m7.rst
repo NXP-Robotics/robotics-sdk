@@ -7,10 +7,10 @@ Ubuntu image is delivered separately as a WIC (see :doc:`../prebuilt_binaries`).
 
 .. note::
 
-   NavQ95 PX4 support is **not public**: it is built from NXP's private PX4
-   fork (``NXP-Robotics/PX4-Autopilot-NXP``, board ``imx95``). The builder must
-   have SSH access to the ``NXP-Robotics`` GitHub organization. See
-   ``manifests/px4/navq95_m7.yml`` for the pinned remote and revision.
+   NavQ95 PX4 support is built from NXP's public PX4 fork
+   (``NXP-Robotics/PX4-Autopilot``, board ``imx95``), cloned over HTTPS with no
+   credentials required. See ``manifests/px4/navq95_m7.yml`` for the pinned
+   remote and revision.
 
 Build
 -----
