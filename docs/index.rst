@@ -11,7 +11,7 @@ system, and provides prebuilt artifacts through Nexus.
    :caption: Contents
 
    getting_started
-   boards/navq95_m7
+   boards/navq95
    boards/tropic
    boards/vmu-rt1176
    boards/mr-esc-mcxa
@@ -29,7 +29,7 @@ Supported platforms and stacks
      - Cerebri
      - Zephyr
      - AM32
-   * - ``navq95_m7``
+   * - ``navq95``
      - yes
      -
      - yes

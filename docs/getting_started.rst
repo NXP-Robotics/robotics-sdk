@@ -91,14 +91,14 @@ Pull NXP prebuilt firmware (and, for NavQ95, the Ubuntu image) from Nexus:
 
 .. code-block:: console
 
-   west sdk download --platform navq95_m7    # firmware + ubuntu .wic
+   west sdk download --platform navq95    # firmware + ubuntu .wic
    west sdk download --platform tropic       # firmware only
    west sdk download --platform vmu-rt1176   # firmware only
    west sdk download --platform all          # everything
 
 Artifacts land under ``bin/<platform>/``: firmware directly in
 ``bin/<platform>/`` for tropic, vmu-rt1176 and mr-esc-mcxa, and in
-``bin/navq95_m7/realtime/`` (plus the Ubuntu WIC in ``bin/navq95_m7/ubuntu/``)
+``bin/navq95/realtime/`` (plus the Ubuntu WIC in ``bin/navq95/ubuntu/``)
 for NavQ95. Checksums are verified automatically.
 
 .. note::
@@ -117,8 +117,8 @@ PX4 / Zephyr / Cerebri sources when needed, then builds the artifacts:
 .. code-block:: console
 
    west sdk build --platform tropic                    # PX4 (default stack)
-   west sdk build --platform navq95_m7                 # PX4 (default stack)
-   west sdk build --platform navq95_m7 --stack zephyr  # plain Zephyr
+   west sdk build --platform navq95                 # PX4 (default stack)
+   west sdk build --platform navq95 --stack zephyr  # plain Zephyr
    west sdk build --platform vmu-rt1176 --stack cerebri
 
 ``--stack`` is optional; each platform has a sensible default.

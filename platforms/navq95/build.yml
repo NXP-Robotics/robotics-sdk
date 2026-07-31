@@ -1,26 +1,26 @@
-# Build + artifact definition for the navq95_m7 platform (NavQ95, i.MX95 M7).
+# Build + artifact definition for the navq95 platform (NavQ95, i.MX95 M7).
 #
 # This file is the single source of truth for how each stack builds this
 # platform and what artifacts it produces. `west sdk build` / `west sdk
 # download` read it generically; sdk.py contains no platform-specific logic.
 
-platform: navq95_m7
+platform: navq95
 default_stack: px4
 
 # NavQ95 keeps a realtime/ sub-dir because it also ships an Ubuntu WIC image
-# under bin/navq95_m7/ubuntu/; the M7 firmware lives in bin/navq95_m7/realtime/.
+# under bin/navq95/ubuntu/; the M7 firmware lives in bin/navq95/realtime/.
 realtime_subdir: realtime
 
 stacks:
   # NavQ95 PX4 support is NOT public: it lives on NXP's private PX4 fork as the
-  # `imx95` board (see manifests/px4/navq95_m7.yml for the pinned remote/SHA).
+  # `imx95` board (see manifests/px4/navq95.yml for the pinned remote/SHA).
   px4:
     kind: px4
     targets:
       - nxp_imx95_default
       - nxp_imx95_ddr
     # Built outputs (relative to PX4-Autopilot/build/) collected into
-    # bin/navq95_m7/realtime/. Filenames preserved as-is (rename upstream in PX4).
+    # bin/navq95/realtime/. Filenames preserved as-is (rename upstream in PX4).
     artifacts:
       - nxp_imx95_default/nxp_imx95_default.elf
       - nxp_imx95_default/nxp_imx95_default.bin
@@ -29,9 +29,9 @@ stacks:
 
     # NavQ95-only post-build step: sign the collected .bin images with
     # MCUboot's imgtool (shipped inside the PX4 tree at scripts/imgtool.py).
-    # Runs after artifacts land in bin/navq95_m7/realtime/; 'in'/'out' are basenames
+    # Runs after artifacts land in bin/navq95/realtime/; 'in'/'out' are basenames
     # within that directory. Producing <name>.mcuboot.bin alongside the raw
-    # .bin. Because this key exists only for navq95_m7, signing is applied to
+    # .bin. Because this key exists only for navq95, signing is applied to
     # this platform only -- sdk.py stays generic.
     # NOTE: only the default (TCM) image is signed; the DDR image is NOT.
     sign:
@@ -56,8 +56,8 @@ stacks:
 # Prebuilt artifacts for `west sdk download` (hosted on Nexus).
 # The Ubuntu A-core WIC image is specific to NavQ95.
 download:
-  # dest is relative to bin/<platform>/: firmware -> bin/navq95_m7/realtime/,
-  # the Ubuntu WIC -> bin/navq95_m7/ubuntu/.
+  # dest is relative to bin/<platform>/: firmware -> bin/navq95/realtime/,
+  # the Ubuntu WIC -> bin/navq95/ubuntu/.
   - {name: nxp_imx95_default.elf,         dest: realtime/, sha256: TODO}
   - {name: nxp_imx95_default.bin,         dest: realtime/, sha256: TODO}
   - {name: nxp_imx95_default.mcuboot.bin, dest: realtime/, sha256: TODO}

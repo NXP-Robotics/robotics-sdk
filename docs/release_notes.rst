@@ -5,7 +5,7 @@ Release Notes
 ---------
 
 * Initial NXP Robotics SDK superproject scaffold.
-* Platforms: ``navq95_m7`` (i.MX95 M7), ``tropic`` (mr-tropic),
+* Platforms: ``navq95`` (i.MX95 M7), ``tropic`` (mr-tropic),
   ``vmu-rt1176`` (CogniPilot VMU on RT1176), ``mr-esc-mcxa`` (AM32 ESC on
   FRDM-MCXA153).
 * Stacks: PX4, CogniPilot Cerebri, plain Zephyr, AM32 (selectable per

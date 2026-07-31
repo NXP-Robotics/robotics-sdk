@@ -10,13 +10,13 @@ artifacts through Nexus.
 
 | Platform       | PX4 | Cerebri | Zephyr | AM32 | Prebuilt artifacts                                   |
 |----------------|:---:|:-------:|:------:|:----:|------------------------------------------------------|
-| `navq95_m7`    | ✅  |         |   ✅   |      | `nxp_imx95_default.elf/.bin` (+ `.mcuboot.bin`), `nxp_imx95_ddr.elf/.bin` (+ Ubuntu `.wic`) |
+| `navq95`    | ✅  |         |   ✅   |      | `nxp_imx95_default.elf/.bin` (+ `.mcuboot.bin`), `nxp_imx95_ddr.elf/.bin` (+ Ubuntu `.wic`) |
 | `tropic`       | ✅  |         |   ✅   |      | `nxp_mr-tropic_default.bin`, `nxp_mr-tropic_bootloader.bin` |
 | `vmu-rt1176`   | ✅  |   ✅    |   ✅   |      | `nxp_fmurt1176_default.elf/.bin`                     |
 | `mr-esc-mcxa`  |     |         |        |  ✅  | `AM32_FRDM_A153_<version>.elf/.bin/.hex`             |
 
 > The Ubuntu WIC image is specific to the NavQ95 A-core and is only available
-> for `navq95_m7`. On `navq95_m7`, the PX4 **default (TCM)** image is also
+> for `navq95`. On `navq95`, the PX4 **default (TCM)** image is also
 > MCUboot-signed (`nxp_imx95_default.mcuboot.bin`); the DDR image is not.
 
 ## Prerequisites
@@ -64,15 +64,15 @@ cd ws
 Pulls NXP prebuilt firmware — and, for NavQ95, the Ubuntu image — from Nexus:
 
 ```console
-west sdk download --platform navq95_m7    # firmware + ubuntu .wic
+west sdk download --platform navq95    # firmware + ubuntu .wic
 west sdk download --platform tropic       # firmware only
 west sdk download --platform vmu-rt1176   # firmware only
 west sdk download --platform all          # everything
 ```
 
 Artifacts land under `bin/<platform>/`: firmware directly in `bin/<platform>/`
-for tropic, vmu-rt1176 and mr-esc-mcxa, and in `bin/navq95_m7/realtime/` (plus
-the Ubuntu WIC in `bin/navq95_m7/ubuntu/`) for NavQ95; checksums are verified.
+for tropic, vmu-rt1176 and mr-esc-mcxa, and in `bin/navq95/realtime/` (plus
+the Ubuntu WIC in `bin/navq95/ubuntu/`) for NavQ95; checksums are verified.
 
 > **Status:** the Nexus backend is not wired up yet. `download` currently
 > resolves and prints exactly what it *would* fetch (from each platform's
@@ -86,8 +86,8 @@ missing** (smart auto-fetch), then builds:
 
 ```console
 west sdk build --platform tropic                    # PX4 (default stack)
-west sdk build --platform navq95_m7                 # PX4 (default stack)
-west sdk build --platform navq95_m7 --stack zephyr  # plain Zephyr
+west sdk build --platform navq95                 # PX4 (default stack)
+west sdk build --platform navq95 --stack zephyr  # plain Zephyr
 west sdk build --platform vmu-rt1176 --stack cerebri
 west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
 ```
@@ -149,7 +149,7 @@ west sdk build  --platform tropic --update          # discard edits, rebuild pin
   clone/refresh its sources **without building**.
 - **`west sdk download`** reads each platform's `build.yml` `download:` section
   and pulls the matching prebuilt artifacts from Nexus (WIC included only for
-  `navq95_m7`).
+  `navq95`).
 
 ## Repository layout
 

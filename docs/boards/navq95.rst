@@ -1,5 +1,5 @@
-navq95_m7 (i.MX95 M7)
-=====================
+navq95 (i.MX95 M7)
+==================
 
 The NavQ95 (MR-NavQ95B) realtime domain runs on the i.MX95 Cortex-M7. It
 supports the **PX4** (default) and plain **Zephyr** stacks. The NavQ95 A-core
@@ -9,7 +9,7 @@ Ubuntu image is delivered separately as a WIC (see :doc:`../prebuilt_binaries`).
 
    NavQ95 PX4 support is built from NXP's public PX4 fork
    (``NXP-Robotics/PX4-Autopilot``, board ``imx95``), cloned over HTTPS with no
-   credentials required. See ``manifests/px4/navq95_m7.yml`` for the pinned
+   credentials required. See ``manifests/px4/navq95.yml`` for the pinned
    remote and revision.
 
 Build
@@ -17,11 +17,11 @@ Build
 
 .. code-block:: console
 
-   west sdk build --platform navq95_m7                 # PX4 (default)
-   west sdk build --platform navq95_m7 --stack zephyr  # plain Zephyr
+   west sdk build --platform navq95                 # PX4 (default)
+   west sdk build --platform navq95 --stack zephyr  # plain Zephyr
 
-PX4 artifacts (collected into ``bin/navq95_m7/realtime/``; the Ubuntu WIC
-downloads to ``bin/navq95_m7/ubuntu/``):
+PX4 artifacts (collected into ``bin/navq95/realtime/``; the Ubuntu WIC
+downloads to ``bin/navq95/ubuntu/``):
 
 * ``nxp_imx95_default.elf`` / ``nxp_imx95_default.bin``  -- M7 image (NOR Flash)
 * ``nxp_imx95_ddr.elf`` / ``nxp_imx95_ddr.bin``          -- M7 image from DDR
@@ -41,7 +41,7 @@ producing a ``.mcuboot.bin`` alongside the raw ``.bin``:
    (``nxp_imx95_ddr.bin``) is intentionally **not** signed.
 
 The signing parameters live in the ``sign:`` block of
-``platforms/navq95_m7/build.yml`` and are applied automatically -- equivalent
+``platforms/navq95/build.yml`` and are applied automatically -- equivalent
 to:
 
 .. code-block:: console
@@ -61,6 +61,6 @@ Download prebuilt
 
 .. code-block:: console
 
-   west sdk download --platform navq95_m7   # firmware (raw + signed) + ubuntu .wic
+   west sdk download --platform navq95   # firmware (raw + signed) + ubuntu .wic
 
 See :doc:`getting_started` for the required one-time ``west init`` bootstrap.

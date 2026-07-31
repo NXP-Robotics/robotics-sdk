@@ -1,4 +1,4 @@
-# NXP Robotics SDK - Zephyr stack - navq95_m7 platform (MR-NavQ95B, i.MX95 M7)
+# NXP Robotics SDK - Zephyr stack - navq95 platform (MR-NavQ95B, i.MX95 M7)
 #
 # NavQ95 (board target mr_navq95b/mimx9596/m7) is currently supported only on
 # Zephyr 'main' (targeting the 4.4 release), not yet in a tagged stable release.
