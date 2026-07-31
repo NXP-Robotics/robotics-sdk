@@ -18,7 +18,7 @@ manifest:
   projects:
     - name: PX4-Autopilot
       remote: nxp-robotics
-      repo-path: PX4-Autopilot.git
+      repo-path: px4-autopilot-nxp.git
       # Pinned to the validated NavQ95 (imx95) commit on branch
       # pr-nuttx-12-12-0-imx95.
       revision: 36c6c23a7e982dd7019cf98a028df1b227bb5e8d
