@@ -17,7 +17,8 @@ manifest:
   projects:
     - name: PX4-Autopilot
       remote: px4
-      # TODO: pin to the exact SHA/tag validated for this SDK release.
-      revision: main
+      # Pinned to the top of upstream PX4 release/1.17 validated for
+      # this SDK release.
+      revision: 6249cc3d892e161f5834d8976e41b5ee27443864
       submodules: true
       path: PX4-Autopilot
