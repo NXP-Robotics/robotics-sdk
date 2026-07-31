@@ -6,11 +6,18 @@ default_stack: px4
 stacks:
   px4:
     kind: px4
+    # NXP MR-VMU-RT1176 is upstream PX4's FMUv6X-RT reference design board
+    # (px4_fmu-v6xrt). See
+    # https://docs.px4.io/main/en/flight_controller/nxp_mr_vmu_rt1176.
+    # App first, bootloader next.
     targets:
-      - nxp_fmurt1176_default
+      - px4_fmu-v6xrt_default
+      - px4_fmu-v6xrt_bootloader
     artifacts:
-      - nxp_fmurt1176_default/nxp_fmurt1176_default.elf
-      - nxp_fmurt1176_default/nxp_fmurt1176_default.bin
+      - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.elf
+      - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.bin
+      - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.elf
+      - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.bin
 
   cerebri:
     kind: zephyr
@@ -25,5 +32,7 @@ stacks:
     app: null
 
 download:
-  - {name: nxp_fmurt1176_default.elf, dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_fmurt1176_default.bin, dest: bin/realtime/, sha256: TODO}
+  - {name: px4_fmu-v6xrt_default.elf,    dest: bin/realtime/, sha256: TODO}
+  - {name: px4_fmu-v6xrt_default.bin,    dest: bin/realtime/, sha256: TODO}
+  - {name: px4_fmu-v6xrt_bootloader.elf, dest: bin/realtime/, sha256: TODO}
+  - {name: px4_fmu-v6xrt_bootloader.bin, dest: bin/realtime/, sha256: TODO}
