@@ -13,7 +13,7 @@ manifest:
 
   remotes:
     - name: nxp-robotics
-      url-base: https://github.com/NXP-Robotics
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
     - name: PX4-Autopilot

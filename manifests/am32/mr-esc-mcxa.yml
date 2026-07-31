@@ -15,14 +15,14 @@ manifest:
 
   remotes:
     - name: am32-firmware
-      url-base: https://github.com/am32-firmware
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
     - name: AM32
       remote: am32-firmware
-      repo-path: AM32.git
+      repo-path: am32.git
       # Floating on upstream default branch (no release pin yet).
-      revision: main
+      revision: 85626b55341816661cb6d5c9402fcf39bcbeb2f6
       # AM32 pulls its MCU HAL/CMSIS via git submodules.
       submodules: true
       path: AM32

@@ -12,10 +12,10 @@ manifest:
 
   remotes:
     - name: px4
-      url-base: https://github.com/PX4
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
-    - name: PX4-Autopilot
+    - name: px4-autopilot-nxp
       remote: px4
       # Pinned to the top of upstream PX4 release/1.17 validated for
       # this SDK release.

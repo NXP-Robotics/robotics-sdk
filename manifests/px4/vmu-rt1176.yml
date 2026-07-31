@@ -10,7 +10,7 @@ manifest:
 
   remotes:
     - name: px4
-      url-base: https://github.com/PX4
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
     - name: PX4-Autopilot
