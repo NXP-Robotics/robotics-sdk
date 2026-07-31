@@ -117,6 +117,16 @@ west sdk build  --platform tropic                   # first build auto-clones; l
 west sdk build  --platform tropic --update          # discard edits, rebuild pinned revision
 ```
 
+> **Switching platforms is destructive.** All PX4 platforms share the same
+> `PX4-Autopilot/` workspace directory. If you switch to a different platform
+> (or its pinned revision changed), `build`/`update` detect that the checked-out
+> sources belong to another platform — by comparing the git remote and revision
+> against the target manifest — and **purge and re-clone** them for the requested
+> platform. Any local edits to the previous platform's tree are discarded on the
+> switch. This prevents building one platform against another's sources (e.g.
+> building `vmu-rt1176` on a NavQ95-fork checkout, where the make target does not
+> exist).
+
 ## How it works
 
 - **Manifests** (`manifests/<stack>/<platform>.yml`) pin the exact upstream

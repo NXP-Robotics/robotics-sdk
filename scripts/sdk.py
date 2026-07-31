@@ -10,6 +10,13 @@ Uniform, stack-agnostic interface:
 edits survive rebuilds; pass ``--update`` to force a refetch (which resets
 sources to the manifest revision and discards local changes).
 
+Switching platforms is DESTRUCTIVE: all PX4 platforms share the same
+``PX4-Autopilot/`` workspace dir, so if the currently-checked-out sources
+belong to a different platform (different remote or pinned revision), they are
+purged and re-cloned for the requested platform. This prevents building one
+platform against another's tree (e.g. vmu-rt1176 on the NavQ95 fork, where the
+make target does not exist).
+
 Both require an initialized west workspace (run ``west init -l nxp-robotics-sdk``
 once) because west only discovers extension commands after init.
 
@@ -232,6 +239,11 @@ class Sdk(WestCommand):
 
         log.inf(f"=== update: platform={args.platform} stack={stack} ===")
 
+        # A platform switch is destructive: if the workspace currently holds a
+        # different platform's sources (different remote/revision), purge them
+        # before fetching so 'west update' cannot leave a stale tree behind.
+        self._purge_on_mismatch(stack, args.platform)
+
         try:
             self._fetch_sources(stack, args.platform, do_update=True)
         finally:
@@ -270,9 +282,18 @@ class Sdk(WestCommand):
         # whenever the imported sources are absent. So we always restore
         # manifest.file to the import-free bootstrap west.yml afterwards,
         # leaving the workspace in a usable state.
+        # A platform switch is destructive: if the workspace holds another
+        # platform's sources (different remote/revision), purge them so the
+        # build never runs against a stale tree (e.g. building vmu-rt1176 on a
+        # NavQ95-fork checkout, where the make target does not exist).
+        purged = self._purge_on_mismatch(stack, args.platform)
+
         present = self._sources_present(stack, args.platform)
         do_update = args.update or not present
-        if args.update and present:
+        if purged:
+            log.inf("Sources belonged to a different platform and were purged; "
+                    "fetching this platform's pinned sources.")
+        elif args.update and present:
             log.inf("--update: refetching sources "
                     "(local changes will be reset to the manifest revision).")
         elif not present:
@@ -355,6 +376,139 @@ class Sdk(WestCommand):
             # missing so we (re)fetch and self-heal.
             if not os.path.isdir(d) or not os.listdir(d):
                 return False
+        return True
+
+    def _manifest_projects(self, stack, platform):
+        """Return the projects a (stack, platform) manifest declares, resolved
+        to what west would actually clone.
+
+        Each item is a dict: {'path', 'name', 'url', 'revision'}. 'url' is the
+        fully-resolved fetch URL (remote url-base + repo-path/name), matching
+        what 'git remote get-url origin' reports after a clone. Excludes
+        'self'. Keeps sdk.py free of per-platform knowledge -- everything is
+        read from the manifest.
+        """
+        manifest_rel = manifest_for(stack, platform)
+        manifest_abs = os.path.join(_sdk_root(self.topdir), manifest_rel)
+        with open(manifest_abs) as f:
+            data = (yaml.safe_load(f) or {}).get("manifest", {}) or {}
+        remotes = {r.get("name"): (r.get("url-base") or "").rstrip("/")
+                   for r in data.get("remotes", []) or []}
+        out = []
+        for proj in data.get("projects", []) or []:
+            name = proj.get("name")
+            if not name:
+                continue
+            path = proj.get("path") or name
+            base = remotes.get(proj.get("remote"), "")
+            repo = proj.get("repo-path") or name
+            url = f"{base}/{repo}" if base else repo
+            out.append({"path": path, "name": name, "url": url,
+                        "revision": proj.get("revision")})
+        return out
+
+    @staticmethod
+    def _git_out(argv, cwd):
+        """Run a git command and return stripped stdout, or None on failure."""
+        try:
+            res = subprocess.run(["git", *argv], cwd=cwd, check=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                 text=True)
+            return res.stdout.strip()
+        except (subprocess.CalledProcessError, OSError):
+            return None
+
+    @staticmethod
+    def _same_remote(a, b):
+        """Compare two git remote URLs, ignoring a trailing '.git' and case."""
+        def norm(u):
+            return (u or "").strip().rstrip("/").removesuffix(".git").lower()
+        return norm(a) == norm(b)
+
+    def _sources_match(self, stack, platform):
+        """True only if every present project checkout matches the manifest's
+        remote URL AND is checked out at the manifest revision.
+
+        Returns False if any declared project is present but points at a
+        different remote or a different commit (i.e. it belongs to another
+        platform / an older pin). Missing projects are NOT a mismatch here --
+        absence is handled by _sources_present (they simply get fetched).
+        """
+        try:
+            projects = self._manifest_projects(stack, platform)
+        except Exception as exc:  # noqa: BLE001 - defensive
+            log.wrn(f"Could not read manifest projects ({exc}); "
+                    f"treating sources as mismatched to force a refetch.")
+            return False
+        for proj in projects:
+            d = os.path.join(self.topdir, proj["path"])
+            if not os.path.isdir(d) or not os.listdir(d):
+                continue  # absent -> not a 'mismatch', just needs fetching
+            # Remote check. west names the remote after the manifest's
+            # 'remote:' entry (NOT necessarily 'origin'), so compare the
+            # manifest URL against ALL configured remotes; a match on any one
+            # means the right upstream is wired up.
+            remotes_out = self._git_out(["remote", "-v"], cwd=d)
+            if remotes_out:
+                urls = set()
+                for line in remotes_out.splitlines():
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        urls.add(parts[1])
+                if urls and not any(self._same_remote(u, proj["url"]) for u in urls):
+                    log.inf(f"  remote mismatch in {proj['path']}: "
+                            f"have {sorted(urls)}, want {proj['url']!r}")
+                    return False
+            # Revision check: resolve the pinned revision and compare to HEAD.
+            want = proj.get("revision")
+            if want:
+                head = self._git_out(["rev-parse", "HEAD"], cwd=d)
+                target = self._git_out(["rev-parse", f"{want}^{{commit}}"], cwd=d)
+                # If we cannot resolve the target locally, be conservative and
+                # treat it as a mismatch so west (re)fetches it.
+                if head is None or target is None or head != target:
+                    log.inf(f"  revision mismatch in {proj['path']}: "
+                            f"HEAD={head}, want {want} ({target}).")
+                    return False
+        return True
+
+    def _purge_sources(self, stack, platform):
+        """Delete the workspace project dirs declared by the (stack, platform)
+        manifest. Used to make a platform switch destructive.
+
+        Only removes manifest-declared project paths (never the SDK repo, and
+        never bin/ / build/ / .px4-venv). Logs each removal.
+        """
+        import shutil
+        try:
+            projects = self._manifest_projects(stack, platform)
+        except Exception as exc:  # noqa: BLE001
+            log.wrn(f"Could not read manifest projects for purge ({exc}).")
+            return
+        for proj in projects:
+            path = proj["path"]
+            if not path or path in (".", SDK_REPO) or os.path.isabs(path):
+                continue  # never touch the SDK repo or escape the workspace
+            d = os.path.join(self.topdir, path)
+            if os.path.isdir(d):
+                log.inf(f"purging sources: {d}")
+                shutil.rmtree(d, ignore_errors=True)
+
+    def _purge_on_mismatch(self, stack, platform):
+        """Destructive platform-switch guard.
+
+        If sources are present but do NOT match this platform's manifest
+        (different remote or revision), purge them and return True. Otherwise
+        return False (nothing purged).
+        """
+        if not self._sources_present(stack, platform):
+            return False  # nothing there -> normal fetch handles it
+        if self._sources_match(stack, platform):
+            return False  # already the right sources -> keep local edits
+        log.wrn("Detected sources for a different platform/revision; "
+                "performing a destructive re-fetch (local changes to the "
+                "existing tree will be discarded).")
+        self._purge_sources(stack, platform)
         return True
 
     def _restore_bootstrap_manifest(self):
