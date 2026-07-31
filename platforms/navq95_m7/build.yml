@@ -7,6 +7,10 @@
 platform: navq95_m7
 default_stack: px4
 
+# NavQ95 keeps a realtime/ sub-dir because it also ships an Ubuntu WIC image
+# under bin/navq95_m7/ubuntu/; the M7 firmware lives in bin/navq95_m7/realtime/.
+realtime_subdir: realtime
+
 stacks:
   # NavQ95 PX4 support is NOT public: it lives on NXP's private PX4 fork as the
   # `imx95` board (see manifests/px4/navq95_m7.yml for the pinned remote/SHA).
@@ -16,7 +20,7 @@ stacks:
       - nxp_imx95_default
       - nxp_imx95_ddr
     # Built outputs (relative to PX4-Autopilot/build/) collected into
-    # bin/realtime/. Filenames are preserved as-is (rename upstream in PX4).
+    # bin/navq95_m7/realtime/. Filenames preserved as-is (rename upstream in PX4).
     artifacts:
       - nxp_imx95_default/nxp_imx95_default.elf
       - nxp_imx95_default/nxp_imx95_default.bin
@@ -25,7 +29,7 @@ stacks:
 
     # NavQ95-only post-build step: sign the collected .bin images with
     # MCUboot's imgtool (shipped inside the PX4 tree at scripts/imgtool.py).
-    # Runs after artifacts land in bin/realtime/; 'in'/'out' are basenames
+    # Runs after artifacts land in bin/navq95_m7/realtime/; 'in'/'out' are basenames
     # within that directory. Producing <name>.mcuboot.bin alongside the raw
     # .bin. Because this key exists only for navq95_m7, signing is applied to
     # this platform only -- sdk.py stays generic.
@@ -52,9 +56,11 @@ stacks:
 # Prebuilt artifacts for `west sdk download` (hosted on Nexus).
 # The Ubuntu A-core WIC image is specific to NavQ95.
 download:
-  - {name: nxp_imx95_default.elf,         dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_default.bin,         dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_default.mcuboot.bin, dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_ddr.elf,             dest: bin/realtime/, sha256: TODO}
-  - {name: nxp_imx95_ddr.bin,             dest: bin/realtime/, sha256: TODO}
-  - {name: navq95-ubuntu.wic,             dest: ubuntu/,       sha256: TODO}
+  # dest is relative to bin/<platform>/: firmware -> bin/navq95_m7/realtime/,
+  # the Ubuntu WIC -> bin/navq95_m7/ubuntu/.
+  - {name: nxp_imx95_default.elf,         dest: realtime/, sha256: TODO}
+  - {name: nxp_imx95_default.bin,         dest: realtime/, sha256: TODO}
+  - {name: nxp_imx95_default.mcuboot.bin, dest: realtime/, sha256: TODO}
+  - {name: nxp_imx95_ddr.elf,             dest: realtime/, sha256: TODO}
+  - {name: nxp_imx95_ddr.bin,             dest: realtime/, sha256: TODO}
+  - {name: navq95-ubuntu.wic,             dest: ubuntu/,   sha256: TODO}

@@ -206,18 +206,42 @@ class Sdk(WestCommand):
             for entry in entries:
                 self._download_stub(platform, entry)
 
+    def _realtime_dir(self, pdata, platform):
+        """Resolve a platform's firmware output directory: bin/<platform>/<sub>.
+
+        The optional top-level 'realtime_subdir' key in build.yml names the
+        firmware sub-directory under bin/<platform>/. It defaults to
+        "realtime"; set it to "" to place artifacts directly under
+        bin/<platform>/ (used by platforms that have no co-located extra
+        images such as an Ubuntu WIC). Keeps sdk.py free of per-platform
+        branching -- the layout is data-driven from build.yml.
+        """
+        subdir = pdata.get("realtime_subdir", "realtime")
+        parts = [self.topdir, "bin", platform]
+        if subdir:
+            parts.append(subdir)
+        return os.path.join(*parts)
+
     def _download_stub(self, platform, entry):
-        """Print what would be fetched. Creates NO files (backend not wired)."""
+        """Print what would be fetched. Creates NO files (backend not wired).
+
+        Every artifact is placed under bin/<platform>/. The 'dest' key is a
+        sub-path RELATIVE to bin/<platform>/ (e.g. "" for the platform root,
+        "realtime/" for the firmware sub-dir, "ubuntu/" for the NavQ95 WIC),
+        so download and build share the same bin/<platform>/... layout.
+        """
         name = entry.get("name", "<unnamed>")
         src = entry.get("src") or name
-        dest = entry.get("dest", os.path.join("bin", "realtime", ""))
-        # A dest ending in '/' (or a bare dir) is a destination directory.
-        if dest.endswith("/") or dest.endswith(os.sep) or not os.path.splitext(dest)[1]:
-            dest = os.path.join(dest, name)
+        rel = entry.get("dest", "")
+        # A dest that names a file keeps that name; a bare dir gets 'name'.
+        if rel.endswith("/") or rel.endswith(os.sep) or not os.path.splitext(rel)[1]:
+            rel = os.path.join(rel, name)
+        base = os.path.join(self.topdir, "bin", platform)
+        out = os.path.join(base, rel)
         url = f"{NEXUS_REPO}/{platform}/{src}"
         log.inf(f"  - {name}")
         log.inf(f"    TODO would fetch : {url}")
-        log.inf(f"    TODO would write : {os.path.join(self.topdir, dest)}")
+        log.inf(f"    TODO would write : {out}")
         if entry.get("sha256"):
             log.inf(f"    TODO would verify: sha256={entry['sha256']}")
 
@@ -307,11 +331,12 @@ class Sdk(WestCommand):
             self._fetch_sources(stack, args.platform, do_update=do_update)
 
             if kind == "px4":
-                self._build_px4(cfg, args.jobs, args.platform, use_venv=args.use_venv)
+                self._build_px4(cfg, args.jobs, args.platform, pdata,
+                                use_venv=args.use_venv)
             elif kind in ("zephyr", "cerebri"):
                 self._build_zephyr(cfg, args.jobs, args.platform)
             elif kind == "am32":
-                self._build_am32(cfg, args.jobs, args.platform)
+                self._build_am32(cfg, args.jobs, args.platform, pdata)
             else:
                 log.die(f"Unsupported build kind '{kind}'.")
         finally:
@@ -532,7 +557,7 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # PX4 build (native make via shell-out)
     # ------------------------------------------------------------------ #
-    def _build_px4(self, cfg, jobs, platform, use_venv=True):
+    def _build_px4(self, cfg, jobs, platform, pdata, use_venv=True):
         px4_src = os.path.join(self.topdir, "PX4-Autopilot")
         if not os.path.isdir(px4_src):
             log.die(f"PX4 sources not found at {px4_src}. "
@@ -572,26 +597,27 @@ class Sdk(WestCommand):
             log.inf(f"--- px4 make {target} (-j{jobs}) ---")
             self._run(["make", target, f"-j{jobs}"], cwd=px4_src, env=env)
 
+        out_dir = self._realtime_dir(pdata, platform)
         self._collect_artifacts(os.path.join(px4_src, "build"),
-                                cfg.get("artifacts", []) or [], platform)
+                                cfg.get("artifacts", []) or [], out_dir)
 
         # Optional per-platform post-build signing (navq95 uses MCUboot).
         # No-op unless the platform's build.yml defines a 'sign' block, so
         # sdk.py stays generic.
-        self._sign_px4(px4_src, cfg.get("sign"), env, venv_bin, platform)
+        self._sign_px4(px4_src, cfg.get("sign"), env, venv_bin, out_dir)
 
-    def _sign_px4(self, px4_src, sign, env, venv_bin, platform):
+    def _sign_px4(self, px4_src, sign, env, venv_bin, out_dir):
         """Sign collected .bin images with MCUboot imgtool (config-driven).
 
         The 'sign' block comes from the platform's build.yml (present only for
         navq95). imgtool.py lives in the PX4 tree (scripts/imgtool.py) and does
         ``from imgtool import main``, so it must run with PX4-Autopilot/scripts
-        importable. Inputs/outputs are basenames inside bin/realtime/.
+        importable. Inputs/outputs are basenames inside the platform's
+        realtime output directory (out_dir).
         """
         if not sign:
             return
 
-        out_dir = os.path.join(self.topdir, "bin", platform, "realtime")
         scripts_dir = os.path.join(px4_src, "scripts")
         tool_rel = sign.get("tool", "scripts/imgtool.py")
         tool = tool_rel if os.path.isabs(tool_rel) else os.path.join(px4_src, tool_rel)
@@ -666,16 +692,16 @@ class Sdk(WestCommand):
         except OSError:
             pass
 
-    def _collect_artifacts(self, src_root, artifacts, platform):
-        """Copy built artifacts into bin/realtime/, preserving basenames.
+    def _collect_artifacts(self, src_root, artifacts, out_dir):
+        """Copy built artifacts into out_dir, preserving basenames.
 
-        Each entry may be an exact path or a glob pattern (e.g. containing
-        '*'); globs are expanded relative to src_root and every match is
-        collected.
+        out_dir is the platform's resolved realtime output directory (see
+        _realtime_dir). Each entry may be an exact path or a glob pattern
+        (e.g. containing '*'); globs are expanded relative to src_root and
+        every match is collected.
         """
         import shutil
         import glob as _glob
-        out_dir = os.path.join(self.topdir, "bin", platform, "realtime")
         os.makedirs(out_dir, exist_ok=True)
         for rel in artifacts:
             pattern = rel if os.path.isabs(rel) else os.path.join(src_root, rel)
@@ -786,7 +812,7 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # AM32 build (GNU make via shell-out; xPack toolchain via arm_sdk_install)
     # ------------------------------------------------------------------ #
-    def _build_am32(self, cfg, jobs, platform):
+    def _build_am32(self, cfg, jobs, platform, pdata):
         am32_src = os.path.join(self.topdir, "AM32")
         if not os.path.isdir(am32_src):
             log.die(f"AM32 sources not found at {am32_src}. "
@@ -816,7 +842,8 @@ class Sdk(WestCommand):
             self._run(["make", target, f"-j{jobs}"], cwd=am32_src)
 
         # AM32 emits versioned files into obj/; collect as-is (globs supported).
-        self._collect_artifacts(am32_src, cfg.get("artifacts", []) or [], platform)
+        out_dir = self._realtime_dir(pdata, platform)
+        self._collect_artifacts(am32_src, cfg.get("artifacts", []) or [], out_dir)
 
     # ------------------------------------------------------------------ #
     # preflight: fail fast on a clean system with a clear, actionable msg

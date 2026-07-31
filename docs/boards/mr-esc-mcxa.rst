@@ -27,7 +27,7 @@ On first build, ``make arm_sdk_install`` downloads the xPack toolchain (needs
 network + ``wget``/``tar``); subsequent builds skip it.
 
 Artifacts (collected **as-is**, with the AM32 version in the filename, into
-``bin/realtime/``):
+``bin/mr-esc-mcxa/``):
 
 * ``AM32_FRDM_A153_<version>.elf``
 * ``AM32_FRDM_A153_<version>.bin``

@@ -20,7 +20,8 @@ Build
    west sdk build --platform navq95_m7                 # PX4 (default)
    west sdk build --platform navq95_m7 --stack zephyr  # plain Zephyr
 
-PX4 artifacts (collected into ``bin/realtime/``):
+PX4 artifacts (collected into ``bin/navq95_m7/realtime/``; the Ubuntu WIC
+downloads to ``bin/navq95_m7/ubuntu/``):
 
 * ``nxp_imx95_default.elf`` / ``nxp_imx95_default.bin``  -- M7 image (NOR Flash)
 * ``nxp_imx95_ddr.elf`` / ``nxp_imx95_ddr.bin``          -- M7 image from DDR

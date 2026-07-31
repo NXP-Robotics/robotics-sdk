@@ -3,6 +3,9 @@
 platform: vmu-rt1176
 default_stack: px4
 
+# Firmware artifacts go directly under bin/<platform>/ (no realtime subdir).
+realtime_subdir: ""
+
 stacks:
   px4:
     kind: px4
@@ -32,7 +35,8 @@ stacks:
     app: null
 
 download:
-  - {name: px4_fmu-v6xrt_default.elf,    dest: bin/realtime/, sha256: TODO}
-  - {name: px4_fmu-v6xrt_default.bin,    dest: bin/realtime/, sha256: TODO}
-  - {name: px4_fmu-v6xrt_bootloader.elf, dest: bin/realtime/, sha256: TODO}
-  - {name: px4_fmu-v6xrt_bootloader.bin, dest: bin/realtime/, sha256: TODO}
+  # dest is relative to bin/<platform>/; "" == bin/vmu-rt1176/.
+  - {name: px4_fmu-v6xrt_default.elf,    dest: "", sha256: TODO}
+  - {name: px4_fmu-v6xrt_default.bin,    dest: "", sha256: TODO}
+  - {name: px4_fmu-v6xrt_bootloader.elf, dest: "", sha256: TODO}
+  - {name: px4_fmu-v6xrt_bootloader.bin, dest: "", sha256: TODO}

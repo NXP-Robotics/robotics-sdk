@@ -7,6 +7,9 @@
 platform: mr-esc-mcxa
 default_stack: am32
 
+# Firmware artifacts go directly under bin/<platform>/ (no realtime subdir).
+realtime_subdir: ""
+
 stacks:
   # AM32 uses a GNU Makefile build. Each board is a make target (e.g.
   # 'make FRDM_A153'). A one-time 'make arm_sdk_install' downloads the xPack
@@ -17,7 +20,7 @@ stacks:
     targets:
       - FRDM_A153
     # AM32 emits versioned outputs into obj/ (AM32_<board>_<version>.{elf,bin,hex}).
-    # Collected AS-IS (version kept in the filename) into bin/realtime/.
+    # Collected AS-IS (version kept in the filename) into bin/<platform>/.
     # Globs are resolved at collect time.
     artifacts:
       - "obj/AM32_FRDM_A153_*.elf"
@@ -28,6 +31,7 @@ stacks:
 # Filenames carry the AM32 version; '*' is a version placeholder resolved
 # against the Nexus listing. (Backend is stubbed for now.)
 download:
-  - {name: "AM32_FRDM_A153_*.elf", dest: bin/realtime/, sha256: TODO}
-  - {name: "AM32_FRDM_A153_*.bin", dest: bin/realtime/, sha256: TODO}
-  - {name: "AM32_FRDM_A153_*.hex", dest: bin/realtime/, sha256: TODO}
+  # dest is relative to bin/<platform>/; "" == bin/mr-esc-mcxa/.
+  - {name: "AM32_FRDM_A153_*.elf", dest: "", sha256: TODO}
+  - {name: "AM32_FRDM_A153_*.bin", dest: "", sha256: TODO}
+  - {name: "AM32_FRDM_A153_*.hex", dest: "", sha256: TODO}

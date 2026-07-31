@@ -14,8 +14,9 @@ download`` after the one-time workspace bootstrap (see :doc:`getting_started`).
 
 Artifacts are placed in:
 
-* ``bin/realtime/`` -- firmware binaries (all platforms)
-* ``ubuntu/``       -- NavQ95 Ubuntu WIC image (``navq95_m7`` only)
+* ``bin/<platform>/``          -- firmware binaries (tropic, vmu-rt1176, mr-esc-mcxa)
+* ``bin/navq95_m7/realtime/``  -- NavQ95 M7 firmware binaries
+* ``bin/navq95_m7/ubuntu/``    -- NavQ95 Ubuntu WIC image (``navq95_m7`` only)
 
 The artifact catalog is defined per platform in the ``download:`` section of
 ``platforms/<platform>/build.yml``.
