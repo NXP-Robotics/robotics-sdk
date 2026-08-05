@@ -21,6 +21,6 @@ manifest:
       repo-path: px4-autopilot-nxp.git
       # Pinned to the validated NavQ95 (imx95) commit on branch
       # pr-nuttx-12-12-0-imx95.
-      revision: 36c6c23a7e982dd7019cf98a028df1b227bb5e8d
+      revision: bb1ba2cabd19530fb5df707171c26e7649deb2aa
       submodules: true
       path: PX4-Autopilot
