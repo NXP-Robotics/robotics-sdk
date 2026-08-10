@@ -399,6 +399,22 @@ class Sdk(WestCommand):
         bd.add_argument("-p", "--platform", required=True, help="Platform to build.")
         bd.add_argument("-s", "--stack", default=None,
                         help="Stack to build. Defaults to the platform's default_stack.")
+        bd.add_argument("--shield", default=None,
+                        help="Zephyr stack only: select the shield example set "
+                             "to build (mr-mcxn-t1: t1|oflo|f9p). Defaults to "
+                             "the platform's 'default_shield'. Not used by the "
+                             "cerebri stack, which maps each app to its shield.")
+        bd.add_argument("--build-all", dest="build_all", action="store_true",
+                        help="Build ALL non-caveat examples for the selected "
+                             "shield/stack (instead of only the curated "
+                             "default set). With no --shield/--stack it spans "
+                             "every stack. Cannot be combined with a named "
+                             "<example>.")
+        bd.add_argument("example", nargs="?", default=None,
+                        help="Optional single example/app (by name) to build. "
+                             "zephyr: one example within the selected shield; "
+                             "cerebri: one app. Omitted -> all non-caveat "
+                             "examples (zephyr) or all apps (cerebri).")
         bd.add_argument("-j", "--jobs", default=str(os.cpu_count() or 1),
                         help="Parallel build jobs.")
         bd.add_argument("--update", action="store_true",
@@ -420,6 +436,12 @@ class Sdk(WestCommand):
                              ".px4-venv is created and populated.")
 
         lst = sub.add_parser("list", help="List all supported platforms")
+        lst.add_argument("-v", "--verbose", "--examples", dest="verbose",
+                         action="store_true",
+                         help="Also show each platform's stacks, shields "
+                              "and examples. Without this flag, 'list' prints "
+                              "ONE platform name per line (stable, "
+                              "machine-parseable contract for CI).")
 
         return parser
 
@@ -442,6 +464,37 @@ class Sdk(WestCommand):
 
         for plat in platforms:
             log.inf(plat)
+            # Default output is ONE platform name per line -- a stable
+            # contract for CI. The stack/shield/example matrix is opt-in
+            # via -v/--verbose so it never pollutes the parseable list.
+            if not getattr(args, "verbose", False):
+                continue
+            try:
+                pdata, _ = load_platform(self.topdir, plat)
+            except SystemExit:
+                continue
+            for sname, scfg in (pdata.get("stacks") or {}).items():
+                scfg = scfg or {}
+                shields = scfg.get("shields")
+                if shields:
+                    default_shield = pdata.get("default_shield")
+                    for shield, sh in shields.items():
+                        tag = " (default)" if shield == default_shield else ""
+                        log.inf(f"  [{sname}] --shield {shield}{tag}")
+                        for ex in (sh or {}).get("examples", []):
+                            if ex.get("expect_fail"):
+                                m = "  [expect_fail]"
+                            elif ex.get("default"):
+                                m = "  [default]"
+                            else:
+                                m = ""
+                            log.inf(f"      {ex.get('name')}{m}")
+                elif scfg.get("apps"):
+                    for app in scfg["apps"]:
+                        shd = app.get("shield")
+                        dfl = "  [default]" if app.get("default") else ""
+                        st = f"  (shield: {shd})" if shd else ""
+                        log.inf(f"  [{sname}] {app.get('name')}{st}{dfl}")
 
     # ------------------------------------------------------------------ #
     # download
@@ -643,44 +696,81 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     def _do_build(self, args):
         pdata, ppath = load_platform(self.topdir, args.platform)
+
+        if getattr(args, "build_all", False) and args.example:
+            log.die("--build-all cannot be combined with a named <example>.")
+
+        # Bare invocation (no --stack, no --shield, no <example>): for a
+        # platform that defines a curated default set (default: true across
+        # its shields/apps, e.g. mr-mcxn-t1), build that default set across
+        # ALL stacks. For LEGACY platforms (no shields, no default flags -- a
+        # single 'app' per stack, e.g. navq95/tropic/vmu-rt1176/mr-esc-mcxa),
+        # preserve the original behaviour: build the platform's default_stack.
+        bare = (args.stack is None and args.shield is None and args.example is None)
+        build_all = getattr(args, "build_all", False)
+        if bare and (build_all or self._stacks_with_defaults(pdata)):
+            self._build_all_stacks(pdata, ppath, args)
+            return
+
         stack = resolve_stack(pdata, args.platform, args.stack)
+        self._build_one_stack(pdata, ppath, args.platform, stack, args,
+                              build_all=build_all)
+
+    def _stacks_with_defaults(self, pdata):
+        """Return stack names that have at least one default:true target."""
+        out = []
+        for sname, scfg in (pdata.get("stacks") or {}).items():
+            scfg = scfg or {}
+            has = False
+            shields = scfg.get("shields")
+            if shields:
+                for sh in shields.values():
+                    if any(e.get("default") for e in (sh or {}).get("examples", [])):
+                        has = True
+            if scfg.get("apps") and any(a.get("default") for a in scfg["apps"]):
+                has = True
+            if has:
+                out.append(sname)
+        return out
+
+    def _build_all_stacks(self, pdata, ppath, args):
+        """Build the default set (or all non-caveat with --build-all) across
+        every stack that has such targets. Each stack uses its own manifest,
+        so we set+fetch per stack. Zephyr/cerebri kinds only."""
+        build_all = getattr(args, "build_all", False)
+        if build_all:
+            stacks = list((pdata.get("stacks") or {}).keys())
+        else:
+            stacks = self._stacks_with_defaults(pdata)
+        if not stacks:
+            log.die(f"Platform '{args.platform}' has no buildable default "
+                    f"targets. Name a shield/stack/example explicitly.")
+        log.inf(f"=== build: platform={args.platform} stacks={', '.join(stacks)} "
+                f"({'all non-caveat' if build_all else 'default set'}) ===")
+        for stack in stacks:
+            self._build_one_stack(pdata, ppath, args.platform, stack, args,
+                                  build_all=build_all)
+
+    def _build_one_stack(self, pdata, ppath, platform, stack, args,
+                         build_all=False):
         cfg = dict(pdata["stacks"][stack])
         kind = cfg.get("kind")
         if not kind:
             log.die(f"Stack '{stack}' in {ppath} has no 'kind'.")
 
-        log.inf(f"=== build: platform={args.platform} stack={stack} kind={kind} ===")
+        log.inf(f"=== build: platform={platform} stack={stack} kind={kind} ===")
 
-        # Fail fast on a clean system: verify the required toolchain/system
-        # dependencies exist before cloning or building anything.
         if not args.skip_preflight:
             self._preflight(kind)
         else:
             log.wrn("Skipping preflight checks (--skip-preflight).")
 
-        # Point the workspace manifest at the (stack, platform) file and, when
-        # needed, clone/update its sources -- the SAME fetch performed by 'sdk
-        # update'. Smart-fetch policy: by default we run 'west update' ONLY
-        # when the manifest's project dirs are missing, so repeat builds never
-        # clobber local edits. '--update' forces a refetch (resets sources to
-        # the manifest revision, discarding local changes).
-        #
-        # The platform manifests use ``import: true``; if left active after the
-        # build, west can no longer discover this 'sdk' extension command
-        # whenever the imported sources are absent. So we always restore
-        # manifest.file to the import-free bootstrap west.yml afterwards,
-        # leaving the workspace in a usable state.
-        # A platform switch is destructive: if the workspace holds another
-        # platform's sources (different remote/revision), purge them so the
-        # build never runs against a stale tree (e.g. building vmu-rt1176 on a
-        # NavQ95-fork checkout, where the make target does not exist).
-        purged = self._purge_on_mismatch(stack, args.platform)
-
-        present = self._sources_present(stack, args.platform)
+        purged = self._purge_on_mismatch(stack, platform)
+        present = self._sources_present(stack, platform)
         do_update = args.update or not present
         if purged:
-            log.inf("Sources belonged to a different platform and were purged; "
-                    "fetching this platform's pinned sources.")
+            log.inf("Sources belonged to a different platform/stack and were "
+                    "purged; fetching this stack's pinned sources.")
         elif args.update and present:
             log.inf("--update: refetching sources "
                     "(local changes will be reset to the manifest revision).")
@@ -692,15 +782,20 @@ class Sdk(WestCommand):
                     "(use --update to refresh to the manifest revision).")
 
         try:
-            self._fetch_sources(stack, args.platform, do_update=do_update)
+            self._fetch_sources(stack, platform, do_update=do_update)
 
             if kind == "px4":
-                self._build_px4(cfg, args.jobs, args.platform, pdata,
+                self._build_px4(cfg, args.jobs, platform, pdata,
                                 use_venv=args.use_venv)
-            elif kind in ("zephyr", "cerebri"):
-                self._build_zephyr(cfg, args.jobs, args.platform)
+            elif kind == "zephyr":
+                self._build_zephyr(cfg, args.jobs, platform, pdata,
+                                   shield=args.shield, example=args.example,
+                                   build_all=build_all)
+            elif kind == "cerebri":
+                self._build_cerebri(cfg, args.jobs, platform, pdata,
+                                    app_name=args.example, build_all=build_all)
             elif kind == "am32":
-                self._build_am32(cfg, args.jobs, args.platform, pdata)
+                self._build_am32(cfg, args.jobs, platform, pdata)
             else:
                 log.die(f"Unsupported build kind '{kind}'.")
         finally:
@@ -848,16 +943,32 @@ class Sdk(WestCommand):
                     log.inf(f"  remote mismatch in {proj['path']}: "
                             f"have {sorted(urls)}, want {proj['url']!r}")
                     return False
-            # Revision check: resolve the pinned revision and compare to HEAD.
+            # Revision check: compare HEAD against the pinned revision.
+            #
+            # west always writes a 'manifest-rev' ref at the fetched revision,
+            # regardless of whether the manifest pinned a SHA, a tag or a
+            # BRANCH name. A raw 'rev-parse <branch>^{commit}' only works when a
+            # local ref by that name exists -- which it does NOT after a fresh
+            # 'west update' (the tree is left on a detached manifest-rev). So we
+            # resolve the target as: manifest-rev first, then the literal
+            # revision as a fallback (covers SHAs/tags present locally). Only if
+            # NEITHER resolves do we treat it as a real mismatch.
             want = proj.get("revision")
             if want:
                 head = self._git_out(["rev-parse", "HEAD"], cwd=d)
-                target = self._git_out(["rev-parse", f"{want}^{{commit}}"], cwd=d)
-                # If we cannot resolve the target locally, be conservative and
-                # treat it as a mismatch so west (re)fetches it.
-                if head is None or target is None or head != target:
+                target = self._git_out(["rev-parse", "manifest-rev^{commit}"],
+                                       cwd=d)
+                if target is None:
+                    target = self._git_out(
+                        ["rev-parse", f"{want}^{{commit}}"], cwd=d)
+                # Unresolvable target -> cannot prove a mismatch; assume the
+                # sources are the right ones (avoid a spurious destructive
+                # re-fetch when only the revision *form* -- branch vs SHA --
+                # differs). A genuine platform switch is still caught by the
+                # remote/URL check above.
+                if head is not None and target is not None and head != target:
                     log.inf(f"  revision mismatch in {proj['path']}: "
-                            f"HEAD={head}, want {want} ({target}).")
+                            f"HEAD={head}, want {want} (manifest-rev={target}).")
                     return False
         return True
 
@@ -1158,20 +1269,176 @@ class Sdk(WestCommand):
     # ------------------------------------------------------------------ #
     # Zephyr / Cerebri build (native west build)
     # ------------------------------------------------------------------ #
-    def _build_zephyr(self, cfg, jobs, platform):
+    # Overlay resolution (M2): SDK is authoritative for shield->overlay.
+    # Overlays are REFERENCED from pulled repos; the SDK owns no DTS/overlay.
+    def _shield_overlay(self, pdata, shield):
+        rel = (pdata.get("overlays") or {}).get(shield)
+        return os.path.join(self.topdir, rel) if rel else None
+
+    def _zephyr_build_one(self, board, name, app, overlay, group,
+                          sysbuild=False, sysbuild_args=None,
+                          platform=None, stack=None):
+        bslug = board.replace("/", "_")
+        sub = name or bslug
+        if group is not None and platform is not None:
+            # Shield/stack platforms: build/<platform>/<stack>/<shield>/<example>.
+            # The <stack> segment keeps e.g. cerebri/oflo/optical_flow from
+            # colliding with zephyr/oflo/*.
+            build_dir = os.path.join(self.topdir, "build", platform,
+                                     stack or "", group, sub)
+        else:
+            # Legacy single-stack/single-app platforms (navq95, tropic,
+            # vmu-rt1176): unchanged -> build/<board-slug>.
+            build_dir = os.path.join(self.topdir, "build", bslug)
+        cmd = ["build", "-b", board, "--build-dir", build_dir]
+        if sysbuild:
+            # Build MCUboot + the signed app together (two-image sysbuild).
+            cmd.insert(1, "--sysbuild")
+        if app:
+            cmd.append(app)
+        # CMake/sysbuild extra args go after a single '--'.
+        extra = []
+        if overlay:
+            extra.append(f"-DEXTRA_DTC_OVERLAY_FILE={overlay}")
+        if sysbuild and sysbuild_args:
+            # Absolutize workspace-relative file paths in -D...FILE= args so
+            # CMake resolves them against the workspace, not the app source dir.
+            for arg in sysbuild_args:
+                if "FILE=" in arg and "=" in arg:
+                    key, val = arg.split("=", 1)
+                    if val and not os.path.isabs(val):
+                        val = os.path.join(self.topdir, val)
+                    extra.append(f"{key}={val}")
+                else:
+                    extra.append(arg)
+        if extra:
+            cmd += ["--", *extra]
+        tag = "sysbuild " if sysbuild else ""
+        label = f"{group}/{name}" if group else board
+        log.inf(f"--- west {tag}build -b {board} [{label}] "
+                f"(build-dir {build_dir}) ---")
+        return self._west_try(cmd, cwd=self.topdir)
+
+    def _summarize(self, results):
+        """Print a per-example PASS/FAIL table; exit non-zero if any failed."""
+        if not results:
+            return
+        npass = sum(1 for _, ok in results if ok)
+        log.inf("=== build summary ===")
+        for name, ok in results:
+            log.inf(f"  {'PASS' if ok else 'FAIL'}  {name}")
+        log.inf(f"=== {npass}/{len(results)} passed ===")
+        if npass != len(results):
+            log.die("one or more examples failed to build")
+
+    def _build_zephyr(self, cfg, jobs, platform, pdata=None,
+                      shield=None, example=None, build_all=False):
         boards = cfg.get("boards") or []
         if not boards:
-            log.die("Zephyr/Cerebri stack defines no 'boards'.")
-        app = cfg.get("app")
+            log.die("Zephyr stack defines no 'boards'.")
+        pdata = pdata or {}
+        shields = cfg.get("shields")
 
+        if not shields:
+            if shield is not None or example is not None:
+                log.die(f"Stack for '{platform}' defines no 'shields'; "
+                        f"--shield/<example> are not applicable.")
+            for board in boards:
+                self._zephyr_build_one(board, None, cfg.get("app"), None, None)
+            return
+
+        # Which shields to process:
+        #  - explicit --shield  -> just that one
+        #  - a named <example>  -> the specified shield, else default_shield
+        #  - otherwise (bare/all-stacks) -> ALL shields (so default:true
+        #    examples on non-default shields, e.g. f9p/gnss, are built too).
+        if shield is not None:
+            if shield not in shields:
+                log.die(f"Shield '{shield}' is not valid for '{platform}'. "
+                        f"Valid shields: {', '.join(shields)}")
+            groups = [shield]
+        elif example is not None:
+            dfl = pdata.get("default_shield")
+            if dfl is None:
+                log.die(f"Platform '{platform}' defines no 'default_shield'; "
+                        f"pass --shield. Valid: {', '.join(shields)}")
+            groups = [dfl]
+        else:
+            groups = list(shields.keys())
+
+        results = []
+        for group in groups:
+            overlay = self._shield_overlay(pdata, group)
+            examples = (shields[group] or {}).get("examples", [])
+            by_name = {e.get("name"): e for e in examples}
+
+            if example is not None:
+                if example not in by_name:
+                    log.die(f"Example '{example}' not found in shield "
+                            f"'{group}'. Available: {', '.join(by_name)}")
+                builds = [by_name[example]]
+            elif build_all:
+                builds = [e for e in examples if not e.get("expect_fail")]
+                skipped = [e["name"] for e in examples if e.get("expect_fail")]
+                if skipped:
+                    log.inf(f"[{group}] skipping caveat examples "
+                            f"(build them by name): {', '.join(skipped)}")
+            else:
+                builds = [e for e in examples if e.get("default")]
+                if not builds:
+                    log.inf(f"[{group}] no default examples; skipping "
+                            f"(name an example or use --build-all).")
+
+            for board in boards:
+                for e in builds:
+                    ok = self._zephyr_build_one(
+                        board, e.get("name"), e.get("app"), overlay, group,
+                        sysbuild=cfg.get("sysbuild", False),
+                        sysbuild_args=cfg.get("sysbuild_args"),
+                        platform=platform, stack="zephyr")
+                    results.append((f"{group}/{e.get('name')}", ok))
+        self._summarize(results)
+
+    def _build_cerebri(self, cfg, jobs, platform, pdata=None, app_name=None,
+                       build_all=False):
+        boards = cfg.get("boards") or []
+        if not boards:
+            log.die("Cerebri stack defines no 'boards'.")
+        pdata = pdata or {}
+        apps = cfg.get("apps") or []
+        if not apps:
+            log.die(f"Cerebri stack for '{platform}' defines no 'apps'.")
+        by_name = {a.get("name"): a for a in apps}
+
+        if app_name is not None:
+            if app_name not in by_name:
+                log.die(f"App '{app_name}' not found in cerebri stack. "
+                        f"Available: {', '.join(by_name)}")
+            builds = [by_name[app_name]]
+        elif build_all:
+            builds = list(apps)  # every cerebri app (none are caveat today)
+        else:
+            # Default: only the curated default set (default: true).
+            builds = [a for a in apps if a.get("default")]
+            other = [a["name"] for a in apps if not a.get("default")]
+            if other:
+                log.inf(f"Building default cerebri apps; build others by name "
+                        f"or --build-all: {', '.join(other)}")
+            if not builds:
+                builds = apps  # no default flags -> preserve prior behaviour
+
+        results = []
         for board in boards:
-            slug = board.replace("/", "_")
-            build_dir = os.path.join(self.topdir, "build", slug)
-            cmd = ["build", "-b", board, "--build-dir", build_dir]
-            if app:
-                cmd.append(app)
-            log.inf(f"--- west build -b {board} (build-dir {build_dir}) ---")
-            self._west(cmd, cwd=self.topdir)
+            for a in builds:
+                shield = a.get("shield")
+                overlay = self._shield_overlay(pdata, shield) if shield else None
+                ok = self._zephyr_build_one(board, a.get("name"), a.get("app"),
+                                            overlay, shield or "cerebri",
+                                            sysbuild=cfg.get("sysbuild", False),
+                                            sysbuild_args=cfg.get("sysbuild_args"),
+                                            platform=platform, stack="cerebri")
+                results.append((f"{shield or 'cerebri'}/{a.get('name')}", ok))
+        self._summarize(results)
 
     # ------------------------------------------------------------------ #
     # AM32 build (GNU make via shell-out; xPack toolchain via arm_sdk_install)
@@ -1386,3 +1653,20 @@ class Sdk(WestCommand):
             subprocess.run(cmd, cwd=cwd, env=env, check=True)
         except subprocess.CalledProcessError as e:
             log.die(f"Command failed ({e.returncode}): {' '.join(cmd)}")
+
+    def _west_try(self, argv, cwd=None, env=None):
+        """Run west NON-fatally; return True on success, False on failure.
+
+        Used by the shield/app build loops so one example's failure does not
+        abort the whole batch (build-all continues and prints a summary).
+        """
+        import shutil
+        cmd = (["west", *argv] if shutil.which("west")
+               else [sys.executable, "-m", "west", *argv])
+        log.dbg(f"run(non-fatal): {' '.join(cmd)} (cwd={cwd})")
+        try:
+            subprocess.run(cmd, cwd=cwd, env=env, check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            log.wrn(f"build failed ({e.returncode}): {' '.join(cmd)}")
+            return False

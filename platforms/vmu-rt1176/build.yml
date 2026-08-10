@@ -22,12 +22,6 @@ stacks:
       - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.elf
       - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.bin
 
-  cerebri:
-    kind: zephyr
-    boards:
-      - vmu_rt1176
-    app: app/cerebri
-
   zephyr:
     kind: zephyr
     boards:

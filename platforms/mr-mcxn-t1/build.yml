@@ -1,0 +1,94 @@
+# Build + example definition for the mr-mcxn-t1 platform (NXP MCXN947 MR-MCXN-T1).
+#
+# Two ways of working:
+#   * zephyr  - reuse/build stock Zephyr samples for board/peripheral validation.
+#               User-facing --shield {t1,oflo,f9p} selects the example set.
+#               Shields are MUTUALLY EXCLUSIVE (a shield occupies the expansion
+#               connector, so the I/O breakout peripherals are reachable ONLY on t1).
+#   * cerebri - build CogniPilot integration apps (optical_flow now). The user
+#               does NOT pass --shield; the SDK maps each app to its shield and
+#               injects that shield's overlay (M2: the SDK is authoritative).
+#
+#   west sdk build --platform mr-mcxn-t1 [--shield t1|oflo|f9p] [<example>]      # zephyr
+#   west sdk build --platform mr-mcxn-t1 --stack cerebri [<app>]                # cerebri
+#
+# Example names are inherited from the upstream Zephyr sample (the sample's
+# directory leaf), disambiguated by peripheral/location where the same sample
+# serves multiple physical devices (e.g. the ICM-45686 exists on BOTH the hub
+# (U9, LPSPI8) and the OFLO shield (U3, LPSPI7) -- verified from schematic + DTS).
+#
+# default: true  -> built when NO <example> is given (the curated CI set). Every
+#   other example stays buildable by explicitly naming it. Caveat examples
+#   (expect_fail) are never in build-all and fail if built by name.
+# expect_fail: true -> peripheral present so LISTED, excluded from build-all,
+#   expected to FAIL when built explicitly.
+
+platform: mr-mcxn-t1
+default_stack: zephyr
+default_shield: t1
+
+realtime_subdir: ""
+
+# MCUboot via sysbuild is enabled per stack below (zephyr/cerebri kind only).
+overlays:
+  t1:   null
+  oflo: null
+  f9p:  null
+
+stacks:
+  zephyr:
+    kind: zephyr
+    # MCUboot via sysbuild: every example builds BOTH the MCUboot bootloader
+    # (mcuboot/zephyr/zephyr.bin) and the runnable signed app
+    # (<app>/zephyr/zephyr.signed.bin). sysbuild is a zephyr/cerebri-kind
+    # capability (PX4/AM32 cannot use it); enabled here per stack.
+    sysbuild: true
+    sysbuild_args:
+      - -DSB_CONFIG_BOOTLOADER_MCUBOOT=y
+      - -Dmcuboot_EXTRA_CONF_FILE=zephyr/boards/nxp/mr_mcxn_t1/mcuboot/mr_mcxn_t1_mcxn947_cpu0.conf
+      - -Dmcuboot_DTC_OVERLAY_FILE=zephyr/boards/nxp/mr_mcxn_t1/mcuboot/mr_mcxn_t1_mcxn947_cpu0.overlay
+    boards:
+      - mr_mcxn_t1/mcxn947/cpu0
+    shields:
+      t1:
+        examples:
+          - {name: hello_world,               app: zephyr/samples/hello_world, default: true}
+          - {name: dhcpv4_client,             app: zephyr/samples/net/dhcpv4_client, default: true}
+          - {name: 6dof_motion_drdy_icm45686_hub, app: zephyr/samples/sensor/6dof_motion_drdy}
+          - {name: magn_polling,              app: zephyr/samples/sensor/magn_polling}
+          - {name: can_counter,               app: zephyr/samples/drivers/can/counter}
+          - {name: cdc_acm,                   app: zephyr/samples/subsys/usb/cdc_acm}
+          - {name: led_strip,                 app: zephyr/samples/drivers/led/led_strip}
+          - {name: watchdog,                  app: zephyr/samples/drivers/watchdog}
+          - {name: die_temp_polling,          app: zephyr/samples/sensor/die_temp_polling, expect_fail: true}
+          - {name: rtc,                       app: zephyr/samples/drivers/rtc, expect_fail: true}
+          - {name: servo_motor,               app: zephyr/samples/basic/servo_motor}
+          - {name: adc_dt,                    app: zephyr/samples/drivers/adc/adc_dt}
+          - {name: qdec,                      app: zephyr/samples/sensor/qdec}
+          - {name: button,                    app: zephyr/samples/basic/button}
+          - {name: echo_bot,                  app: zephyr/samples/drivers/uart/echo_bot}
+          - {name: rtio_loopback,             app: zephyr/samples/drivers/i2c/rtio_loopback}
+      oflo:
+        examples:
+          - {name: distance_polling,           app: zephyr/samples/sensor/distance_polling}
+          - {name: 6dof_motion_drdy_icm42688,  app: zephyr/samples/sensor/6dof_motion_drdy}
+          - {name: 6dof_motion_drdy_icm45686_oflo, app: zephyr/samples/sensor/6dof_motion_drdy}
+          - {name: sensor_shell,               app: zephyr/samples/sensor/sensor_shell, expect_fail: true}
+      f9p:
+        examples:
+          - {name: gnss, app: zephyr/samples/drivers/gnss, default: true}
+
+  cerebri:
+    kind: cerebri
+    sysbuild: true
+    sysbuild_args:
+      - -DSB_CONFIG_BOOTLOADER_MCUBOOT=y
+      - -Dmcuboot_EXTRA_CONF_FILE=zephyr/boards/nxp/mr_mcxn_t1/mcuboot/mr_mcxn_t1_mcxn947_cpu0.conf
+      - -Dmcuboot_DTC_OVERLAY_FILE=zephyr/boards/nxp/mr_mcxn_t1/mcuboot/mr_mcxn_t1_mcxn947_cpu0.overlay
+    boards:
+      - mr_mcxn_t1/mcxn947/cpu0
+    apps:
+      - {name: optical_flow, app: spinali/app/optical_flow, shield: oflo, default: true}
+
+download:
+  []
