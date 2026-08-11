@@ -747,18 +747,32 @@ class Sdk(WestCommand):
                     f"targets. Name a shield/stack/example explicitly.")
         log.inf(f"=== build: platform={args.platform} stacks={', '.join(stacks)} "
                 f"({'all non-caveat' if build_all else 'default set'}) ===")
+        # Multiple stacks share one west workspace but pin different sources
+        # (e.g. mr-mcxn-t1 zephyr vs cerebri resolve hal_afbr to different
+        # revisions via their imports). A stack switch must therefore re-run
+        # 'west update' so imported modules move to THIS stack's pinned rev;
+        # the smart-fetch "sources present -> skip" heuristic only inspects
+        # top-level projects and would otherwise leave imported modules stale.
+        force_update = len(stacks) > 1
         for stack in stacks:
             self._build_one_stack(pdata, ppath, args.platform, stack, args,
-                                  build_all=build_all)
+                                  build_all=build_all,
+                                  force_update=force_update)
 
     def _build_one_stack(self, pdata, ppath, platform, stack, args,
-                         build_all=False):
+                         build_all=False, force_update=False):
         cfg = dict(pdata["stacks"][stack])
         kind = cfg.get("kind")
         if not kind:
             log.die(f"Stack '{stack}' in {ppath} has no 'kind'.")
 
         log.inf(f"=== build: platform={platform} stack={stack} kind={kind} ===")
+
+        # zephyr-export and blobs-fetch are one-shot guards; reset them per
+        # stack so each stack re-runs them (a stack switch may have re-run
+        # 'west update' and changed imported module revisions).
+        self._zephyr_exported = False
+        self._blobs_fetched = False
 
         if not args.skip_preflight:
             self._preflight(kind)
@@ -767,10 +781,13 @@ class Sdk(WestCommand):
 
         purged = self._purge_on_mismatch(stack, platform)
         present = self._sources_present(stack, platform)
-        do_update = args.update or not present
+        do_update = args.update or force_update or not present
         if purged:
             log.inf("Sources belonged to a different platform/stack and were "
                     "purged; fetching this stack's pinned sources.")
+        elif force_update:
+            log.inf("Multi-stack build: refetching so imported modules match "
+                    "this stack's manifest revision.")
         elif args.update and present:
             log.inf("--update: refetching sources "
                     "(local changes will be reset to the manifest revision).")
