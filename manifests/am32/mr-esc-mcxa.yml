@@ -35,5 +35,5 @@ manifest:
     - name: AM32-bootloader
       remote: am32-github
       repo-path: AM32-bootloader
-      revision: master
+      revision: 8a53777b4bb57231e364bd23c893b4c156020579
       path: AM32-bootloader
