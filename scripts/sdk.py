@@ -788,10 +788,12 @@ class Sdk(WestCommand):
                 self._build_px4(cfg, args.jobs, platform, pdata,
                                 use_venv=args.use_venv)
             elif kind == "zephyr":
+                self._zephyr_export()
                 self._build_zephyr(cfg, args.jobs, platform, pdata,
                                    shield=args.shield, example=args.example,
                                    build_all=build_all)
             elif kind == "cerebri":
+                self._zephyr_export()
                 self._build_cerebri(cfg, args.jobs, platform, pdata,
                                     app_name=args.example, build_all=build_all)
             elif kind == "am32":
@@ -1330,6 +1332,19 @@ class Sdk(WestCommand):
         log.inf(f"=== {npass}/{len(results)} passed ===")
         if npass != len(results):
             log.die("one or more examples failed to build")
+
+    def _zephyr_export(self):
+        """Register the Zephyr CMake package so find_package(Zephyr) resolves
+        during the board builds. Runs once per invocation; must be called after
+        the manifest is active and the Zephyr tree fetched (i.e. after
+        _fetch_sources) and before any west build. Failure is fatal (via
+        self._west), matching Zephyr's required-setup semantics.
+        """
+        if getattr(self, "_zephyr_exported", False):
+            return
+        log.inf("--- west zephyr-export (register Zephyr CMake package) ---")
+        self._west(["zephyr-export"], cwd=self.topdir)
+        self._zephyr_exported = True
 
     def _build_zephyr(self, cfg, jobs, platform, pdata=None,
                       shield=None, example=None, build_all=False):
