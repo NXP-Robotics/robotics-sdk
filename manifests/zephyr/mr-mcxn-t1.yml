@@ -13,14 +13,14 @@ manifest:
 
   remotes:
     - name: nxp
-      url-base: ssh://git@bitbucket.sw.nxp.com/~nxa06406
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
     - name: cognipilot
       url-base: https://github.com/CogniPilot
 
   projects:
     - name: zephyr-rtos
       remote: nxp
-      revision: feature/add-mcxn-t1-nodes
+      revision: devel
       path: zephyr
       import: true
     - name: zephyr_boards
