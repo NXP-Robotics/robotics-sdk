@@ -1,0 +1,13 @@
+# Authoritative artifact sources and pinned versions for `west sdk download`.
+# A platform build.yml may override a whole class under its own `artifacts:`.
+artifacts:
+  mcu:
+    base_url: https://nl4-nxrm.sw.nxp.com
+    repository: TARS_Daily_Build
+    path: Robotics_Firmware
+    version: latest
+  mpu:
+    base_url: https://nl4-nxrm.sw.nxp.com
+    repository: TARS_Daily_Build
+    path: Robotics_Release
+    version: latest

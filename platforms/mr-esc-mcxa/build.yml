@@ -27,11 +27,10 @@ stacks:
       - "obj/AM32_FRDM_A153_*.bin"
       - "obj/AM32_FRDM_A153_*.hex"
 
-# Prebuilt artifacts for `west sdk download` (hosted on Nexus).
-# Filenames carry the AM32 version; '*' is a version placeholder resolved
-# against the Nexus listing. (Backend is stubbed for now.)
+# Prebuilt artifacts for `west sdk download`. The '*' in 'src' resolves against
+# the listing (newest wins) and the real basename is kept. 'dest' relative to
+# bin/mr-esc-mcxa/ ("" == the platform root).
 download:
-  # dest is relative to bin/<platform>/; "" == bin/mr-esc-mcxa/.
-  - {name: "AM32_FRDM_A153_*.elf", dest: "", sha256: TODO}
-  - {name: "AM32_FRDM_A153_*.bin", dest: "", sha256: TODO}
-  - {name: "AM32_FRDM_A153_*.hex", dest: "", sha256: TODO}
+  - {name: AM32_FRDM_A153.elf, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.elf", dest: ""}
+  - {name: AM32_FRDM_A153.bin, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.bin", dest: ""}
+  - {name: AM32_FRDM_A153.hex, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.hex", dest: ""}
