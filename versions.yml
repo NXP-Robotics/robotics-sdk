@@ -1,0 +1,13 @@
+# Authoritative artifact source and pinned versions for `west sdk download`.
+# Daily builds track 'latest'; a release pins mcu/mpu to specific builds.
+artifacts:
+  base_url: https://nl4-nxrm.sw.nxp.com
+  repository: TARS_Daily_Build
+
+  mcu:
+    path: Robotics_Firmware
+    version: latest
+
+  mpu:
+    path: Robotics_Release
+    version: latest

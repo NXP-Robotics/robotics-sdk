@@ -53,14 +53,18 @@ stacks:
       - mr_navq95b/mimx9596/m7/ddr
     app: samples/hello_world
 
-# Prebuilt artifacts for `west sdk download` (hosted on Nexus).
-# The Ubuntu A-core WIC image is specific to NavQ95.
+# Prebuilt artifacts for `west sdk download`. Source and versions come from the
+# root versions.yml; entries reference an artifact class (mcu/mpu) and select a
+# subset. 'dest' is relative to bin/navq95/.
 download:
-  # dest is relative to bin/<platform>/: firmware -> bin/navq95/realtime/,
-  # the Ubuntu WIC -> bin/navq95/ubuntu/.
-  - {name: nxp_imx95_default.elf,         dest: realtime/, sha256: TODO}
-  - {name: nxp_imx95_default.bin,         dest: realtime/, sha256: TODO}
-  - {name: nxp_imx95_default.mcuboot.bin, dest: realtime/, sha256: TODO}
-  - {name: nxp_imx95_ddr.elf,             dest: realtime/, sha256: TODO}
-  - {name: nxp_imx95_ddr.bin,             dest: realtime/, sha256: TODO}
-  - {name: navq95-ubuntu.wic,             dest: ubuntu/,   sha256: TODO}
+  # M7 real-time firmware.
+  - {name: nxp_imx95_default.elf,         class: mcu, subpath: navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.bin,         class: mcu, subpath: navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.mcuboot.bin, class: mcu, subpath: navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_ddr.elf,             class: mcu, subpath: navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_ddr.bin,             class: mcu, subpath: navq95/realtime, dest: realtime/}
+
+  # A-core Linux image (timestamped name -> glob); keep .wic.zst compressed
+  # and fetch the matching .wic.bmap for bmaptool.
+  - {name: navq95.wic.zst,  class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-mr-imx95-navq.rootfs-*.wic.zst",  dest: ubuntu/}
+  - {name: navq95.wic.bmap, class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-mr-imx95-navq.rootfs-*.wic.bmap", dest: ubuntu/}

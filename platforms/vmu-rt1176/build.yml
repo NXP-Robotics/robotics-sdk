@@ -35,8 +35,8 @@ stacks:
     app: null
 
 download:
-  # dest is relative to bin/<platform>/; "" == bin/vmu-rt1176/.
-  - {name: px4_fmu-v6xrt_default.elf,    dest: "", sha256: TODO}
-  - {name: px4_fmu-v6xrt_default.bin,    dest: "", sha256: TODO}
-  - {name: px4_fmu-v6xrt_bootloader.elf, dest: "", sha256: TODO}
-  - {name: px4_fmu-v6xrt_bootloader.bin, dest: "", sha256: TODO}
+  # 'dest' relative to bin/vmu-rt1176/ ("" == the platform root).
+  - {name: px4_fmu-v6xrt_default.elf,    class: mcu, subpath: vmu-rt1176, dest: ""}
+  - {name: px4_fmu-v6xrt_default.bin,    class: mcu, subpath: vmu-rt1176, dest: ""}
+  - {name: px4_fmu-v6xrt_bootloader.elf, class: mcu, subpath: vmu-rt1176, dest: ""}
+  - {name: px4_fmu-v6xrt_bootloader.bin, class: mcu, subpath: vmu-rt1176, dest: ""}

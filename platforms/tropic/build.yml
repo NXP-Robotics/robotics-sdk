@@ -24,6 +24,6 @@ stacks:
     app: null
 
 download:
-  # dest is relative to bin/<platform>/; "" == bin/tropic/.
-  - {name: nxp_mr-tropic_default.bin,    dest: "", sha256: TODO}
-  - {name: nxp_mr-tropic_bootloader.bin, dest: "", sha256: TODO}
+  # 'dest' relative to bin/tropic/ ("" == the platform root).
+  - {name: nxp_mr-tropic_default.bin,    class: mcu, subpath: tropic, dest: ""}
+  - {name: nxp_mr-tropic_bootloader.bin, class: mcu, subpath: tropic, dest: ""}

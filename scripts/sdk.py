@@ -24,8 +24,11 @@ sdk.py contains NO platform-specific knowledge. Each platform owns a single
 definition file ``platforms/<platform>/build.yml`` describing its stacks
 (kind, targets/boards, app, artifacts) and its ``download`` catalog.
 
-NOTE: The Nexus download backend is not wired yet; ``download`` resolves the
-catalog and prints what it *would* fetch (clearly marked TODO).
+``download`` fetches prebuilt artifacts from the store described by the
+authoritative root ``versions.yml`` (location + per-class pinned versions).
+Authentication uses ``~/.netrc``; when the host is absent the user is prompted
+once for a token which is persisted to ``~/.netrc`` (chmod 600). Transfers are
+size- and SHA-256-verified.
 """
 
 import os
@@ -46,8 +49,8 @@ except ImportError:  # pragma: no cover
 # --------------------------------------------------------------------------- #
 SDK_REPO = "nxp-robotics-sdk"
 
-# Nexus location for prebuilt artifacts (download). TODO: wire real backend.
-NEXUS_REPO = "https://nexus.example.nxp.com/repository/nxp-robotics-sdk-raw"
+# Authoritative artifact source + pinned versions live in this root file.
+VERSIONS_FILE = "versions.yml"
 
 
 def _sdk_root(topdir):
@@ -100,6 +103,258 @@ def manifest_for(stack, platform):
     return os.path.join("manifests", stack, f"{platform}.yml")
 
 
+def load_versions(topdir):
+    """Load the authoritative artifact source/version file (root versions.yml).
+
+    Returns the 'artifacts' mapping: {base_url, repository, <class>: {path,
+    version}, ...}. sdk.py stays platform- and backend-agnostic -- everything
+    (store location, per-class pinned versions) is data here.
+    """
+    if yaml is None:
+        log.die("PyYAML is required. Install with: pip install pyyaml")
+    path = os.path.join(_sdk_root(topdir), VERSIONS_FILE)
+    if not os.path.isfile(path):
+        log.die(f"Missing {VERSIONS_FILE} at {path}.")
+    with open(path) as f:
+        data = (yaml.safe_load(f) or {}).get("artifacts", {}) or {}
+    if not data:
+        log.die(f"{VERSIONS_FILE} has no 'artifacts' block.")
+    return data
+
+
+# --------------------------------------------------------------------------- #
+# Artifact store client for `west sdk download`.
+#
+# Backend-agnostic surface (resolve by path prefix + fetch). The current
+# backend is a Nexus RAW repository; swapping to another store (e.g. a
+# GitHub/Bitbucket binary repo) is localized to this class plus the location
+# fields in versions.yml. Self-contained (stdlib + requests) so it works in a
+# plain customer checkout. Authentication uses ~/.netrc; when the host is
+# absent the user is prompted once for a token which is appended to ~/.netrc
+# (chmod 600). The token is never logged or echoed.
+# --------------------------------------------------------------------------- #
+class _StoreError(Exception):
+    """Any artifact resolution/transfer/verification failure."""
+
+
+class _ArtifactStore:
+    """Minimal artifact-store client: resolve assets by path prefix + fetch."""
+
+    def __init__(self, dry_run=False):
+        self.dry_run = dry_run
+        self._session = None
+        self._authed_hosts = set()
+        # Per-(base_url, repository) cache of the full asset path listing, so
+        # multiple entries (and 'download all') list each repo only once.
+        self._asset_cache = {}
+
+    # -- session / auth ------------------------------------------------- #
+    def _requests(self):
+        try:
+            import requests  # noqa: F401
+            return requests
+        except ImportError:
+            log.die("The 'requests' package is required for 'west sdk "
+                    "download'. Install it with: pip install requests")
+
+    @property
+    def session(self):
+        if self._session is None:
+            requests = self._requests()
+            self._session = requests.Session()
+            # Internal Nexus uses an internal CA; SSL verification is disabled
+            # to match the rest of the SDK's internal tooling.
+            self._session.verify = False
+            try:
+                import urllib3
+                urllib3.disable_warnings()
+            except Exception:  # pragma: no cover - best effort
+                pass
+        return self._session
+
+    @staticmethod
+    def _host_of(base_url):
+        from urllib.parse import urlparse
+        return urlparse(base_url).hostname or base_url
+
+    def ensure_auth(self, base_url):
+        """Ensure ~/.netrc has credentials for base_url's host.
+
+        requests reads ~/.netrc automatically, so once the entry exists we do
+        nothing further. If it is missing we prompt for a Nexus User Token and
+        persist it (chmod 600). Idempotent per host.
+        """
+        host = self._host_of(base_url)
+        if host in self._authed_hosts:
+            return
+        if self._netrc_has_host(host):
+            self._authed_hosts.add(host)
+            return
+        if self.dry_run:
+            log.wrn(f"~/.netrc has no entry for {host}; a User Token would be "
+                    f"prompted for on a real download (skipped in --dry-run).")
+            self._authed_hosts.add(host)
+            return
+        self._prompt_and_store_token(host)
+        self._authed_hosts.add(host)
+
+    @staticmethod
+    def _netrc_path():
+        return os.path.join(os.path.expanduser("~"), ".netrc")
+
+    def _netrc_has_host(self, host):
+        import netrc
+        path = self._netrc_path()
+        if not os.path.isfile(path):
+            return False
+        try:
+            auth = netrc.netrc(path).authenticators(host)
+        except Exception as exc:  # e.g. permissions too permissive, parse error
+            log.wrn(f"Could not parse ~/.netrc ({exc}). Ensure it is chmod 600 "
+                    f"and well-formed.")
+            return False
+        return auth is not None
+
+    def _prompt_and_store_token(self, host):
+        """Interactively obtain a Nexus User Token and append it to ~/.netrc."""
+        import getpass
+        log.inf("")
+        log.inf(f"Nexus authentication required for {host}.")
+        log.inf("Obtain a *User Token* from the Nexus UI:")
+        log.inf(f"  1. Log in to https://{host}")
+        log.inf("  2. Click your username (top-right) -> 'User Token'")
+        log.inf("  3. Click 'Access User Token' to reveal the Name/Pass codes")
+        log.inf("")
+        try:
+            name_code = input("  Nexus User Token NAME code: ").strip()
+            pass_code = getpass.getpass("  Nexus User Token PASS code: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            log.die("Aborted: no Nexus credentials provided.")
+        if not name_code or not pass_code:
+            log.die("Aborted: empty Nexus token.")
+
+        path = self._netrc_path()
+        line = f"machine {host} login {name_code} password {pass_code}\n"
+        # Append (preserving other hosts) and lock down permissions.
+        existed = os.path.isfile(path)
+        with open(path, "a") as f:
+            if existed:
+                f.write("\n")
+            f.write(line)
+        os.chmod(path, 0o600)
+        log.inf(f"Stored Nexus credentials for {host} in {path} (chmod 600).")
+
+    # -- asset resolution ----------------------------------------------- #
+    def _list_assets(self, base_url, repository):
+        """Return the list of asset dicts for a repository (cached)."""
+        key = (base_url, repository)
+        if key in self._asset_cache:
+            return self._asset_cache[key]
+        api = f"{base_url}/service/rest/v1/search/assets"
+        items = []
+        token = None
+        while True:
+            params = {"repository": repository}
+            if token:
+                params["continuationToken"] = token
+            try:
+                r = self.session.get(api, params=params, timeout=60)
+            except Exception as exc:  # noqa: BLE001
+                raise _StoreError(f"listing {repository} failed: {exc}")
+            if r.status_code == 401:
+                raise _StoreError(
+                    f"authentication failed (HTTP 401) for {repository}. "
+                    f"Check the token in ~/.netrc.")
+            if r.status_code == 403:
+                raise _StoreError(
+                    f"access forbidden (HTTP 403) for {repository}. "
+                    f"Your account may lack read permission.")
+            if r.status_code != 200:
+                raise _StoreError(
+                    f"listing {repository} returned HTTP {r.status_code}.")
+            data = r.json()
+            items.extend(data.get("items", []) or [])
+            token = data.get("continuationToken")
+            if not token:
+                break
+        self._asset_cache[key] = items
+        return items
+
+    def resolve_asset(self, base_url, repository, dir_prefix, pattern):
+        """Find the single asset directly under dir_prefix matching pattern.
+
+        dir_prefix is a repository-absolute directory (leading+trailing '/').
+        pattern is a basename or fnmatch glob. Only assets whose parent dir is
+        exactly dir_prefix are considered (no recursion into sub-dirs). If
+        several match (e.g. a glob), the lexicographically-last is returned so
+        timestamped names resolve to the newest. Returns the asset dict or None.
+        """
+        import fnmatch
+        assets = self._list_assets(base_url, repository)
+        matches = []
+        for a in assets:
+            p = a.get("path", "")
+            ap = p if p.startswith("/") else "/" + p
+            if not ap.startswith(dir_prefix):
+                continue
+            rest = ap[len(dir_prefix):]
+            if "/" in rest:      # deeper than dir_prefix -> not a direct child
+                continue
+            if fnmatch.fnmatch(rest, pattern):
+                matches.append(a)
+        if not matches:
+            return None
+        matches.sort(key=lambda a: a.get("path", ""))
+        return matches[-1]
+
+    # -- transfer ------------------------------------------------------- #
+    def download(self, url, out_path, expect_sha256=None, expect_size=None):
+        """Stream a URL to out_path, then verify size/sha256 if provided."""
+        import hashlib
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+        tmp = out_path + ".part"
+        h = hashlib.sha256()
+        total = 0
+        try:
+            with self.session.get(url, stream=True, timeout=120) as r:
+                if r.status_code == 404:
+                    raise _StoreError(f"not found (HTTP 404): {url}")
+                if r.status_code != 200:
+                    raise _StoreError(f"HTTP {r.status_code} fetching {url}")
+                with open(tmp, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=1024 * 1024):
+                        if not chunk:
+                            continue
+                        f.write(chunk)
+                        h.update(chunk)
+                        total += len(chunk)
+        except _StoreError:
+            self._rm(tmp)
+            raise
+        except Exception as exc:  # noqa: BLE001
+            self._rm(tmp)
+            raise _StoreError(f"transfer failed: {exc}")
+
+        if expect_size is not None and int(expect_size) != total:
+            self._rm(tmp)
+            raise _StoreError(
+                f"size mismatch: got {total} bytes, expected {expect_size}.")
+        if expect_sha256:
+            got = h.hexdigest()
+            if got.lower() != str(expect_sha256).lower():
+                self._rm(tmp)
+                raise _StoreError(
+                    f"sha256 mismatch: got {got}, expected {expect_sha256}.")
+        os.replace(tmp, out_path)
+
+    @staticmethod
+    def _rm(path):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+
 class Sdk(WestCommand):
     """Parent command; delegates to the ``download`` / ``build`` subcommands."""
 
@@ -118,10 +373,13 @@ class Sdk(WestCommand):
 
         dl = sub.add_parser(
             "download",
-            help="Download prebuilt artifacts (firmware, and Ubuntu WIC for navq95) from Nexus",
+            help="Download prebuilt artifacts (firmware, and Linux WIC for navq95) from the artifact store",
         )
         dl.add_argument("-p", "--platform", required=True,
                         help="Platform to download for, or 'all'.")
+        dl.add_argument("--dry-run", action="store_true",
+                        help="Resolve and print what would be fetched without "
+                             "downloading anything.")
 
         up = sub.add_parser(
             "update",
@@ -196,15 +454,35 @@ class Sdk(WestCommand):
         else:
             targets = [args.platform]
 
+        # Authoritative source + pinned versions (one place for the whole SDK).
+        art = load_versions(self.topdir)
+        base_url = art.get("base_url")
+        repository = art.get("repository")
+        if not base_url or not repository:
+            log.die(f"{VERSIONS_FILE}: 'artifacts' needs 'base_url' and "
+                    f"'repository'.")
+
+        # One shared store client: single netrc lookup / token prompt, cached
+        # listing per repository, one connection pool.
+        store = _ArtifactStore(dry_run=getattr(args, "dry_run", False))
+        store.ensure_auth(base_url)
+
+        overall_ok = True
         for platform in targets:
             pdata, _ = load_platform(self.topdir, platform)
             entries = pdata.get("download", []) or []
             if not entries:
                 log.wrn(f"[{platform}] no download entries defined; skipping.")
                 continue
+
             log.inf(f"=== download: {platform} ===")
             for entry in entries:
-                self._download_stub(platform, entry)
+                ok = self._download_one(store, platform, entry, art,
+                                        base_url, repository)
+                overall_ok = overall_ok and ok
+
+        if not overall_ok:
+            log.die("One or more artifacts failed to download. See messages above.")
 
     def _realtime_dir(self, pdata, platform):
         """Resolve a platform's firmware output directory: bin/<platform>/<sub>.
@@ -222,28 +500,92 @@ class Sdk(WestCommand):
             parts.append(subdir)
         return os.path.join(*parts)
 
-    def _download_stub(self, platform, entry):
-        """Print what would be fetched. Creates NO files (backend not wired).
+    def _download_one(self, store, platform, entry, art, base_url, repository):
+        """Resolve and fetch a single download-catalog entry.
 
-        Every artifact is placed under bin/<platform>/. The 'dest' key is a
-        sub-path RELATIVE to bin/<platform>/ (e.g. "" for the platform root,
-        "realtime/" for the firmware sub-dir, "ubuntu/" for the NavQ95 WIC),
-        so download and build share the same bin/<platform>/... layout.
+        Catalog entry keys (data-driven from build.yml; sdk.py has no
+        per-platform knowledge):
+
+          name    : output basename (display label).
+          class   : artifact class in versions.yml (e.g. 'mcu', 'mpu'); supplies
+                    the store path and pinned version.
+          subpath : path under <class.path>/<class.version>/ (e.g.
+                    'navq95/realtime').
+          src     : store-side basename or glob if it differs from 'name'
+                    (e.g. the timestamped WIC 'imx-image-ros-*.wic.zst').
+          dest    : sub-path under bin/<platform>/. If it names a file it is
+                    kept verbatim; a bare dir gets the resolved basename.
+          sha256  : optional expected checksum ('TODO'/empty -> use the store's
+                    reported checksum, if any).
+
+        Returns True on success (or dry-run), False on failure.
         """
         name = entry.get("name", "<unnamed>")
-        src = entry.get("src") or name
-        rel = entry.get("dest", "")
-        # A dest that names a file keeps that name; a bare dir gets 'name'.
-        if rel.endswith("/") or rel.endswith(os.sep) or not os.path.splitext(rel)[1]:
-            rel = os.path.join(rel, name)
-        base = os.path.join(self.topdir, "bin", platform)
-        out = os.path.join(base, rel)
-        url = f"{NEXUS_REPO}/{platform}/{src}"
+        cls = entry.get("class")
+        ccfg = art.get(cls) if cls else None
+        if not ccfg or not ccfg.get("path"):
+            log.err(f"  - {name}")
+            log.err(f"    ERROR: unknown artifact class {cls!r} "
+                    f"(define it in {VERSIONS_FILE}).")
+            return False
+        cls_path = str(ccfg["path"]).strip("/")
+        version = str(ccfg.get("version", "latest"))
+        subpath = (entry.get("subpath") or "").strip("/")
+
+        # store-side pattern to resolve: 'src' if given, else 'name'.
+        pattern = entry.get("src") or name
+
+        prefix_parts = [cls_path, version]
+        if subpath:
+            prefix_parts.append(subpath)
+        dir_prefix = "/" + "/".join(prefix_parts) + "/"
+
         log.inf(f"  - {name}")
-        log.inf(f"    TODO would fetch : {url}")
-        log.inf(f"    TODO would write : {out}")
-        if entry.get("sha256"):
-            log.inf(f"    TODO would verify: sha256={entry['sha256']}")
+        try:
+            asset = store.resolve_asset(base_url, repository, dir_prefix, pattern)
+        except _StoreError as exc:
+            log.err(f"    ERROR resolving: {exc}")
+            return False
+        if asset is None:
+            log.err(f"    ERROR: no asset matching '{pattern}' under "
+                    f"{repository}:{dir_prefix}")
+            return False
+
+        remote_path = asset["path"]                       # leading '/'
+        remote_base = os.path.basename(remote_path)
+        remote_sha = (asset.get("checksum") or {}).get("sha256")
+        remote_size = asset.get("fileSize")
+
+        # Local destination. 'dest' is relative to bin/<platform>/. A dest that
+        # names a file is kept verbatim; a bare dir gets the RESOLVED remote
+        # basename (so timestamped/globbed names land with their real names).
+        rel = entry.get("dest", "")
+        if rel.endswith("/") or rel.endswith(os.sep) or not os.path.splitext(rel)[1]:
+            rel = os.path.join(rel, remote_base)
+        out = os.path.join(self.topdir, "bin", platform, rel)
+
+        url = f"{base_url}/repository/{repository}{remote_path}"
+        want_sha = entry.get("sha256")
+        if not want_sha or str(want_sha).upper() == "TODO":
+            want_sha = remote_sha
+
+        if store.dry_run:
+            log.inf(f"    would fetch : {url}")
+            log.inf(f"    would write : {out}")
+            if remote_size is not None:
+                log.inf(f"    size        : {remote_size} bytes")
+            if want_sha:
+                log.inf(f"    would verify: sha256={want_sha}")
+            return True
+
+        try:
+            store.download(url, out, expect_sha256=want_sha,
+                           expect_size=remote_size)
+        except _StoreError as exc:
+            log.err(f"    ERROR downloading: {exc}")
+            return False
+        log.inf(f"    saved -> {out}")
+        return True
 
     # ------------------------------------------------------------------ #
     # update: fetch/update a platform's sources only (no build)
