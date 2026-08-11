@@ -18,6 +18,6 @@ manifest:
       remote: zephyr
       # NavQ95 (mr_navq95b) lives on Zephyr 'main' for now.
       # TODO: pin to the exact SHA validated for this SDK release.
-      revision: main
+      revision: 5c12262de735358850365ede6d6f17c2db175131
       path: zephyr
       import: true

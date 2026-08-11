@@ -20,7 +20,7 @@ manifest:
   projects:
     - name: zephyr-rtos
       remote: nxp
-      revision: devel
+      revision: 46146504e6d7a4729a78e36eda5b13cd92d52c8d
       path: zephyr
       import: true
     - name: zephyr_boards

@@ -17,6 +17,6 @@ manifest:
   projects:
     - name: spinali
       remote: nxp
-      revision: devel
+      revision: 6f74f0d431c7d05baa20e895e34e1cf1cf02ae9b
       path: spinali
       import: true
