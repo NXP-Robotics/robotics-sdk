@@ -1338,7 +1338,65 @@ class Sdk(WestCommand):
         label = f"{group}/{name}" if group else board
         log.inf(f"--- west {tag}build -b {board} [{label}] "
                 f"(build-dir {build_dir}) ---")
-        return self._west_try(cmd, cwd=self.topdir)
+        ok = self._west_try(cmd, cwd=self.topdir)
+        if ok:
+            # Collect the flashable images into bin/, mirroring the build tree:
+            #   bin/<platform>/<stack>/<shield>/<example>/{zephyr.signed.bin,
+            #                                               mcuboot.bin}
+            # (legacy single-app platforms -> bin/<platform>/<board-slug>/).
+            if group is not None and platform is not None:
+                out_dir = os.path.join(self.topdir, "bin", platform,
+                                       stack or "", group, sub)
+            else:
+                out_dir = os.path.join(self.topdir, "bin", platform or bslug,
+                                       bslug)
+            self._collect_zephyr_images(build_dir, sub, out_dir)
+        return ok
+
+    def _collect_zephyr_images(self, build_dir, name, out_dir):
+        """Copy the flashable images produced by a (sysbuild) west build into
+        out_dir. Convention-based (no per-example config):
+
+          <app>/zephyr/zephyr.signed.bin  -> out_dir/zephyr.signed.bin
+          mcuboot/zephyr/zephyr.bin       -> out_dir/mcuboot.bin
+
+        With sysbuild the app image lives under <build_dir>/<name>/zephyr/;
+        without sysbuild it is directly under <build_dir>/zephyr/ (and there is
+        no mcuboot image). Missing files are skipped. Falls back to the
+        unsigned zephyr.bin when no signed image exists.
+        """
+        import shutil
+        os.makedirs(out_dir, exist_ok=True)
+
+        # App image: prefer the sysbuild sub-image dir, else the top build dir;
+        # prefer the signed image, else the raw one.
+        app_dirs = [os.path.join(build_dir, name, "zephyr"),
+                    os.path.join(build_dir, "zephyr")]
+        copied = False
+        for d in app_dirs:
+            signed = os.path.join(d, "zephyr.signed.bin")
+            raw = os.path.join(d, "zephyr.bin")
+            if os.path.isfile(signed):
+                dst = os.path.join(out_dir, "zephyr.signed.bin")
+                shutil.copy2(signed, dst)
+                log.inf(f"collected -> {dst}")
+                copied = True
+                break
+            if os.path.isfile(raw):
+                dst = os.path.join(out_dir, "zephyr.bin")
+                shutil.copy2(raw, dst)
+                log.inf(f"collected -> {dst}")
+                copied = True
+                break
+        if not copied:
+            log.wrn(f"no app image found to collect under {build_dir}")
+
+        # MCUboot image (sysbuild only).
+        mcuboot = os.path.join(build_dir, "mcuboot", "zephyr", "zephyr.bin")
+        if os.path.isfile(mcuboot):
+            dst = os.path.join(out_dir, "mcuboot.bin")
+            shutil.copy2(mcuboot, dst)
+            log.inf(f"collected -> {dst}")
 
     def _summarize(self, results):
         """Print a per-example PASS/FAIL table; exit non-zero if any failed."""
