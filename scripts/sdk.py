@@ -789,11 +789,13 @@ class Sdk(WestCommand):
                                 use_venv=args.use_venv)
             elif kind == "zephyr":
                 self._zephyr_export()
+                self._fetch_blobs(pdata)
                 self._build_zephyr(cfg, args.jobs, platform, pdata,
                                    shield=args.shield, example=args.example,
                                    build_all=build_all)
             elif kind == "cerebri":
                 self._zephyr_export()
+                self._fetch_blobs(pdata)
                 self._build_cerebri(cfg, args.jobs, platform, pdata,
                                     app_name=args.example, build_all=build_all)
             elif kind == "am32":
@@ -1332,6 +1334,27 @@ class Sdk(WestCommand):
         log.inf(f"=== {npass}/{len(results)} passed ===")
         if npass != len(results):
             log.die("one or more examples failed to build")
+
+    def _fetch_blobs(self, pdata):
+        """Fetch the Zephyr binary blobs a platform needs (west blobs fetch).
+
+        Blobs (e.g. the AFBR ToF library) are NOT pulled by 'west update', so
+        they must be fetched explicitly. The modules are declared per platform
+        in build.yml under a top-level 'blobs:' list; sdk.py stays platform-
+        agnostic. Fetched unconditionally (no harm if a build does not use one)
+        and idempotently (a no-op once present). Must run after _fetch_sources
+        (the manifest must be active for the 'blobs' extension command to
+        exist). Failure is fatal.
+        """
+        modules = (pdata or {}).get("blobs") or []
+        if not modules:
+            return
+        if getattr(self, "_blobs_fetched", False):
+            return
+        for module in modules:
+            log.inf(f"--- west blobs fetch {module} ---")
+            self._west(["blobs", "fetch", module], cwd=self.topdir)
+        self._blobs_fetched = True
 
     def _zephyr_export(self):
         """Register the Zephyr CMake package so find_package(Zephyr) resolves

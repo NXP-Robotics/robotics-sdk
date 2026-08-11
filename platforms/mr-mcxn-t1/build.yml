@@ -29,6 +29,12 @@ default_shield: t1
 
 realtime_subdir: ""
 
+# Zephyr binary blobs required by this platform. west update does NOT pull
+# these; the SDK fetches them (west blobs fetch) before zephyr/cerebri builds.
+# The AFBR ToF nodes are inlined in the base DTS, so every build links it.
+blobs:
+  - hal_afbr
+
 # MCUboot via sysbuild is enabled per stack below (zephyr/cerebri kind only).
 overlays:
   t1:   null
