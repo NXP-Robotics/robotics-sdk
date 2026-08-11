@@ -2,9 +2,9 @@
 #
 # AM32 is an open-source ESC / motor-controller firmware. This platform builds
 # it for NXP MCXA targets (currently the FRDM-MCXA153 board -> make target
-# FRDM_A153).
+# FRDM_A153), together with the matching AM32 bootloader.
 #
-# NOTE: intentionally NOT pinned yet -- we track upstream 'main' directly for
+# NOTE: intentionally NOT pinned yet -- we track upstream directly for
 # development. Pin to an exact tag/SHA at release time (replace 'revision').
 manifest:
   version: "1.0"
@@ -16,6 +16,8 @@ manifest:
   remotes:
     - name: am32-firmware
       url-base: ssh://git@bitbucket.sw.nxp.com/tars
+    - name: am32-github
+      url-base: https://github.com/am32-firmware
 
   projects:
     - name: AM32
@@ -26,3 +28,12 @@ manifest:
       # AM32 pulls its MCU HAL/CMSIS via git submodules.
       submodules: true
       path: AM32
+
+    # AM32 open-source ESC bootloader, tracked on upstream 'master' during
+    # development (pin to an exact tag/SHA at release time). No submodules --
+    # the A153 HAL/CMSIS is vendored in-tree.
+    - name: AM32-bootloader
+      remote: am32-github
+      repo-path: AM32-bootloader
+      revision: master
+      path: AM32-bootloader

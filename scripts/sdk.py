@@ -1177,37 +1177,80 @@ class Sdk(WestCommand):
     # AM32 build (GNU make via shell-out; xPack toolchain via arm_sdk_install)
     # ------------------------------------------------------------------ #
     def _build_am32(self, cfg, jobs, platform, pdata):
-        am32_src = os.path.join(self.topdir, "AM32")
-        if not os.path.isdir(am32_src):
-            log.die(f"AM32 sources not found at {am32_src}. "
-                    f"Run 'west sdk update' (or 'west sdk build --update') first.")
+        # Two schemas supported:
+        #   new: cfg["builds"] = [{src, targets, artifacts, [toolchain_from]}, ...]
+        #        -- multiple GNU-make source trees under one stack.
+        #   old: cfg["targets"]/cfg["artifacts"] with an implicit src "AM32".
+        builds = cfg.get("builds")
+        if not builds:
+            builds = [{
+                "src": "AM32",
+                "targets": cfg.get("targets") or [],
+                "artifacts": cfg.get("artifacts") or [],
+            }]
 
-        targets = cfg.get("targets") or []
-        if not targets:
-            log.die("AM32 stack defines no 'targets'.")
+        # xPack arm-none-eabi-gcc prefix relative to a source tree, matching
+        # AM32's make/tools.mk ARM_SDK_PREFIX on Linux. Used to point one tree
+        # at another tree's already-installed toolchain (toolchain_from) so the
+        # tools are downloaded only once.
+        arm_prefix_rel = os.path.join(
+            "tools", "linux",
+            "xpack-arm-none-eabi-gcc-10.3.1-2.3", "bin", "arm-none-eabi-")
 
-        # One-time prebuild: AM32 downloads its own xPack arm-none-eabi-gcc
-        # toolchain into the tree via 'make arm_sdk_install'. Idempotent -- the
-        # target no-ops once the SDK is present, but we also stamp it to avoid
-        # re-running the network step on every build.
-        stamp = os.path.join(am32_src, ".arm_sdk_installed")
-        if not os.path.isfile(stamp):
-            log.inf("--- am32 prebuild: make arm_sdk_install (download toolchain) ---")
-            self._run(["make", "arm_sdk_install"], cwd=am32_src)
-            try:
-                open(stamp, "w").write("ok\n")
-            except OSError:
-                pass
-        else:
-            log.inf("am32 toolchain already installed (arm_sdk_install)")
-
-        for target in targets:
-            log.inf(f"--- am32 make {target} (-j{jobs}) ---")
-            self._run(["make", target, f"-j{jobs}"], cwd=am32_src)
-
-        # AM32 emits versioned files into obj/; collect as-is (globs supported).
         out_dir = self._realtime_dir(pdata, platform)
-        self._collect_artifacts(am32_src, cfg.get("artifacts", []) or [], out_dir)
+        for unit in builds:
+            src = unit.get("src") or "AM32"
+            am32_src = os.path.join(self.topdir, src)
+            if not os.path.isdir(am32_src):
+                log.die(f"{src} sources not found at {am32_src}. "
+                        f"Run 'west sdk update' (or 'west sdk build --update') "
+                        f"first.")
+
+            targets = unit.get("targets") or []
+            if not targets:
+                log.die(f"AM32 build unit '{src}' defines no 'targets'.")
+
+            # A unit may reuse another unit's already-downloaded toolchain
+            # instead of running arm_sdk_install again. We then pass an absolute
+            # ARM_SDK_PREFIX on the make command line (overrides tools.mk's ':='
+            # assignment), so this tree's CC/OBJCOPY resolve to the shared GCC.
+            make_extra = []
+            borrow = unit.get("toolchain_from")
+            if borrow:
+                shared_prefix = os.path.join(self.topdir, borrow, arm_prefix_rel)
+                gcc = shared_prefix + "gcc"
+                if not os.path.isfile(gcc):
+                    log.die(f"toolchain_from '{borrow}': expected the shared "
+                            f"toolchain at {gcc}, but it was not found. It is "
+                            f"installed while building '{borrow}', so list that "
+                            f"unit before '{src}' in build.yml.")
+                make_extra = [f"ARM_SDK_PREFIX={shared_prefix}"]
+                log.inf(f"am32 ({src}): reusing toolchain from '{borrow}' "
+                        f"(no re-download)")
+            else:
+                # One-time prebuild: download the xPack arm-none-eabi-gcc
+                # toolchain into this tree via 'make arm_sdk_install'. Stamped
+                # to avoid re-running the network step on every build.
+                stamp = os.path.join(am32_src, ".arm_sdk_installed")
+                if not os.path.isfile(stamp):
+                    log.inf(f"--- am32 prebuild ({src}): make arm_sdk_install "
+                            f"(download toolchain) ---")
+                    self._run(["make", "arm_sdk_install"], cwd=am32_src)
+                    try:
+                        open(stamp, "w").write("ok\n")
+                    except OSError:
+                        pass
+                else:
+                    log.inf(f"am32 toolchain already installed ({src})")
+
+            for target in targets:
+                log.inf(f"--- am32 make {target} (-j{jobs}) in {src} ---")
+                self._run(["make", target, f"-j{jobs}", *make_extra],
+                          cwd=am32_src)
+
+            # AM32 emits versioned files into obj/; collect as-is (globs ok).
+            self._collect_artifacts(am32_src, unit.get("artifacts", []) or [],
+                                    out_dir)
 
     # ------------------------------------------------------------------ #
     # preflight: fail fast on a clean system with a clear, actionable msg

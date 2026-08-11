@@ -1,8 +1,9 @@
 # Build + artifact definition for the mr-esc-mcxa platform.
 #
-# AM32 open-source ESC / motor-controller firmware built for NXP MCXA targets.
-# This file is the single source of truth for how the platform builds and what
-# artifacts it produces; sdk.py contains no platform-specific logic.
+# AM32 open-source ESC / motor-controller firmware built for NXP MCXA targets,
+# plus the matching AM32 bootloader. This file is the single source of truth
+# for how the platform builds and what artifacts it produces; sdk.py contains
+# no platform-specific logic.
 
 platform: mr-esc-mcxa
 default_stack: am32
@@ -11,21 +12,41 @@ default_stack: am32
 realtime_subdir: ""
 
 stacks:
-  # AM32 uses a GNU Makefile build. Each board is a make target (e.g.
-  # 'make FRDM_A153'). A one-time 'make arm_sdk_install' downloads the xPack
-  # arm-none-eabi-gcc toolchain into the AM32 tree (handled as a prebuild step
-  # by sdk.py). Currently only the FRDM-MCXA153 board is supported.
+  # AM32 uses a GNU Makefile build. Each 'builds' entry is a separate source
+  # tree; a board/bootloader is a make target (e.g. 'make FRDM_A153' or
+  # 'make AM32_A153_BOOTLOADER_PB2'). A one-time 'make arm_sdk_install'
+  # downloads the xPack arm-none-eabi-gcc toolchain into a tree (handled by
+  # sdk.py). Entries are built in order; an entry may reuse another entry's
+  # already-downloaded toolchain via 'toolchain_from' so the tools are fetched
+  # only once.
   am32:
     kind: am32
-    targets:
-      - FRDM_A153
-    # AM32 emits versioned outputs into obj/ (AM32_<board>_<version>.{elf,bin,hex}).
-    # Collected AS-IS (version kept in the filename) into bin/<platform>/.
-    # Globs are resolved at collect time.
-    artifacts:
-      - "obj/AM32_FRDM_A153_*.elf"
-      - "obj/AM32_FRDM_A153_*.bin"
-      - "obj/AM32_FRDM_A153_*.hex"
+    builds:
+      # Main ESC / motor-controller firmware (am32.git). Installs the xPack
+      # toolchain into AM32/tools/ via 'make arm_sdk_install'.
+      - src: AM32
+        targets:
+          - FRDM_A153
+        # AM32 emits versioned outputs into obj/
+        # (AM32_<board>_<version>.{elf,bin,hex}); collected AS-IS (version kept
+        # in the filename). Globs are resolved at collect time.
+        artifacts:
+          - "obj/AM32_FRDM_A153_*.elf"
+          - "obj/AM32_FRDM_A153_*.bin"
+          - "obj/AM32_FRDM_A153_*.hex"
+      # AM32 bootloader (github.com/am32-firmware/AM32-bootloader). Same xPack
+      # toolchain version/layout as the firmware, so REUSE the firmware's
+      # already-downloaded tools instead of downloading again -- sdk.py builds
+      # this tree with an absolute ARM_SDK_PREFIX pointing into AM32/tools/.
+      # Target AM32_A153_BOOTLOADER_PB2 -> obj/AM32_A153_BOOTLOADER_PB2_V<ver>.{elf,bin,hex}.
+      - src: AM32-bootloader
+        toolchain_from: AM32
+        targets:
+          - AM32_A153_BOOTLOADER_PB2
+        artifacts:
+          - "obj/AM32_A153_BOOTLOADER_PB2_*.elf"
+          - "obj/AM32_A153_BOOTLOADER_PB2_*.bin"
+          - "obj/AM32_A153_BOOTLOADER_PB2_*.hex"
 
 # Prebuilt artifacts for `west sdk download`. The '*' in 'src' resolves against
 # the listing (newest wins) and the real basename is kept. 'dest' relative to
@@ -34,3 +55,6 @@ download:
   - {name: AM32_FRDM_A153.elf, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.elf", dest: ""}
   - {name: AM32_FRDM_A153.bin, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.bin", dest: ""}
   - {name: AM32_FRDM_A153.hex, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.hex", dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2.elf, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.elf", dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2.bin, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.bin", dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2.hex, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.hex", dest: ""}
