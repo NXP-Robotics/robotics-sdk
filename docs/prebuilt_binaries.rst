@@ -47,24 +47,32 @@ or logged.
 Versions
 --------
 
-The root ``versions.yml`` is the single source of truth for the store location
-and the pinned build of each artifact class::
+The root ``versions.yml`` is the default source of truth: it defines each
+artifact class (its store location and pinned build). Each class is
+self-contained::
 
    artifacts:
-     base_url: https://nl4-nxrm.sw.nxp.com
-     repository: TARS_Daily_Build
      mcu:
+       base_url: https://nl4-nxrm.sw.nxp.com
+       repository: TARS_Daily_Build
        path: Robotics_Firmware
        version: latest
      mpu:
+       base_url: https://nl4-nxrm.sw.nxp.com
+       repository: TARS_Daily_Build
        path: Robotics_Release
        version: latest
 
 Daily builds track ``latest`` for both classes. A release pins each class to
 its own build number (the MCU firmware and the MPU/Linux image come from
 separate pipelines with independent numbering, e.g. ``mcu: 35`` /
-``mpu: 20``). Use ``--dry-run`` to resolve and print exactly what would be
-fetched (URLs, sizes, checksums) without downloading.
+``mpu: 20``).
+
+A platform may override a whole class for itself: a top-level ``artifacts:``
+block in ``platforms/<platform>/build.yml`` that defines a class replaces the
+generic one from ``versions.yml`` for that platform (e.g. to pull a class from
+a different store). Use ``--dry-run`` to resolve and print exactly what would
+be fetched (URLs, sizes, checksums) without downloading.
 
 Integrity
 ---------

@@ -106,9 +106,9 @@ def manifest_for(stack, platform):
 def load_versions(topdir):
     """Load the authoritative artifact source/version file (root versions.yml).
 
-    Returns the 'artifacts' mapping: {base_url, repository, <class>: {path,
-    version}, ...}. sdk.py stays platform- and backend-agnostic -- everything
-    (store location, per-class pinned versions) is data here.
+    Returns the 'artifacts' mapping: {<class>: {base_url, repository, path,
+    version, [backend]}, ...}. Each class is self-contained so a platform can
+    override a whole class. sdk.py stays platform- and backend-agnostic.
     """
     if yaml is None:
         log.die("PyYAML is required. Install with: pip install pyyaml")
@@ -454,18 +454,13 @@ class Sdk(WestCommand):
         else:
             targets = [args.platform]
 
-        # Authoritative source + pinned versions (one place for the whole SDK).
+        # Generic (default) artifact sources + pinned versions. A platform may
+        # override a whole class under its own 'artifacts:' block.
         art = load_versions(self.topdir)
-        base_url = art.get("base_url")
-        repository = art.get("repository")
-        if not base_url or not repository:
-            log.die(f"{VERSIONS_FILE}: 'artifacts' needs 'base_url' and "
-                    f"'repository'.")
 
-        # One shared store client: single netrc lookup / token prompt, cached
-        # listing per repository, one connection pool.
+        # One shared store client; auth/listing are cached per host/repository,
+        # so classes on different stores each authenticate/list once.
         store = _ArtifactStore(dry_run=getattr(args, "dry_run", False))
-        store.ensure_auth(base_url)
 
         overall_ok = True
         for platform in targets:
@@ -477,12 +472,25 @@ class Sdk(WestCommand):
 
             log.inf(f"=== download: {platform} ===")
             for entry in entries:
-                ok = self._download_one(store, platform, entry, art,
-                                        base_url, repository)
+                ok = self._download_one(store, platform, entry, pdata, art)
                 overall_ok = overall_ok and ok
 
         if not overall_ok:
             log.die("One or more artifacts failed to download. See messages above.")
+
+    def _resolve_class(self, pdata, art, cls):
+        """Resolve an artifact class: a platform 'artifacts' block overrides the
+        generic versions.yml at the whole-class level; else fall back to the
+        generic definition. Returns the class dict or None.
+        """
+        if not cls:
+            return None
+        pov = pdata.get("artifacts") or {}
+        if cls in pov and pov[cls]:
+            return pov[cls]
+        if cls in art and art[cls]:
+            return art[cls]
+        return None
 
     def _realtime_dir(self, pdata, platform):
         """Resolve a platform's firmware output directory: bin/<platform>/<sub>.
@@ -500,15 +508,16 @@ class Sdk(WestCommand):
             parts.append(subdir)
         return os.path.join(*parts)
 
-    def _download_one(self, store, platform, entry, art, base_url, repository):
+    def _download_one(self, store, platform, entry, pdata, art):
         """Resolve and fetch a single download-catalog entry.
 
         Catalog entry keys (data-driven from build.yml; sdk.py has no
         per-platform knowledge):
 
           name    : output basename (display label).
-          class   : artifact class in versions.yml (e.g. 'mcu', 'mpu'); supplies
-                    the store path and pinned version.
+          class   : artifact class (e.g. 'mcu', 'mpu'); supplies the store
+                    (base_url/repository), path and pinned version. Resolved
+                    from the platform's 'artifacts' override, else versions.yml.
           subpath : path under <class.path>/<class.version>/ (e.g.
                     'navq95/realtime').
           src     : store-side basename or glob if it differs from 'name'
@@ -522,15 +531,28 @@ class Sdk(WestCommand):
         """
         name = entry.get("name", "<unnamed>")
         cls = entry.get("class")
-        ccfg = art.get(cls) if cls else None
+        ccfg = self._resolve_class(pdata, art, cls)
         if not ccfg or not ccfg.get("path"):
             log.err(f"  - {name}")
-            log.err(f"    ERROR: unknown artifact class {cls!r} "
-                    f"(define it in {VERSIONS_FILE}).")
+            log.err(f"    ERROR: unknown artifact class {cls!r} (define it in "
+                    f"{VERSIONS_FILE} or the platform's 'artifacts' block).")
+            return False
+        base_url = ccfg.get("base_url")
+        repository = ccfg.get("repository")
+        if not base_url or not repository:
+            log.err(f"  - {name}")
+            log.err(f"    ERROR: class {cls!r} needs 'base_url' and 'repository'.")
+            return False
+        backend = str(ccfg.get("backend", "nexus"))
+        if backend != "nexus":
+            log.err(f"  - {name}")
+            log.err(f"    ERROR: backend {backend!r} not implemented yet "
+                    f"(only 'nexus').")
             return False
         cls_path = str(ccfg["path"]).strip("/")
         version = str(ccfg.get("version", "latest"))
         subpath = (entry.get("subpath") or "").strip("/")
+        store.ensure_auth(base_url)
 
         # store-side pattern to resolve: 'src' if given, else 'name'.
         pattern = entry.get("src") or name
