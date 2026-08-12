@@ -5,9 +5,9 @@ artifacts:
     base_url: https://nl4-nxrm.sw.nxp.com
     repository: TARS_Daily_Build
     path: Robotics_Firmware
-    version: 54
+    version: 56
   mpu:
     base_url: https://nl4-nxrm.sw.nxp.com
     repository: TARS_Daily_Build
     path: Robotics_Release
-    version: 70
+    version: 72
