@@ -964,32 +964,39 @@ class Sdk(WestCommand):
                     log.inf(f"  remote mismatch in {proj['path']}: "
                             f"have {sorted(urls)}, want {proj['url']!r}")
                     return False
-            # Revision check: compare HEAD against the pinned revision.
+            # Revision check: compare HEAD against the revision THIS
+            # manifest pins (proj['revision']), NOT against 'manifest-rev'.
             #
-            # west always writes a 'manifest-rev' ref at the fetched revision,
-            # regardless of whether the manifest pinned a SHA, a tag or a
-            # BRANCH name. A raw 'rev-parse <branch>^{commit}' only works when a
-            # local ref by that name exists -- which it does NOT after a fresh
-            # 'west update' (the tree is left on a detached manifest-rev). So we
-            # resolve the target as: manifest-rev first, then the literal
-            # revision as a fallback (covers SHAs/tags present locally). Only if
-            # NEITHER resolves do we treat it as a real mismatch.
+            # 'manifest-rev' records the revision of the LAST 'west update',
+            # which -- for a platform/stack switch that reuses the same
+            # workspace path (e.g. navq95 and tropic both clone PX4 into
+            # 'PX4-Autopilot' but pin different commits) -- still points at the
+            # PREVIOUS platform's commit. Trusting manifest-rev therefore made
+            # a stale tree look like a match ('head == manifest-rev') and
+            # skipped the needed re-fetch. So we resolve the manifest's pinned
+            # revision directly and treat HEAD != pinned as a real mismatch.
+            #
+            # A pinned SHA/tag resolves locally whenever the tree exists; a
+            # pinned BRANCH name may not resolve until fetched -- in that case
+            # we cannot prove a mismatch by revision alone, so we fall back to
+            # manifest-rev (best-effort) and, if that too is inconclusive,
+            # assume a match (avoids a spurious destructive re-fetch on a mere
+            # branch-vs-SHA form difference; a genuine platform switch is still
+            # caught by the remote/URL check above).
             want = proj.get("revision")
             if want:
                 head = self._git_out(["rev-parse", "HEAD"], cwd=d)
-                target = self._git_out(["rev-parse", "manifest-rev^{commit}"],
-                                       cwd=d)
+                # Authoritative target: the revision this manifest pins.
+                target = self._git_out(
+                    ["rev-parse", f"{want}^{{commit}}"], cwd=d)
                 if target is None:
+                    # Pinned revision (likely an unfetched branch name) does
+                    # not resolve locally -> fall back to manifest-rev.
                     target = self._git_out(
-                        ["rev-parse", f"{want}^{{commit}}"], cwd=d)
-                # Unresolvable target -> cannot prove a mismatch; assume the
-                # sources are the right ones (avoid a spurious destructive
-                # re-fetch when only the revision *form* -- branch vs SHA --
-                # differs). A genuine platform switch is still caught by the
-                # remote/URL check above.
+                        ["rev-parse", "manifest-rev^{commit}"], cwd=d)
                 if head is not None and target is not None and head != target:
                     log.inf(f"  revision mismatch in {proj['path']}: "
-                            f"HEAD={head}, want {want} (manifest-rev={target}).")
+                            f"HEAD={head}, want {want} (resolved={target}).")
                     return False
         return True
 
