@@ -15,6 +15,7 @@ system, and provides prebuilt artifacts through Nexus.
    boards/tropic
    boards/vmu-rt1176
    boards/mr-esc-mcxa
+   boards/mr-mcxn-t1
    prebuilt_binaries
    release_notes
 
@@ -49,3 +50,8 @@ Supported platforms and stacks
      -
      -
      - yes
+   * - ``mr-mcxn-t1``
+     -
+     - yes
+     - yes
+     -

@@ -14,6 +14,7 @@ artifacts through Nexus.
 | `tropic`       | ✅  |         |   ✅   |      | `nxp_mr-tropic_default.bin`, `nxp_mr-tropic_bootloader.bin` |
 | `vmu-rt1176`   | ✅  |   ✅    |   ✅   |      | `nxp_fmurt1176_default.elf/.bin`                     |
 | `mr-esc-mcxa`  |     |         |        |  ✅  | `AM32_FRDM_A153_<version>.elf/.bin/.hex`             |
+| `mr-mcxn-t1`   |     |   ✅    |   ✅   |      | per-example `zephyr.signed.bin` + `mcuboot.bin` (Zephyr t1/oflo/f9p shields, Cerebri optical_flow) |
 
 > The Ubuntu WIC image is specific to the NavQ95 A-core and is only available
 > for `navq95`. On `navq95`, the PX4 **default (TCM)** image is also
@@ -67,6 +68,7 @@ Pulls NXP prebuilt firmware — and, for NavQ95, the Ubuntu image — from Nexus
 west sdk download --platform navq95    # firmware + ubuntu .wic
 west sdk download --platform tropic       # firmware only
 west sdk download --platform vmu-rt1176   # firmware only
+west sdk download --platform mr-mcxn-t1   # firmware only (per-shield/example)
 west sdk download --platform all          # everything
 ```
 
@@ -90,6 +92,9 @@ west sdk build --platform navq95                 # PX4 (default stack)
 west sdk build --platform navq95 --stack zephyr  # plain Zephyr
 west sdk build --platform vmu-rt1176 --stack cerebri
 west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
+west sdk build --platform mr-mcxn-t1                # Zephyr, --shield t1 (default)
+west sdk build --platform mr-mcxn-t1 --shield f9p   # Zephyr, F9P GNSS shield
+west sdk build --platform mr-mcxn-t1 --stack cerebri # Cerebri (optical_flow)
 ```
 
 `--stack` is optional; each platform has a sensible default (see table).
