@@ -101,13 +101,6 @@ Artifacts land under ``bin/<platform>/``: firmware directly in
 ``bin/navq95/realtime/`` (plus the Ubuntu WIC in ``bin/navq95/ubuntu/``)
 for NavQ95. Checksums are verified automatically.
 
-.. note::
-
-   The Nexus backend is not wired up yet. ``download`` currently resolves and
-   prints exactly what it *would* fetch (from each platform's
-   ``platforms/<platform>/build.yml`` ``download:`` section); the
-   transfer itself is stubbed.
-
 Build From Source
 -----------------
 

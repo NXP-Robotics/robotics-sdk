@@ -76,11 +76,6 @@ Artifacts land under `bin/<platform>/`: firmware directly in `bin/<platform>/`
 for tropic, vmu-rt1176 and mr-esc-mcxa, and in `bin/navq95/realtime/` (plus
 the Ubuntu WIC in `bin/navq95/ubuntu/`) for NavQ95; checksums are verified.
 
-> **Status:** the Nexus backend is not wired up yet. `download` currently
-> resolves and prints exactly what it *would* fetch (from each platform's
-> `platforms/<platform>/build.yml` `download:` section); the transfer itself
-> is a stub. See the TODO in `scripts/sdk.py`.
-
 ### 2b. Build from source
 
 Selects the platform/stack manifest, fetches the pinned sources **when they are
