@@ -28,6 +28,6 @@ manifest:
   projects:
     - name: nxp-robotics-docs
       remote: tars
-      revision: efb6ac01c1df1ab1b90d4df1246a58c0876e541f
+      revision: 3a1aba513415421301d2cc47b0f502757c5313d9
       path: docs
       groups: [docs]
