@@ -58,3 +58,9 @@ download:
   - {name: AM32_A153_BOOTLOADER_PB2.elf, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.elf", dest: ""}
   - {name: AM32_A153_BOOTLOADER_PB2.bin, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.bin", dest: ""}
   - {name: AM32_A153_BOOTLOADER_PB2.hex, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.hex", dest: ""}
+
+  # esc_passthrough (built on the vmu-rt1176 platform, collected here under
+  # passthrough/<platform>/ via that stack's collect_dir + image_name).
+  # Non-sysbuild Zephyr build -> renamed .bin + .elf per board.
+  - {name: esc_vmu_rt1176_passthrough.bin, class: mcu, subpath: mr-esc-mcxa/passthrough/vmu-rt1176, dest: passthrough/vmu-rt1176/}
+  - {name: esc_vmu_rt1176_passthrough.elf, class: mcu, subpath: mr-esc-mcxa/passthrough/vmu-rt1176, dest: passthrough/vmu-rt1176/}

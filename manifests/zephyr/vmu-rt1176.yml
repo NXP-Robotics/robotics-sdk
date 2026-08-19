@@ -1,4 +1,9 @@
 # NXP Robotics SDK - plain Zephyr stack - vmu-rt1176 platform (RT1176)
+#
+# Builds the out-of-tree esc_passthrough application (AM32/BLHeli ESC
+# configurator passthrough) for the MR-VMU-RT1176 board on generic Zephyr.
+# The app source lives in nxp-robotics-apps; the FlexIO-UART transport is
+# carried app-privately (no shared driver module).
 manifest:
   version: "1.0"
 
@@ -9,11 +14,17 @@ manifest:
   remotes:
     - name: zephyr
       url-base: https://github.com/zephyrproject-rtos
+    - name: nxp
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
     - name: zephyr
       remote: zephyr
-      # TODO: pin to the exact SHA/tag validated for this SDK release.
-      revision: 5c12262de735358850365ede6d6f17c2db175131
+      revision: f2b5ecd866f0a4b3ce91e3cdbc89b51bf93c53c0
       path: zephyr
       import: true
+
+    - name: nxp-robotics-apps
+      remote: nxp
+      revision: 09f97d283cd6448db33e4413e94cd996b04d131d
+      path: nxp-robotics-apps

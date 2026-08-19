@@ -708,7 +708,7 @@ class Sdk(WestCommand):
         # preserve the original behaviour: build the platform's default_stack.
         bare = (args.stack is None and args.shield is None and args.example is None)
         build_all = getattr(args, "build_all", False)
-        if bare and (build_all or self._stacks_with_defaults(pdata)):
+        if bare and (build_all or self._stacks_with_defaults(pdata) or pdata.get("build_all")):
             self._build_all_stacks(pdata, ppath, args)
             return
 
@@ -738,7 +738,7 @@ class Sdk(WestCommand):
         every stack that has such targets. Each stack uses its own manifest,
         so we set+fetch per stack. Zephyr/cerebri kinds only."""
         build_all = getattr(args, "build_all", False)
-        if build_all:
+        if build_all or pdata.get("build_all"):
             stacks = list((pdata.get("stacks") or {}).keys())
         else:
             stacks = self._stacks_with_defaults(pdata)
@@ -1305,7 +1305,8 @@ class Sdk(WestCommand):
 
     def _zephyr_build_one(self, board, name, app, overlay, group,
                           sysbuild=False, sysbuild_args=None,
-                          platform=None, stack=None):
+                          platform=None, stack=None, collect_dir=None,
+                          image_name=None):
         bslug = board.replace("/", "_")
         sub = name or bslug
         if group is not None and platform is not None:
@@ -1351,16 +1352,26 @@ class Sdk(WestCommand):
             #   bin/<platform>/<stack>/<shield>/<example>/{zephyr.signed.bin,
             #                                               mcuboot.bin}
             # (legacy single-app platforms -> bin/<platform>/<board-slug>/).
-            if group is not None and platform is not None:
+            if collect_dir:
+                # Explicit collect-destination override (build.yml
+                # `collect_dir`): land images under bin/<collect_dir>/
+                # regardless of the platform/board-slug derivation. Lets an
+                # app built on one platform be collected under another
+                # platform's bin tree (e.g. build on vmu-rt1176, collect
+                # under bin/mr-esc-mcxa/passthrough/vmu-rt1176/).
+                out_dir = os.path.join(self.topdir, "bin", collect_dir)
+            elif group is not None and platform is not None:
                 out_dir = os.path.join(self.topdir, "bin", platform,
                                        stack or "", group, sub)
             else:
                 out_dir = os.path.join(self.topdir, "bin", platform or bslug,
                                        bslug)
-            self._collect_zephyr_images(build_dir, sub, out_dir)
+            self._collect_zephyr_images(build_dir, sub, out_dir,
+                                        image_name=image_name)
         return ok
 
-    def _collect_zephyr_images(self, build_dir, name, out_dir):
+    def _collect_zephyr_images(self, build_dir, name, out_dir,
+                               image_name=None):
         """Copy the flashable images produced by a (sysbuild) west build into
         out_dir. Convention-based (no per-example config):
 
@@ -1371,6 +1382,11 @@ class Sdk(WestCommand):
         without sysbuild it is directly under <build_dir>/zephyr/ (and there is
         no mcuboot image). Missing files are skipped. Falls back to the
         unsigned zephyr.bin when no signed image exists.
+
+        When `image_name` is set (build.yml `image_name`), the collected app
+        image is RENAMED to <image_name>.bin and the app ELF is ALSO collected
+        as <image_name>.elf. Absent -> legacy names (zephyr[.signed].bin, no
+        ELF), unchanged for all other platforms.
         """
         import shutil
         os.makedirs(out_dir, exist_ok=True)
@@ -1383,18 +1399,26 @@ class Sdk(WestCommand):
         for d in app_dirs:
             signed = os.path.join(d, "zephyr.signed.bin")
             raw = os.path.join(d, "zephyr.bin")
-            if os.path.isfile(signed):
-                dst = os.path.join(out_dir, "zephyr.signed.bin")
-                shutil.copy2(signed, dst)
-                log.inf(f"collected -> {dst}")
-                copied = True
-                break
-            if os.path.isfile(raw):
-                dst = os.path.join(out_dir, "zephyr.bin")
-                shutil.copy2(raw, dst)
-                log.inf(f"collected -> {dst}")
-                copied = True
-                break
+            elf = os.path.join(d, "zephyr.elf")
+            src_bin = signed if os.path.isfile(signed) else (
+                raw if os.path.isfile(raw) else None)
+            if src_bin is None:
+                continue
+            if image_name:
+                bin_dst = os.path.join(out_dir, image_name + ".bin")
+            elif src_bin == signed:
+                bin_dst = os.path.join(out_dir, "zephyr.signed.bin")
+            else:
+                bin_dst = os.path.join(out_dir, "zephyr.bin")
+            shutil.copy2(src_bin, bin_dst)
+            log.inf(f"collected -> {bin_dst}")
+            # Collect the ELF alongside when an explicit image_name is given.
+            if image_name and os.path.isfile(elf):
+                elf_dst = os.path.join(out_dir, image_name + ".elf")
+                shutil.copy2(elf, elf_dst)
+                log.inf(f"collected -> {elf_dst}")
+            copied = True
+            break
         if not copied:
             log.wrn(f"no app image found to collect under {build_dir}")
 
@@ -1464,7 +1488,10 @@ class Sdk(WestCommand):
                 log.die(f"Stack for '{platform}' defines no 'shields'; "
                         f"--shield/<example> are not applicable.")
             for board in boards:
-                self._zephyr_build_one(board, None, cfg.get("app"), None, None)
+                self._zephyr_build_one(board, None, cfg.get("app"), None, None,
+                                       platform=platform, stack="zephyr",
+                                       collect_dir=cfg.get("collect_dir"),
+                                       image_name=cfg.get("image_name"))
             return
 
         # Which shields to process:

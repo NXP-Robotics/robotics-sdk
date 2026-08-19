@@ -2,6 +2,7 @@
 
 platform: vmu-rt1176
 default_stack: px4
+build_all: True
 
 # Firmware artifacts go directly under bin/<platform>/ (no realtime subdir).
 realtime_subdir: ""
@@ -22,11 +23,18 @@ stacks:
       - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.elf
       - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.bin
 
+  # esc_passthrough (AM32/BLHeli ESC configurator passthrough) is built here,
+  # collated with the RT1176 board build, but its binaries are collected under
+  # the AM32/ESC bin tree via collect_dir (build on this platform, collect
+  # under bin/mr-esc-mcxa/passthrough/vmu-rt1176/).
   zephyr:
     kind: zephyr
     boards:
-      - vmu_rt1176
-    app: null
+      - vmu_rt1170/mimxrt1176/cm7
+    app: nxp-robotics-apps/esc_passthrough
+    collect_dir: mr-esc-mcxa/passthrough/vmu-rt1176
+    # Rename the collected app image and also collect the ELF alongside it.
+    image_name: esc_vmu_rt1176_passthrough
 
 download:
   # 'dest' relative to bin/vmu-rt1176/ ("" == the platform root).
