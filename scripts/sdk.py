@@ -1203,7 +1203,6 @@ class Sdk(WestCommand):
         # workspace venv (idempotent) before signing.
         py = os.path.join(venv_bin, "python") if venv_bin else None
         py = py if (py and os.path.isfile(py)) else sys.executable
-        self._ensure_imgtool_deps(py)
 
         # imgtool imports its sibling package; make it importable.
         sign_env = dict(env)
@@ -1240,26 +1239,6 @@ class Sdk(WestCommand):
             log.inf(f"sign: {in_name} -> {out_name}")
             self._run(cmd, cwd=scripts_dir, env=sign_env)
             log.inf(f"signed -> {out_path}")
-
-    # imgtool's third-party deps (absent from PX4's requirements.txt).
-    _IMGTOOL_DEPS = ["click", "cryptography", "intelhex", "pyyaml", "cbor2"]
-
-    def _ensure_imgtool_deps(self, py):
-        """Install MCUboot imgtool's Python deps into the venv (idempotent)."""
-        venv = os.path.join(self.topdir, ".px4-venv")
-        stamp = os.path.join(venv, ".imgtool-deps.ok")
-        if os.path.isfile(stamp):
-            log.inf("imgtool deps already installed")
-            return
-        log.inf("Installing imgtool dependencies into venv "
-                f"({', '.join(self._IMGTOOL_DEPS)})")
-        self._run([py, "-m", "pip", "install", *self._IMGTOOL_DEPS],
-                  cwd=self.topdir)
-        try:
-            with open(stamp, "w") as f:
-                f.write("ok\n")
-        except OSError:
-            pass
 
     def _collect_artifacts(self, src_root, artifacts, out_dir):
         """Copy built artifacts into out_dir, preserving basenames.
