@@ -18,7 +18,7 @@ stacks:
     kind: px4
     targets:
       - nxp_imx95_default
-      - nxp_imx95_ddr
+#      - nxp_imx95_ddr
     # Built outputs (relative to PX4-Autopilot/build/) collected into
     # bin/navq95/realtime/. Filenames preserved as-is (rename upstream in PX4).
     artifacts:
@@ -43,6 +43,18 @@ stacks:
       images:
         - {in: nxp_imx95_default.bin, out: nxp_imx95_default.mcuboot.bin}
 
+    # Re-wrap the SIGNED image in PX4's own .px4 firmware container. PX4's
+    # build already auto-generates nxp_imx95_default.px4 from the unsigned
+    # .bin (via px_mkfw.py, during 'make nxp_imx95_default'); this repeats
+    # that same packaging step against the mcuboot-signed .bin instead, since
+    # that is the image actually flashed/deployed.
+    package:
+      tool: Tools/px_mkfw.py
+      prototype: boards/nxp/imx95/firmware.prototype
+      build_target: nxp_imx95_default   # source of parameters.xml/airframes.xml
+      images:
+        - {in: nxp_imx95_default.mcuboot.bin, out: nxp_imx95_default.mcuboot.px4}
+
   # NavQ95 (MR-NavQ95B) is also its own Zephyr board on the i.MX95 Cortex-M7.
   # One `--stack zephyr` builds ALL boards below. Currently on Zephyr 'main'
   # (targeting the 4.4 release).
@@ -61,6 +73,7 @@ download:
   - {name: nxp_imx95_default.elf,         class: mcu, subpath: navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_default.bin,         class: mcu, subpath: navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_default.mcuboot.bin, class: mcu, subpath: navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.mcuboot.px4, class: mcu, subpath: navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_ddr.elf,             class: mcu, subpath: navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_ddr.bin,             class: mcu, subpath: navq95/realtime, dest: realtime/}
 

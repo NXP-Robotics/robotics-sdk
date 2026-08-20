@@ -20,6 +20,7 @@ stacks:
     artifacts:
       - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.elf
       - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.bin
+      - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.px4
       - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.elf
       - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.bin
 
@@ -40,5 +41,6 @@ download:
   # 'dest' relative to bin/vmu-rt1176/ ("" == the platform root).
   - {name: px4_fmu-v6xrt_default.elf,    class: mcu, subpath: vmu-rt1176, dest: ""}
   - {name: px4_fmu-v6xrt_default.bin,    class: mcu, subpath: vmu-rt1176, dest: ""}
+  - {name: px4_fmu-v6xrt_default.px4,    class: mcu, subpath: vmu-rt1176, dest: ""}
   - {name: px4_fmu-v6xrt_bootloader.elf, class: mcu, subpath: vmu-rt1176, dest: ""}
   - {name: px4_fmu-v6xrt_bootloader.bin, class: mcu, subpath: vmu-rt1176, dest: ""}

@@ -15,6 +15,7 @@ stacks:
       - nxp_mr-tropic_bootloader
     artifacts:
       - nxp_mr-tropic_default/nxp_mr-tropic_default.bin
+      - nxp_mr-tropic_default/nxp_mr-tropic_default.px4
       - nxp_mr-tropic_bootloader/nxp_mr-tropic_bootloader.bin
 
   zephyr:
@@ -26,4 +27,5 @@ stacks:
 download:
   # 'dest' relative to bin/tropic/ ("" == the platform root).
   - {name: nxp_mr-tropic_default.bin,    class: mcu, subpath: tropic, dest: ""}
+  - {name: nxp_mr-tropic_default.px4,    class: mcu, subpath: tropic, dest: ""}
   - {name: nxp_mr-tropic_bootloader.bin, class: mcu, subpath: tropic, dest: ""}
