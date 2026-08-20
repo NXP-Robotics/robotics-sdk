@@ -11,6 +11,7 @@ system, and provides prebuilt artifacts through Nexus.
    :caption: Contents
 
    getting_started
+   building_with_docker
    boards/navq95
    boards/tropic
    boards/vmu-rt1176
