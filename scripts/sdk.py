@@ -1066,39 +1066,13 @@ class Sdk(WestCommand):
             log.die(f"PX4 sources not found at {px4_src}. "
                     f"Run 'west sdk update' (or 'west sdk build --update') first.")
 
-        env = os.environ.copy()
-        if use_venv:
-            venv_bin = self._ensure_px4_venv(px4_src)
-            self._ensure_ccache(venv_bin)
-            env["PATH"] = venv_bin + os.pathsep + env.get("PATH", "")
-            # PX4's CMake resolves Python via find_package/PATH and runs
-            # "${PYTHON_EXECUTABLE} -c 'import menuconfig'" (kconfiglib). Point it
-            # explicitly at the venv interpreter (which has PX4's requirements
-            # incl. kconfiglib) so a system python without kconfiglib is not used.
-            venv_py = os.path.join(venv_bin, "python")
-            if os.path.isfile(venv_py):
-                env["PYTHON_EXECUTABLE"] = venv_py
-                env["VIRTUAL_ENV"] = os.path.dirname(venv_bin)
-                env.pop("PYTHONHOME", None)
-        else:
-            # --no-venv: build against the current Python environment as-is.
-            # The caller is responsible for having PX4's Python requirements
-            # (e.g. kconfiglib, which provides the 'menuconfig' module PX4's
-            # kconfig.cmake needs) installed. Point PX4's CMake at the current
-            # interpreter so it does not fall back to an unrelated python.
-            log.wrn("--no-venv: skipping PX4 venv; using the current Python "
-                    "environment. Ensure PX4's Python requirements "
-                    "(e.g. kconfiglib) are installed.")
-            venv_bin = None
-            env["PYTHON_EXECUTABLE"] = sys.executable
-
         targets = cfg.get("targets") or []
         if not targets:
             log.die("PX4 stack defines no 'targets'.")
 
         for target in targets:
             log.inf(f"--- px4 make {target} (-j{jobs}) ---")
-            self._run(["make", target, f"-j{jobs}"], cwd=px4_src, env=env)
+            self._run(["make", target, f"-j{jobs}"], cwd=px4_src)
 
         out_dir = self._realtime_dir(pdata, platform)
         self._collect_artifacts(os.path.join(px4_src, "build"),
@@ -1107,10 +1081,10 @@ class Sdk(WestCommand):
         # Optional per-platform post-build signing (navq95 uses MCUboot).
         # No-op unless the platform's build.yml defines a 'sign' block, so
         # sdk.py stays generic.
-        self._sign_px4(px4_src, cfg.get("sign"), env, venv_bin, out_dir)
-        self._package_px4(px4_src, cfg.get("package"), env, venv_bin, out_dir)
+        self._sign_px4(px4_src, cfg.get("sign"), out_dir)
+        self._package_px4(px4_src, cfg.get("package"), out_dir)
 
-    def _package_px4(self, px4_src, package, env, venv_bin, out_dir):
+    def _package_px4(self, px4_src, package, out_dir):
         """Re-run PX4's px_mkfw.py against a post-signing image (config-driven).
 
         'package' comes from the platform's build.yml (present only where a
@@ -1145,7 +1119,6 @@ class Sdk(WestCommand):
             if not os.path.isfile(p):
                 log.die(f"package: required PX4 build output not found: {p} "
                         f"(expected from 'make {build_target}')")
-        py = os.path.join(venv_bin, "python") if venv_bin else sys.executable
         images = package.get("images") or []
         if not images:
             log.wrn("package: no images listed; nothing to package.")
@@ -1161,7 +1134,7 @@ class Sdk(WestCommand):
             if not os.path.isfile(in_path):
                 log.wrn(f"package: input not found (skipped): {in_path}")
                 continue
-            cmd = [py, tool,
+            cmd = [tool,
                    "--prototype", proto,
                    "--git_identity", px4_src,
                    "--parameter_xml", param_xml,
@@ -1170,12 +1143,12 @@ class Sdk(WestCommand):
             log.inf(f"package: {in_name} -> {out_name}")
             with open(out_path, "w") as f:
                 try:
-                    subprocess.run(cmd, cwd=px4_src, env=env, stdout=f, check=True)
+                    subprocess.run(cmd, cwd=px4_src, stdout=f, check=True)
                 except subprocess.CalledProcessError as e:
                         log.die(f"Command failed ({e.returncode}): {' '.join(cmd)}")
             log.inf(f"packaged -> {out_path}")
 
-    def _sign_px4(self, px4_src, sign, env, venv_bin, out_dir):
+    def _sign_px4(self, px4_src, sign, out_dir):
         """Sign collected .bin images with MCUboot imgtool (config-driven).
 
         The 'sign' block comes from the platform's build.yml (present only for
@@ -1198,18 +1171,6 @@ class Sdk(WestCommand):
             log.wrn("sign: no images listed; nothing to sign.")
             return
 
-        # imgtool needs a few third-party deps (click, cryptography, intelhex,
-        # pyyaml) that are NOT in PX4's requirements.txt. Install them into the
-        # workspace venv (idempotent) before signing.
-        py = os.path.join(venv_bin, "python") if venv_bin else None
-        py = py if (py and os.path.isfile(py)) else sys.executable
-
-        # imgtool imports its sibling package; make it importable.
-        sign_env = dict(env)
-        sign_env["PYTHONPATH"] = (
-            scripts_dir + os.pathsep + sign_env.get("PYTHONPATH", "")
-        ).rstrip(os.pathsep)
-
         log.inf("--- post-build: MCUboot signing (imgtool) ---")
         for img in images:
             in_name = img.get("in")
@@ -1223,7 +1184,7 @@ class Sdk(WestCommand):
                 log.wrn(f"sign: input not found (skipped): {in_path}")
                 continue
 
-            cmd = [py, tool, "sign",
+            cmd = [tool, "sign",
                    "--version", str(sign.get("version", "1.0.0")),
                    "--header-size", str(sign.get("header_size", "0x800")),
                    "--slot-size", str(sign.get("slot_size", "0x700000"))]
@@ -1237,7 +1198,7 @@ class Sdk(WestCommand):
             cmd += [in_path, out_path]
 
             log.inf(f"sign: {in_name} -> {out_name}")
-            self._run(cmd, cwd=scripts_dir, env=sign_env)
+            self._run(cmd, cwd=scripts_dir)
             log.inf(f"signed -> {out_path}")
 
     def _collect_artifacts(self, src_root, artifacts, out_dir):
@@ -1263,53 +1224,6 @@ class Sdk(WestCommand):
                 dest = os.path.join(out_dir, os.path.basename(candidate))
                 shutil.copy2(candidate, dest)
                 log.inf(f"collected -> {dest}")
-
-    def _ensure_px4_venv(self, px4_src):
-        """Create/refresh a per-workspace venv with PX4's Python requirements.
-
-        Returns the venv's bin directory. Idempotent via a requirements hash
-        stamp so we only reinstall when requirements.txt changes.
-        """
-        import hashlib
-        venv = os.path.join(self.topdir, ".px4-venv")
-        venv_bin = os.path.join(venv, "bin")
-        py = os.path.join(venv_bin, "python")
-        if not os.path.isfile(py):
-            log.inf(f"Creating PX4 venv at {venv}")
-            self._run([sys.executable, "-m", "venv", venv], cwd=self.topdir)
-            self._run([py, "-m", "pip", "install", "--upgrade", "pip", "wheel"],
-                      cwd=self.topdir)
-
-        req = os.path.join(px4_src, "Tools", "setup", "requirements.txt")
-        if os.path.isfile(req):
-            with open(req, "rb") as f:
-                digest = hashlib.sha256(f.read()).hexdigest()
-            stamp = os.path.join(venv, ".requirements.sha256")
-            prev = None
-            if os.path.isfile(stamp):
-                with open(stamp) as f:
-                    prev = f.read().strip()
-            # Reinstall if requirements changed OR a sentinel package is
-            # missing. The sentinel guards against a stamp that was written
-            # after an interrupted/partial install (kconfiglib provides the
-            # 'menuconfig' module PX4's kconfig.cmake needs).
-            need_install = (prev != digest) or not self._venv_has_sentinel(py)
-            if need_install:
-                log.inf("Installing PX4 Python requirements into venv")
-                self._run([py, "-m", "pip", "install", "-r", req], cwd=self.topdir)
-                # Only stamp AFTER verifying the sentinel imports, so a failed
-                # install never gets cached as 'up to date'.
-                if self._venv_has_sentinel(py):
-                    with open(stamp, "w") as f:
-                        f.write(digest)
-                else:
-                    log.wrn("PX4 requirements installed but 'menuconfig' "
-                            "(kconfiglib) still not importable; not stamping.")
-            else:
-                log.inf("PX4 venv requirements up to date")
-        else:
-            log.wrn(f"PX4 requirements.txt not found at {req}")
-        return venv_bin
 
     @staticmethod
     def _venv_has_sentinel(py):
