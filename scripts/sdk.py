@@ -1216,8 +1216,7 @@ class Sdk(WestCommand):
             pattern = rel if os.path.isabs(rel) else os.path.join(src_root, rel)
             matches = _glob.glob(pattern)
             if not matches:
-                log.wrn(f"artifact not found (skipped): {pattern}")
-                continue
+                log.die(f"required artifact not found: {pattern}")
             for candidate in sorted(matches):
                 if not os.path.isfile(candidate):
                     continue
