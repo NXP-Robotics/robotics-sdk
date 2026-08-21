@@ -18,7 +18,7 @@ stacks:
     kind: px4
     targets:
       - nxp_imx95_default
-#      - nxp_imx95_ddr
+      - nxp_imx95_ddr
     # Built outputs (relative to PX4-Autopilot/build/) collected into
     # bin/navq95/realtime/. Filenames preserved as-is (rename upstream in PX4).
     artifacts:
