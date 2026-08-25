@@ -7,13 +7,12 @@ manifest:
     west-commands: scripts/west-commands.yml
 
   remotes:
-    - name: zephyr
-      url-base: https://github.com/zephyrproject-rtos
+    - name: nxp
+      url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
-    - name: zephyr
-      remote: zephyr
-      # TODO: pin to the exact SHA/tag validated for this SDK release.
-      revision: 5c12262de735358850365ede6d6f17c2db175131
+    - name: zephyr-rtos
+      remote: nxp
+      revision: c484288fa2ee58821cba846c7a957b6b0137f80a
       path: zephyr
       import: true

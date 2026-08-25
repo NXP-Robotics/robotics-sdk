@@ -83,6 +83,7 @@ missing** (smart auto-fetch), then builds:
 
 ```console
 west sdk build --platform tropic                    # PX4 (default stack)
+west sdk build --platform tropic --stack zephyr     # Zephyr samples
 west sdk build --platform navq95                 # PX4 (default stack)
 west sdk build --platform navq95 --stack zephyr  # plain Zephyr
 west sdk build --platform vmu-rt1176 --stack cerebri

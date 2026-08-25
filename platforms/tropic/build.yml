@@ -2,6 +2,7 @@
 
 platform: tropic
 default_stack: px4
+build_all: True
 
 # Firmware artifacts go directly under bin/<platform>/ (no realtime subdir).
 realtime_subdir: ""
@@ -21,11 +22,36 @@ stacks:
   zephyr:
     kind: zephyr
     boards:
-      - mr_tropic
-    app: null
+      - mr_vmu_tropic
+    examples:
+    - {name: hello_world,     app: zephyr/samples/hello_world, default: true}
+    - {name: gpio,            app: zephyr/samples/basic/button, default: true}
+    - {name: bmi08x_icm45686, app: zephyr/samples/sensor/accel_polling, default: true}
+    - {name: bmm350,          app: zephyr/samples/sensor/magn_polling, default: true}
+    - {name: bmp390,          app: zephyr/samples/sensor/pressure_polling, default: true}
+    - {name: pwmLED,          app: zephyr/samples/basic/fade_led, default: true}
+    - {name: can,             app: zephyr/samples/drivers/can/counter, default: true}
+    - {name: sdcard,          app: zephyr/samples/subsys/fs/fs_sample, default: true}
+    - {name: dhcpv4_client,   app: zephyr/samples/net/dhcpv4_client, default: true}
+    - {name: usb,             app: zephyr/samples/subsys/usb/cdc_acm, default: true}
+    - {name: watchdog,        app: zephyr/samples/drivers/watchdog, default: true}
+    - {name: rtc,             app: zephyr/samples/drivers/rtc, default: true}
 
 download:
   # 'dest' relative to bin/tropic/ ("" == the platform root).
   - {name: nxp_mr-tropic_default.bin,    class: mcu, subpath: tropic, dest: ""}
   - {name: nxp_mr-tropic_default.px4,    class: mcu, subpath: tropic, dest: ""}
   - {name: nxp_mr-tropic_bootloader.bin, class: mcu, subpath: tropic, dest: ""}
+  # zephyr samples
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/hello_world, dest: zephyr/hello_world}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/gpio, dest: zephyr/gpio}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/bmi08x_icm45686, dest: zephyr/bmi08x_icm45686}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/bmm350, dest: zephyr/bmm350}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/bmp390, dest: zephyr/bmp390}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/pwmLED, dest: zephyr/pwmLED}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/can, dest: zephyr/can}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/sdcard, dest: zephyr/sdcard}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/dhcpv4_client, dest: zephyr/dhcpv4_client}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/usb, dest: zephyr/usb}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/watchdog, dest: zephyr/watchdog}
+  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/rtc, dest: zephyr/rtc}

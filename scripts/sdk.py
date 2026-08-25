@@ -1442,14 +1442,33 @@ class Sdk(WestCommand):
         shields = cfg.get("shields")
 
         if not shields:
-            if shield is not None or example is not None:
-                log.die(f"Stack for '{platform}' defines no 'shields'; "
-                        f"--shield/<example> are not applicable.")
-            for board in boards:
-                self._zephyr_build_one(board, None, cfg.get("app"), None, None,
-                                       platform=platform, stack="zephyr",
-                                       collect_dir=cfg.get("collect_dir"),
-                                       image_name=cfg.get("image_name"))
+            examples = cfg.get("examples") or []
+            if examples:
+                # Flat examples list (no shields).
+                if example is not None:
+                    examples = [e for e in examples if e.get("name") == example]
+                    if not examples:
+                        log.die(f"Example '{example}' not found.")
+                elif not build_all:
+                    default = [e for e in examples if e.get("default")]
+                    examples = default if default else examples
+                results = []
+                for board in boards:
+                    for e in examples:
+                        ok = self._zephyr_build_one(
+                            board, e.get("name"), e.get("app"), None, "build",
+                            platform=platform, stack="zephyr")
+                        results.append((e.get("name"), ok))
+                self._summarize(results)
+            else:
+                if shield is not None or example is not None:
+                    log.die(f"Stack for '{platform}' defines no 'shields'; "
+                            f"--shield/<example> are not applicable.")
+                for board in boards:
+                    self._zephyr_build_one(board, None, cfg.get("app"), None, None,
+                                        platform=platform, stack="zephyr",
+                                        collect_dir=cfg.get("collect_dir"),
+                                        image_name=cfg.get("image_name"))
             return
 
         # Which shields to process:
