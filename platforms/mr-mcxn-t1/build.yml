@@ -95,6 +95,7 @@ stacks:
       - mr_mcxn_t1/mcxn947/cpu0
     apps:
       - {name: optical_flow, app: spinali/app/optical_flow, shield: oflo, default: true}
+      - {name: gnss, app: spinali/app/gnss, shield: gnss, default: true}
 
 # Prebuilt artifacts for `west sdk download`. Source and versions come from the
 # root versions.yml; entries reference the mcu class (Robotics_Firmware) and

@@ -14,7 +14,7 @@ artifacts through Nexus.
 | `tropic`       | ✅  |         |   ✅   |      | `nxp_mr-tropic_default.bin`, `nxp_mr-tropic_bootloader.bin` |
 | `vmu-rt1176`   | ✅  |   ✅    |   ✅   |      | `nxp_fmurt1176_default.elf/.bin`                     |
 | `mr-esc-mcxa`  |     |         |        |  ✅  | `AM32_FRDM_A153_<version>.elf/.bin/.hex`             |
-| `mr-mcxn-t1`   |     |   ✅    |   ✅   |      | per-example `zephyr.signed.bin` + `mcuboot.bin` (Zephyr t1/oflo/f9p shields, Cerebri optical_flow) |
+| `mr-mcxn-t1`   |     |   ✅    |   ✅   |      | per-example `zephyr.signed.bin` + `mcuboot.bin` (Zephyr t1/oflo/f9p shields, Cerebri ROS2 nodes: optical_flow and gnss) |
 
 > The Ubuntu WIC image is specific to the NavQ95 A-core and is only available
 > for `navq95`. On `navq95`, the PX4 **default (TCM)** image is also
@@ -89,7 +89,7 @@ west sdk build --platform vmu-rt1176 --stack cerebri
 west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
 west sdk build --platform mr-mcxn-t1                # Zephyr, --shield t1 (default)
 west sdk build --platform mr-mcxn-t1 --shield f9p   # Zephyr, F9P GNSS shield
-west sdk build --platform mr-mcxn-t1 --stack cerebri # Cerebri (optical_flow)
+west sdk build --platform mr-mcxn-t1 --stack cerebri # Cerebri (ROS2 nodes: optical_flow and gnss)
 ```
 
 `--stack` is optional; each platform has a sensible default (see table).

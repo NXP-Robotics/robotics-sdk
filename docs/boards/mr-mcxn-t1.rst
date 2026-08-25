@@ -40,7 +40,7 @@ Build
    west sdk build --platform mr-mcxn-t1 --shield oflo         # zephyr, optical-flow shield
    west sdk build --platform mr-mcxn-t1 --shield f9p          # zephyr, F9P GNSS shield
    west sdk build --platform mr-mcxn-t1 --shield t1 <example> # a specific example
-   west sdk build --platform mr-mcxn-t1 --stack cerebri       # Cerebri (optical_flow)
+   west sdk build --platform mr-mcxn-t1 --stack cerebri       # Cerebri (ROS2 nodes: optical_flow and gnss)
 
 With no ``<example>`` the curated CI / default set is built:
 ``hello_world`` and ``dhcpv4_client`` (t1), ``gnss`` (f9p) and
