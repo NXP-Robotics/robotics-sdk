@@ -60,20 +60,12 @@ stacks:
         examples:
           - {name: hello_world,               app: zephyr/samples/hello_world, default: true}
           - {name: dhcpv4_client,             app: zephyr/samples/net/dhcpv4_client, default: true}
-          - {name: 6dof_motion_drdy_icm45686_hub, app: zephyr/samples/sensor/6dof_motion_drdy}
-          - {name: magn_polling,              app: zephyr/samples/sensor/magn_polling}
+          - {name: accel_polling,             app: zephyr/samples/sensor/accel_polling}
           - {name: can_counter,               app: zephyr/samples/drivers/can/counter}
-          - {name: cdc_acm,                   app: zephyr/samples/subsys/usb/cdc_acm}
           - {name: led_strip,                 app: zephyr/samples/drivers/led/led_strip}
+          - {name: cdc_acm,                   app: zephyr/samples/subsys/usb/cdc_acm}
           - {name: watchdog,                  app: zephyr/samples/drivers/watchdog}
-          - {name: die_temp_polling,          app: zephyr/samples/sensor/die_temp_polling, expect_fail: true}
-          - {name: rtc,                       app: zephyr/samples/drivers/rtc, expect_fail: true}
-          - {name: servo_motor,               app: zephyr/samples/basic/servo_motor}
-          - {name: adc_dt,                    app: zephyr/samples/drivers/adc/adc_dt}
-          - {name: qdec,                      app: zephyr/samples/sensor/qdec}
-          - {name: button,                    app: zephyr/samples/basic/button}
-          - {name: echo_bot,                  app: zephyr/samples/drivers/uart/echo_bot}
-          - {name: rtio_loopback,             app: zephyr/samples/drivers/i2c/rtio_loopback}
+          - {name: rtc,                       app: zephyr/samples/drivers/rtc}
       oflo:
         examples:
           - {name: distance_polling,           app: zephyr/samples/sensor/distance_polling}
