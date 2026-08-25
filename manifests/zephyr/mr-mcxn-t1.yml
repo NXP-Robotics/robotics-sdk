@@ -1,8 +1,7 @@
 # NXP Robotics SDK - Zephyr stack - mr-mcxn-t1 platform (MCXN947 MR-MCXN-T1)
 #
 # Board/peripheral validation via stock Zephyr samples. Brings in ONLY the
-# NXP Zephyr fork (zephyr-rtos) and the board module (zephyr_boards, home of
-# the mr_mcxn_t1 board port). NO zros/synapse: the cerebri apps build on the
+# NXP Zephyr fork (zephyr-rtos). NO zros/synapse: the cerebri apps build on the
 # cerebri stack, not here.
 manifest:
   version: "1.0"
@@ -14,16 +13,10 @@ manifest:
   remotes:
     - name: nxp
       url-base: ssh://git@bitbucket.sw.nxp.com/tars
-    - name: cognipilot
-      url-base: https://github.com/CogniPilot
 
   projects:
     - name: zephyr-rtos
       remote: nxp
-      revision: cbd168760884b199714bc3ce8fc6b13828bfebe0
+      revision: c484288fa2ee58821cba846c7a957b6b0137f80a
       path: zephyr
       import: true
-    - name: zephyr_boards
-      remote: cognipilot
-      revision: 4b4d98928fb9ab4a98133b5607d619a32de6af11
-      path: modules/lib/zephyr_boards
