@@ -51,8 +51,6 @@ stacks:
     sysbuild: true
     sysbuild_args:
       - -DSB_CONFIG_BOOTLOADER_MCUBOOT=y
-      - -Dmcuboot_EXTRA_CONF_FILE=zephyr/boards/nxp/mr_mcxn_t1/mcuboot/mr_mcxn_t1_mcxn947_cpu0.conf
-      - -Dmcuboot_DTC_OVERLAY_FILE=zephyr/boards/nxp/mr_mcxn_t1/mcuboot/mr_mcxn_t1_mcxn947_cpu0.overlay
     boards:
       - mr_mcxn_t1/mcxn947/cpu0
     shields:
@@ -69,9 +67,9 @@ stacks:
       oflo:
         examples:
           - {name: distance_polling,           app: zephyr/samples/sensor/distance_polling}
-          - {name: 6dof_motion_drdy_icm42688,  app: zephyr/samples/sensor/6dof_motion_drdy}
-          - {name: 6dof_motion_drdy_icm45686_oflo, app: zephyr/samples/sensor/6dof_motion_drdy}
-          - {name: sensor_shell,               app: zephyr/samples/sensor/sensor_shell, expect_fail: true}
+          - {name: 6dof_motion_drdy,           app: zephyr/samples/sensor/6dof_motion_drdy}
+          - {name: 6dof_fifo_stream,           app: zephyr/samples/sensor/6dof_fifo_stream}
+          - {name: sensor_shell,               app: zephyr/samples/sensor/sensor_shell}
       f9p:
         examples:
           - {name: gnss, app: zephyr/samples/drivers/gnss, default: true}
