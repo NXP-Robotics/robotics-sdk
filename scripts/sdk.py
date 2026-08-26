@@ -1262,6 +1262,7 @@ class Sdk(WestCommand):
         return os.path.join(self.topdir, rel) if rel else None
 
     def _zephyr_build_one(self, board, name, app, overlay, group,
+                          shield_name=None,
                           sysbuild=False, sysbuild_args=None,
                           platform=None, stack=None, collect_dir=None,
                           image_name=None):
@@ -1287,6 +1288,10 @@ class Sdk(WestCommand):
         extra = []
         if overlay:
             extra.append(f"-DEXTRA_DTC_OVERLAY_FILE={overlay}")
+        if shield_name:
+             # Use the Zephyr shield mechanism (-DSHIELD=) so that both the
+             # shield's .overlay and .conf files are automatically applied.
+            extra.append(f"-DSHIELD={shield_name}")
         if sysbuild and sysbuild_args:
             # Absolutize workspace-relative file paths in -D...FILE= args so
             # CMake resolves them against the workspace, not the app source dir.
@@ -1493,6 +1498,7 @@ class Sdk(WestCommand):
         results = []
         for group in groups:
             overlay = self._shield_overlay(pdata, group)
+            shield_name = (shields[group] or {}).get("shield_name")
             examples = (shields[group] or {}).get("examples", [])
             by_name = {e.get("name"): e for e in examples}
 
@@ -1517,6 +1523,7 @@ class Sdk(WestCommand):
                 for e in builds:
                     ok = self._zephyr_build_one(
                         board, e.get("name"), e.get("app"), overlay, group,
+                        shield_name=shield_name,
                         sysbuild=cfg.get("sysbuild", False),
                         sysbuild_args=cfg.get("sysbuild_args"),
                         platform=platform, stack="zephyr")

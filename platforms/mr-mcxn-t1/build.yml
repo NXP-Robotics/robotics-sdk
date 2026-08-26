@@ -65,12 +65,14 @@ stacks:
           - {name: watchdog,                  app: zephyr/samples/drivers/watchdog}
           - {name: rtc,                       app: zephyr/samples/drivers/rtc}
       oflo:
+        shield_name: mr_mcxn_t1_optical_flow
         examples:
           - {name: distance_polling,           app: zephyr/samples/sensor/distance_polling}
           - {name: 6dof_motion_drdy,           app: zephyr/samples/sensor/6dof_motion_drdy}
           - {name: 6dof_fifo_stream,           app: zephyr/samples/sensor/6dof_fifo_stream}
           - {name: sensor_shell,               app: zephyr/samples/sensor/sensor_shell}
       f9p:
+        shield_name: mr_mcxn_t1_f9p
         examples:
           - {name: gnss, app: zephyr/samples/drivers/gnss, default: true}
 
