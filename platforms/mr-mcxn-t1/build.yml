@@ -68,7 +68,7 @@ stacks:
         shield_name: mr_mcxn_t1_optical_flow
         examples:
           - {name: distance_polling,           app: zephyr/samples/sensor/distance_polling}
-          - {name: 6dof_motion_drdy,           app: zephyr/samples/sensor/6dof_motion_drdy}
+          - {name: 6dof_motion_drdy,           app: zephyr/samples/sensor/6dof_motion_drdy, default: true}
           - {name: 6dof_fifo_stream,           app: zephyr/samples/sensor/6dof_fifo_stream}
           - {name: sensor_shell,               app: zephyr/samples/sensor/sensor_shell}
       f9p:
@@ -102,6 +102,9 @@ download:
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/hello_world,     dest: zephyr/t1/hello_world/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,   dest: zephyr/t1/dhcpv4_client/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,   dest: zephyr/t1/dhcpv4_client/}
+  # zephyr / oflo
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy,    dest: zephyr/oflo/6dof_motion_drdy/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy,    dest: zephyr/oflo/6dof_motion_drdy/}
   # zephyr / f9p
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/f9p/gnss,           dest: zephyr/f9p/gnss/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/f9p/gnss,           dest: zephyr/f9p/gnss/}
