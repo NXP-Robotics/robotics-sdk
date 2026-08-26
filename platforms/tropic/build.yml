@@ -43,15 +43,15 @@ download:
   - {name: nxp_mr-tropic_default.px4,    class: mcu, subpath: tropic, dest: ""}
   - {name: nxp_mr-tropic_bootloader.bin, class: mcu, subpath: tropic, dest: ""}
   # zephyr samples
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/hello_world, dest: zephyr/hello_world}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/gpio, dest: zephyr/gpio}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/bmi08x_icm45686, dest: zephyr/bmi08x_icm45686}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/bmm350, dest: zephyr/bmm350}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/bmp390, dest: zephyr/bmp390}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/pwmLED, dest: zephyr/pwmLED}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/can, dest: zephyr/can}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/sdcard, dest: zephyr/sdcard}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/dhcpv4_client, dest: zephyr/dhcpv4_client}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/usb, dest: zephyr/usb}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/watchdog, dest: zephyr/watchdog}
-  - {name: zephyr.bin, class: mcu, subpath: mr_vmu_tropic/zephyr/rtc, dest: zephyr/rtc}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/hello_world, dest: zephyr/hello_world}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/gpio, dest: zephyr/gpio}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmi08x_icm45686, dest: zephyr/bmi08x_icm45686}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmm350, dest: zephyr/bmm350}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmp390, dest: zephyr/bmp390}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/pwmLED, dest: zephyr/pwmLED}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/can, dest: zephyr/can}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/sdcard, dest: zephyr/sdcard}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/dhcpv4_client, dest: zephyr/dhcpv4_client}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/usb, dest: zephyr/usb}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/watchdog, dest: zephyr/watchdog}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/rtc, dest: zephyr/rtc}

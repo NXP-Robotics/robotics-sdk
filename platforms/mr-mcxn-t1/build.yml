@@ -111,3 +111,6 @@ download:
   # cerebri / oflo
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow, dest: cerebri/oflo/optical_flow/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow, dest: cerebri/oflo/optical_flow/}
+  # cerebri / gnss
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss, dest: cerebri/gnss/gnss/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss, dest: cerebri/gnss/gnss/}
