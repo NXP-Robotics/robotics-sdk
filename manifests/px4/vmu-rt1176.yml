@@ -17,6 +17,6 @@ manifest:
       remote: px4
       repo-path: px4-autopilot-nxp.git
       # Pinned to the SHA of PX4 validated for this SDK release.
-      revision: 7d1f5ed315c1e746cc2f7d445f01cf8853ab735d
+      revision: 066b773eb6ca3c0f211779c31b7403854f363a6d
       submodules: true
       path: PX4-Autopilot
