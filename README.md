@@ -89,6 +89,7 @@ west sdk build --platform navq95 --stack zephyr  # plain Zephyr
 west sdk build --platform vmu-rt1176 --stack cerebri
 west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
 west sdk build --platform mr-mcxn-t1                # Zephyr, --shield t1 (default)
+west sdk build --platform mr-mcxn-t1 --shield oflo  # Zephyr, OFLO shield
 west sdk build --platform mr-mcxn-t1 --shield f9p   # Zephyr, F9P GNSS shield
 west sdk build --platform mr-mcxn-t1 --stack cerebri # Cerebri (ROS2 nodes: optical_flow and gnss)
 ```
