@@ -1329,11 +1329,11 @@ class Sdk(WestCommand):
             else:
                 out_dir = os.path.join(self.topdir, "bin", platform or bslug,
                                        bslug)
-            self._collect_zephyr_images(build_dir, sub, out_dir,
+            self._collect_zephyr_images(build_dir, sub, out_dir, app,
                                         image_name=image_name)
         return ok
 
-    def _collect_zephyr_images(self, build_dir, name, out_dir,
+    def _collect_zephyr_images(self, build_dir, name, out_dir, app,
                                image_name=None):
         """Copy the flashable images produced by a (sysbuild) west build into
         out_dir. Convention-based (no per-example config):
@@ -1354,9 +1354,18 @@ class Sdk(WestCommand):
         import shutil
         os.makedirs(out_dir, exist_ok=True)
 
+        # IMPORTANT: we are NEVER allowed to use the application's name (i.e.
+        # the one found under "name" in platforms/<platform>/build.yml). This is
+        # because the application name is actually an alias and can differ from
+        # the sysbuild domain name.
+        #
+        # Therefore, when we look for the resulting binaries, we must actually use
+        # the domain name to form the search path.
+        domain_name = os.path.basename(os.path.normpath(app))
+
         # App image: prefer the sysbuild sub-image dir, else the top build dir;
         # prefer the signed image, else the raw one.
-        app_dirs = [os.path.join(build_dir, name, "zephyr"),
+        app_dirs = [os.path.join(build_dir, domain_name, "zephyr"),
                     os.path.join(build_dir, "zephyr")]
         copied = False
         for d in app_dirs:
