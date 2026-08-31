@@ -55,16 +55,6 @@ stacks:
       images:
         - {in: nxp_imx95_default.mcuboot.bin, out: nxp_imx95_default.mcuboot.px4}
 
-  # NavQ95 (MR-NavQ95B) is also its own Zephyr board on the i.MX95 Cortex-M7.
-  # One `--stack zephyr` builds ALL boards below. Currently on Zephyr 'main'
-  # (targeting the 4.4 release).
-  zephyr:
-    kind: zephyr
-    boards:
-      - mr_navq95b/mimx9596/m7
-      - mr_navq95b/mimx9596/m7/ddr
-    app: samples/hello_world
-
 # Prebuilt artifacts for `west sdk download`. Source and versions come from the
 # root versions.yml; entries reference an artifact class (mcu/mpu) and select a
 # subset. 'dest' is relative to bin/navq95/.
