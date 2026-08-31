@@ -1,169 +1,219 @@
-# NXP Robotics SDK
+# About
 
-A thin "glue" superproject that unifies multiple robotics platforms across the
-**PX4**, **CogniPilot Cerebri**, **Zephyr**, and **AM32** stacks. It owns no
-firmware source of its own; instead it pins exact upstream revisions (via west
-manifests), dispatches builds to the right build system, and provides prebuilt
-artifacts through Nexus.
+**nxp-robotics-sdk** is a glue layer that unifies multiple robotics platforms
+across all of the supported software stacks (e.g. PX4, Zephyr, AM32, etc...).
+This project owns no firmware source on its own; instead it pins the exact
+upstream revisions (via west manifests), dispatches builds to the right build
+system, and provides a way to download pre-built artifacts.
 
-## Supported platforms and stacks
+# Supported platforms and stacks
 
-| Platform       | PX4 | Cerebri | Zephyr | AM32 | Prebuilt artifacts                                   |
-|----------------|:---:|:-------:|:------:|:----:|------------------------------------------------------|
-| `navq95`    | ✅  |         |   ✅   |      | `nxp_imx95_default.elf/.bin` (+ `.mcuboot.bin`), `nxp_imx95_ddr.elf/.bin` (+ Ubuntu `.wic`) |
-| `tropic`       | ✅  |         |   ✅   |      | `nxp_mr-tropic_default.bin`, `nxp_mr-tropic_bootloader.bin` |
-| `vmu-rt1176`   | ✅  |   ✅    |   ✅   |      | `nxp_fmurt1176_default.elf/.bin`                     |
-| `mr-esc-mcxa`  |     |         |        |  ✅  | `AM32_FRDM_A153_<version>.elf/.bin/.hex`             |
-| `mr-mcxn-t1`   |     |   ✅    |   ✅   |      | per-example `zephyr.signed.bin` + `mcuboot.bin` (Zephyr t1/oflo/f9p shields, Cerebri ROS2 nodes: optical_flow and gnss) |
+|  Platform      |  PX4   | Cerebri |  Zephyr  |   AM32   |
+|:--------------:|:------:|:-------:|:--------:|:--------:|
+|  MR-NAVQ95     |   ✅   |   ❌    |    ❌    |    ❌    |
+|  TROPIC        |   ✅   |   ❌    |    ✅    |    ❌    |
+|  MR-ESC-MCXA   |   ❌   |   ❌    |    ❌    |    ✅    |
+|  MR-MCXN-T1    |   ❌   |   ✅    |    ✅    |    ❌    |
 
-> The Ubuntu WIC image is specific to the NavQ95 A-core and is only available
-> for `navq95`. On `navq95`, the PX4 **default (TCM)** image is also
-> MCUboot-signed (`nxp_imx95_default.mcuboot.bin`); the DDR image is not.
+# Quick getting started guide
 
-## Prerequisites
+Given the number of software stacks supported by the SDK, managing all of their
+package dependencies on your build machine can become tedious. Because of this,
+**nxp-robotics-sdk** provides a Dockerfile, which can be used to build a Docker
+image with all of the package dependencies included in it.
 
-`west sdk build` shells out to the native build systems (PX4's `make`, Zephyr's
-`west build`, AM32's `make`), so the required toolchains must **already be
-installed** — the SDK manages only the Python layer (a per-workspace venv with
-PX4's `requirements.txt`), not system compilers or SDKs. (AM32 is the exception:
-it downloads its own xPack ARM toolchain via `make arm_sdk_install`.)
-
-Before building, `west sdk build` runs a **preflight check** that verifies the
-required tools and fails fast (with the exact remedy) if any are missing. Pass
-`--skip-preflight` to bypass it.
-
-- **Common:** Python 3.10+, `west` (`pip install west pyyaml`), `git` (all
-  manifests pin public remotes cloned over HTTPS), `cmake` (>= 3.20), `ninja`.
-- **PX4 targets:** ARM bare-metal GCC (`arm-none-eabi-gcc`), `make`. Easiest on
-  Ubuntu: `bash PX4-Autopilot/Tools/setup/ubuntu.sh` (after sources are cloned).
-- **Zephyr / Cerebri targets:** the **Zephyr SDK** + `dtc`; export
-  `ZEPHYR_SDK_INSTALL_DIR` or `ZEPHYR_TOOLCHAIN_VARIANT` so it is discoverable.
-- **AM32 targets (`mr-esc-mcxa`):** `make`, `git`, `wget`, `tar`, `python3`. No
-  host ARM GCC needed — `make arm_sdk_install` downloads the xPack toolchain
-  automatically on first build (needs network).
-
-See `docs/getting_started.rst` for full details. Preflight installs nothing —
-on hosts without passwordless `sudo`, install the toolchains out of band.
-
-## Quick Start
-
-### 1. Bootstrap the workspace (one-time, REQUIRED)
-
-All `west sdk ...` commands are **west extension commands** shipped by this SDK.
-West only discovers them **after** a workspace has been initialized on this
-repository. Run this once:
-
-```console
-west init -m <URL-of-nxp-robotics-sdk> ws
-cd ws
-```
-
-> Without this step, `west sdk download` and `west sdk build` do not exist yet.
-
-### 2a. Download prebuilt binaries (no build)
-
-Pulls NXP prebuilt firmware — and, for NavQ95, the Ubuntu image — from Nexus:
-
-```console
-west sdk download --platform navq95    # firmware + ubuntu .wic
-west sdk download --platform tropic       # firmware only
-west sdk download --platform vmu-rt1176   # firmware only
-west sdk download --platform mr-mcxn-t1   # firmware only (per-shield/example)
-west sdk download --platform all          # everything
-```
-
-Artifacts land under `bin/<platform>/`: firmware directly in `bin/<platform>/`
-for tropic, vmu-rt1176 and mr-esc-mcxa, and in `bin/navq95/realtime/` (plus
-the Ubuntu WIC in `bin/navq95/ubuntu/`) for NavQ95; checksums are verified.
-
-### 2b. Build from source
-
-Selects the platform/stack manifest, fetches the pinned sources **when they are
-missing** (smart auto-fetch), then builds:
-
-```console
-west sdk build --platform tropic                    # PX4 (default stack)
-west sdk build --platform tropic --stack zephyr     # Zephyr samples
-west sdk build --platform navq95                 # PX4 (default stack)
-west sdk build --platform navq95 --stack zephyr  # plain Zephyr
-west sdk build --platform vmu-rt1176 --stack cerebri
-west sdk build --platform mr-esc-mcxa               # AM32 (default stack)
-west sdk build --platform mr-mcxn-t1                # Zephyr, --shield t1 (default)
-west sdk build --platform mr-mcxn-t1 --shield oflo  # Zephyr, OFLO shield
-west sdk build --platform mr-mcxn-t1 --shield f9p   # Zephyr, F9P GNSS shield
-west sdk build --platform mr-mcxn-t1 --stack cerebri # Cerebri (ROS2 nodes: optical_flow and gnss)
-```
-
-`--stack` is optional; each platform has a sensible default (see table).
-
-**Python venv (PX4 only).** By default a PX4 build creates and uses a
-per-workspace virtual environment (`.px4-venv`) populated with PX4's Python
-requirements. Pass `--no-venv` to skip it and build against the current Python
-environment instead — in that case you are responsible for having PX4's Python
-requirements (e.g. `kconfiglib`) installed:
-
-```console
-west sdk build --platform tropic                    # default: create/use .px4-venv
-west sdk build --platform tropic --no-venv          # use the current Python env
-```
-
-
-**Fetching sources.** By default `build` runs `west update` **only when the
-manifest's project directories are missing**, so local edits to already-cloned
-sources are preserved across rebuilds. Pass `--update` to force a refetch
-(resets sources to the manifest revision, **overwriting local changes**). To
-fetch/refresh sources without building, use the dedicated verb:
-
-```console
-west sdk update --platform tropic                   # clone/update sources only
-west sdk build  --platform tropic                   # first build auto-clones; later builds keep your edits
-west sdk build  --platform tropic --update          # discard edits, rebuild pinned revision
-```
-
-> **Switching platforms is destructive.** All PX4 platforms share the same
-> `PX4-Autopilot/` workspace directory. If you switch to a different platform
-> (or its pinned revision changed), `build`/`update` detect that the checked-out
-> sources belong to another platform — by comparing the git remote and revision
-> against the target manifest — and **purge and re-clone** them for the requested
-> platform. Any local edits to the previous platform's tree are discarded on the
-> switch. This prevents building one platform against another's sources (e.g.
-> building `vmu-rt1176` on a NavQ95-fork checkout, where the make target does not
-> exist).
-
-## How it works
-
-- **Manifests** (`manifests/<stack>/<platform>.yml`) pin the exact upstream
-  revision for each stack/platform combination.
-- **Build definitions** (`platforms/<platform>/build.yml`) are the single
-  source of truth for how each platform builds under each stack (kind,
-  targets/boards, app, artifacts) and its Nexus `download:` catalog. `sdk.py`
-  is a generic dispatcher with no platform-specific knowledge — it discovers
-  platforms by scanning `platforms/*/build.yml`.
-- **`west sdk build`** sets `manifest.file` to the chosen manifest, runs
-- **`west sdk build`** sets `manifest.file` to the chosen manifest, runs
-  `west update` (only when sources are missing, or always with `--update`),
-  then dispatches on the `build.yml` `kind`:
-  - **PX4** → shells out to PX4's native `make <target>`
-  - **Zephyr / Cerebri** → native `west build -b <board>`
-  - **AM32** → GNU `make <target>` (after a one-time `make arm_sdk_install`
-    that downloads the xPack ARM toolchain)
-- **`west sdk update`** sets the platform manifest and runs `west update` to
-  clone/refresh its sources **without building**.
-- **`west sdk download`** reads each platform's `build.yml` `download:` section
-  and pulls the matching prebuilt artifacts from Nexus (WIC included only for
-  `navq95`).
-
-## Repository layout
+To get started, please make sure Docker is installed on your machine. For an
+Ubuntu-based machine, you can follow [these instructions][1]. To check if
+everything went smoothly with the installation, you can try to run the
+**hello-world** Docker image:
 
 ```
-nxp-robotics-sdk/
-├── manifests/{px4,cerebri,zephyr,am32}/<platform>.yml  # revision pinning
-├── platforms/<platform>/build.yml                  # build + download catalog
-├── scripts/
-│   ├── sdk.py                # `west sdk download` + `west sdk build`
-│   └── west-commands.yml      # registers the `sdk` command
-└── docs/                      # Sphinx (reStructuredText) documentation
+sudo docker run hello-world
 ```
 
-Prebuilt binaries and the Ubuntu WIC are **not** committed to git; they are
-hosted on Nexus and retrieved with `west sdk download`.
+**📝 Note:** To allow Docker to be managed by non-root users, you can follow
+[these instructions][2]. Throughout this guide, it is assumed that `sudo` is
+required.
+
+Apart from Docker, a few system packages are required. These can be installed by
+running:
+
+```
+sudo apt-get update
+sudo apt-get install -y git
+```
+
+To prepare the development environment, first clone the **nxp-robotics-sdk**
+repository by running:
+
+```
+mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
+
+git clone -b <branch> ssh://git@bitbucket.sw.nxp.com/tars/nxp-robotics-sdk.git
+```
+
+**📝 Note:** `branch` is the name of the branch or tag you want to use. We
+recommend always choosing a release branch/tag. For the **ROBOTICS_0.7.0**
+release, the name of the branch would be **robotics-0.7.0**.
+
+For example, to clone the **robotics-0.7.0** branch:
+
+```
+mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
+
+git clone -b robotics-0.7.0 ssh://git@bitbucket.sw.nxp.com/tars/nxp-robotics-sdk.git
+```
+
+You can also pass a tag to the `-b` option. For example, to checkout the
+**robotics_0.7.0-tc3** tag:
+
+```
+mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
+
+git clone -b robotics_0.7.0-tc3 ssh://git@bitbucket.sw.nxp.com/tars/nxp-robotics-sdk.git
+```
+
+**⚠️ Warning:** Doing a checkout on a tag will put your repository in a detached HEAD state.
+You can run `git switch -c <branch>` to create a branch.
+
+The next step is to build the Docker image:
+
+```
+sudo docker build --build-arg UID=$(id -u) \
+		  --build-arg GID=$(id -g) \
+		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+```
+
+**⚠️ Warning:** If you're sitting behind a corporate firewall, you may also need
+to specify the proxies to the build command. You can do so by using the `--build-arg`
+option. For example:
+
+```
+sudo docker build --build-arg UID=$(id -u) \
+		  --build-arg GID=$(id -g) \
+		  --build-arg http_proxy=http://127.0.0.1:1234 \
+		  --build-arg https_proxy=https://127.0.0.1:1234 \
+		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+```
+
+Now everything should be ready to go. To start the container, run:
+
+```
+sudo docker run -it -v ~/robotics-workdir:/home/robotics robotics-sdk
+```
+
+**⚠️ Warning:** If you're sitting behind a corporate firewall, you may also need
+to pass the proxy-related environment variables to the `run` command. You can do
+so by using the `-e` option. For example:
+
+```
+sudo docker run -it -v ~/robotics-workdir:/home/robotics \
+		-e http_proxy=http://127.0.0.1:1234 \
+		-e https_proxy=https://127.0.0.1:1234 \
+		robotics-sdk
+```
+
+After starting the container, you should now initialize `west` by running:
+
+```
+west init -l nxp-robotics-sdk/
+```
+
+If everything went well, you should be able to list all of the available
+platforms by running:
+
+```
+west sdk list
+```
+
+# Command reference guide
+
+**nxp-robotics-sdk** uses [west][3] to manage all of its components (e.g. building
+firmware images, downloading pre-built binaries, updating git revisions, etc...).
+The documentation found below provides an overview of what you can achieve using
+`west` and **nxp-robotics-sdk**.
+
+**📝 Note:** For all commands requiring a platform name as argument (e.g. `west
+sdk build -p <platform>`), you'll have to use one of the supported platform names
+listed by running `west sdk list`.
+
+**📝 Note:** For all build or download commands, all of the binaries will be
+available under `~/robotics-workdir/bin`.
+
+1. **Displaying help information**
+
+The `--help` option can be used to display additional information regarding a
+command or a sub-command (e.g. documentation, supported options, etc...). This
+option should be used as the "ultimate" source of truth since it should always
+be up to date.
+
+Examples of how this option could be used:
+
+```
+# print help information about the sdk command
+west sdk --help
+```
+
+```
+# print help information about the build sub-command
+west sdk build --help
+```
+
+2. **List available platforms**
+
+To list all of the available platforms:
+
+```
+west sdk list
+```
+
+```
+# prints additional information such as supported shields and examples
+west sdk list -v
+```
+
+3. **Download pre-built binaries**
+
+To download the pre-built binaries:
+
+```
+west sdk download -p <platform>
+```
+
+For example, to download the pre-built binaries for the MR-NAVQ95 platform:
+
+```
+west sdk download -p navq95
+```
+
+4. **Build binaries from source**
+
+To build all of the available binaries from source for a given platform:
+
+```
+west sdk build -p <platform>
+```
+
+For example, to build all of the available binaries for the MR-NAVQ95 platform:
+
+```
+west sdk build -p navq95
+```
+
+The aformentioned command builds **all** of the available binaries for the target
+platform (i.e. all stacks, all examples, etc...). You can choose to build a specific
+stack by using the `--stack` option:
+
+```
+west sdk build -p <platform> --stack <stack>
+```
+
+For example, to build the PX4 stack for the MR-NAVQ95 platform:
+
+```
+west sdk build -p navq95 --stack px4
+```
+
+[1]: https://docs.docker.com/engine/install/ubuntu/
+[2]: https://docs.docker.com/engine/install/linux-postinstall/
+[3]: https://docs.zephyrproject.org/latest/develop/west/index.html
