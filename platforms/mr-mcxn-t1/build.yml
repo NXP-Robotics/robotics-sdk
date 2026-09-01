@@ -101,19 +101,35 @@ stacks:
 # named zephyr.signed.bin / mcuboot.bin) do not collide.
 download:
   # zephyr / t1
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/hello_world,     dest: zephyr/t1/hello_world/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/hello_world,     dest: zephyr/t1/hello_world/}
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,   dest: zephyr/t1/dhcpv4_client/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,   dest: zephyr/t1/dhcpv4_client/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/hello_world,        dest: zephyr/t1/hello_world/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/hello_world,        dest: zephyr/t1/hello_world/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,      dest: zephyr/t1/dhcpv4_client/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,      dest: zephyr/t1/dhcpv4_client/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/accel_polling,      dest: zephyr/t1/accel_polling/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/accel_polling,      dest: zephyr/t1/accel_polling/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/can_counter,        dest: zephyr/t1/can_counter/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/can_counter,        dest: zephyr/t1/can_counter/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/led_strip,          dest: zephyr/t1/led_strip/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/led_strip,          dest: zephyr/t1/led_strip/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/cdc_acm,            dest: zephyr/t1/cdc_acm/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/cdc_acm,            dest: zephyr/t1/cdc_acm/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/watchdog,           dest: zephyr/t1/watchdog/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/watchdog,           dest: zephyr/t1/watchdog/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
   # zephyr / oflo
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy,    dest: zephyr/oflo/6dof_motion_drdy/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy,    dest: zephyr/oflo/6dof_motion_drdy/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/distance_polling, dest: zephyr/oflo/distance_polling/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/distance_polling, dest: zephyr/oflo/distance_polling/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy, dest: zephyr/oflo/6dof_motion_drdy/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy, dest: zephyr/oflo/6dof_motion_drdy/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/sensor_shell,     dest: zephyr/oflo/sensor_shell/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/sensor_shell,     dest: zephyr/oflo/sensor_shell/}
   # zephyr / f9p
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/f9p/gnss,           dest: zephyr/f9p/gnss/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/f9p/gnss,           dest: zephyr/f9p/gnss/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/f9p/gnss,              dest: zephyr/f9p/gnss/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/f9p/gnss,              dest: zephyr/f9p/gnss/}
   # cerebri / oflo
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow, dest: cerebri/oflo/optical_flow/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow, dest: cerebri/oflo/optical_flow/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow,    dest: cerebri/oflo/optical_flow/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow,    dest: cerebri/oflo/optical_flow/}
   # cerebri / gnss
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss, dest: cerebri/gnss/gnss/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss, dest: cerebri/gnss/gnss/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss,            dest: cerebri/gnss/gnss/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss,            dest: cerebri/gnss/gnss/}
