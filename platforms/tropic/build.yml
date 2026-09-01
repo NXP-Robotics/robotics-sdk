@@ -24,18 +24,18 @@ stacks:
     boards:
       - mr_vmu_tropic
     examples:
-    - {name: hello_world,     app: zephyr/samples/hello_world, default: true}
-    - {name: gpio,            app: zephyr/samples/basic/button, default: true}
-    - {name: bmi08x_icm45686, app: zephyr/samples/sensor/accel_polling, default: true}
-    - {name: bmm350,          app: zephyr/samples/sensor/magn_polling, default: true}
-    - {name: bmp390,          app: zephyr/samples/sensor/pressure_polling, default: true}
-    - {name: pwmLED,          app: zephyr/samples/basic/fade_led, default: true}
-    - {name: can,             app: zephyr/samples/drivers/can/counter, default: true}
-    - {name: sdcard,          app: zephyr/samples/subsys/fs/fs_sample, default: true}
-    - {name: dhcpv4_client,   app: zephyr/samples/net/dhcpv4_client, default: true}
-    - {name: usb,             app: zephyr/samples/subsys/usb/cdc_acm, default: true}
-    - {name: watchdog,        app: zephyr/samples/drivers/watchdog, default: true}
-    - {name: rtc,             app: zephyr/samples/drivers/rtc, default: true}
+    - {name: hello_world,     app: zephyr/samples/hello_world}
+    - {name: gpio,            app: zephyr/samples/basic/button}
+    - {name: bmi08x_icm45686, app: zephyr/samples/sensor/accel_polling}
+    - {name: bmm350,          app: zephyr/samples/sensor/magn_polling}
+    - {name: bmp390,          app: zephyr/samples/sensor/pressure_polling}
+    - {name: pwmLED,          app: zephyr/samples/basic/fade_led}
+    - {name: can,             app: zephyr/samples/drivers/can/counter}
+    - {name: sdcard,          app: zephyr/samples/subsys/fs/fs_sample}
+    - {name: dhcpv4_client,   app: zephyr/samples/net/dhcpv4_client}
+    - {name: usb,             app: zephyr/samples/subsys/usb/cdc_acm}
+    - {name: watchdog,        app: zephyr/samples/drivers/watchdog}
+    - {name: rtc,             app: zephyr/samples/drivers/rtc}
 
 download:
   # 'dest' relative to bin/tropic/ ("" == the platform root).

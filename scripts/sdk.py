@@ -406,10 +406,10 @@ class Sdk(WestCommand):
                              "cerebri stack, which maps each app to its shield.")
         bd.add_argument("--build-all", dest="build_all", action="store_true",
                         help="Build ALL non-caveat examples for the selected "
-                             "shield/stack (instead of only the curated "
-                             "default set). With no --shield/--stack it spans "
-                             "every stack. Cannot be combined with a named "
-                             "<example>.")
+                             "shield/stack, including any marked "
+                             "default: false. With no --shield/--stack it "
+                             "spans every stack. Cannot be combined with a "
+                             "named <example>.")
         bd.add_argument("example", nargs="?", default=None,
                         help="Optional single example/app (by name) to build. "
                              "zephyr: one example within the selected shield; "
@@ -484,15 +484,15 @@ class Sdk(WestCommand):
                         for ex in (sh or {}).get("examples", []):
                             if ex.get("expect_fail"):
                                 m = "  [expect_fail]"
-                            elif ex.get("default"):
-                                m = "  [default]"
+                            elif not ex.get("default", True):
+                                m = "  [not default]"
                             else:
                                 m = ""
                             log.inf(f"      {ex.get('name')}{m}")
                 elif scfg.get("apps"):
                     for app in scfg["apps"]:
                         shd = app.get("shield")
-                        dfl = "  [default]" if app.get("default") else ""
+                        dfl = "" if app.get("default", True) else "  [not default]"
                         st = f"  (shield: {shd})" if shd else ""
                         log.inf(f"  [{sname}] {app.get('name')}{st}{dfl}")
 
@@ -725,9 +725,9 @@ class Sdk(WestCommand):
             shields = scfg.get("shields")
             if shields:
                 for sh in shields.values():
-                    if any(e.get("default") for e in (sh or {}).get("examples", [])):
+                    if any(e.get("default", True) for e in (sh or {}).get("examples", [])):
                         has = True
-            if scfg.get("apps") and any(a.get("default") for a in scfg["apps"]):
+            if scfg.get("apps") and any(a.get("default", True) for a in scfg["apps"]):
                 has = True
             if has:
                 out.append(sname)
@@ -1464,7 +1464,8 @@ class Sdk(WestCommand):
                     if not examples:
                         log.die(f"Example '{example}' not found.")
                 elif not build_all:
-                    default = [e for e in examples if e.get("default")]
+                    default = [e for e in examples if e.get("default", True)
+                               and not e.get("expect_fail")]
                     examples = default if default else examples
                 results = []
                 for board in boards:
@@ -1523,7 +1524,8 @@ class Sdk(WestCommand):
                     log.inf(f"[{group}] skipping caveat examples "
                             f"(build them by name): {', '.join(skipped)}")
             else:
-                builds = [e for e in examples if e.get("default")]
+                builds = [e for e in examples if e.get("default", True)
+                          and not e.get("expect_fail")]
                 if not builds:
                     log.inf(f"[{group}] no default examples; skipping "
                             f"(name an example or use --build-all).")
@@ -1559,8 +1561,8 @@ class Sdk(WestCommand):
             builds = list(apps)  # every cerebri app (none are caveat today)
         else:
             # Default: only the curated default set (default: true).
-            builds = [a for a in apps if a.get("default")]
-            other = [a["name"] for a in apps if not a.get("default")]
+            builds = [a for a in apps if a.get("default", True)]
+            other = [a["name"] for a in apps if not a.get("default", True)]
             if other:
                 log.inf(f"Building default cerebri apps; build others by name "
                         f"or --build-all: {', '.join(other)}")

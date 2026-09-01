@@ -42,10 +42,9 @@ Build
    west sdk build --platform mr-mcxn-t1 --shield t1 <example> # a specific example
    west sdk build --platform mr-mcxn-t1 --stack cerebri       # Cerebri (ROS2 nodes: optical_flow and gnss)
 
-With no ``<example>`` the curated CI / default set is built:
-``hello_world`` and ``dhcpv4_client`` (t1), ``gnss`` (f9p) and
-``optical_flow`` (cerebri). Every other example stays buildable by naming it
-explicitly.
+With no ``<example>`` every example of the selected shield is built, except
+those marked ``expect_fail: true`` (known broken) or ``default: false`` (built
+only on request). Both stay buildable by naming them explicitly.
 
 Download prebuilt
 -----------------
