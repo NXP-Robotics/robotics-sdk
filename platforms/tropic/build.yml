@@ -26,7 +26,8 @@ stacks:
     examples:
     - {name: hello_world,     app: zephyr/samples/hello_world}
     - {name: gpio,            app: zephyr/samples/basic/button}
-    - {name: bmi08x_icm45686, app: zephyr/samples/sensor/accel_polling}
+    - {name: bmi08x,          app: zephyr/samples/sensor/accel_polling}
+    - {name: icm45686,        app: zephyr/samples/sensor/6dof_motion_drdy}
     - {name: bmm350,          app: zephyr/samples/sensor/magn_polling}
     - {name: bmp390,          app: zephyr/samples/sensor/pressure_polling}
     - {name: pwmLED,          app: zephyr/samples/basic/fade_led}
@@ -45,7 +46,8 @@ download:
   # zephyr samples
   - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/hello_world, dest: zephyr/hello_world}
   - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/gpio, dest: zephyr/gpio}
-  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmi08x_icm45686, dest: zephyr/bmi08x_icm45686}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmi08x, dest: zephyr/bmi08x}
+  - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/icm45686, dest: zephyr/icm45686}
   - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmm350, dest: zephyr/bmm350}
   - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/bmp390, dest: zephyr/bmp390}
   - {name: zephyr.bin, class: mcu, subpath: tropic/zephyr/build/pwmLED, dest: zephyr/pwmLED}
