@@ -65,6 +65,7 @@ stacks:
           - {name: can_counter,               app: zephyr/samples/drivers/can/counter}
           - {name: led_strip,                 app: zephyr/samples/drivers/led/led_strip}
           - {name: cdc_acm,                   app: zephyr/samples/subsys/usb/cdc_acm}
+          - {name: uart_pass,                 app: zephyr/samples/drivers/uart/passthrough}
           - {name: watchdog,                  app: zephyr/samples/drivers/watchdog}
           - {name: rtc,                       app: zephyr/samples/drivers/rtc}
       oflo:
@@ -117,6 +118,8 @@ download:
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/watchdog,           dest: zephyr/t1/watchdog/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/uart_pass,          dest: zephyr/t1/uart_pass/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/uart_pass,          dest: zephyr/t1/uart_pass/}
   # zephyr / oflo
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/distance_polling, dest: zephyr/oflo/distance_polling/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/distance_polling, dest: zephyr/oflo/distance_polling/}
