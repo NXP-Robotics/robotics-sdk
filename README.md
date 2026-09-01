@@ -110,8 +110,8 @@ option. For example:
 ```
 sudo docker build --build-arg UID=$(id -u) \
 		  --build-arg GID=$(id -g) \
-		  --build-arg http_proxy=http://127.0.0.1:1234 \
-		  --build-arg https_proxy=https://127.0.0.1:1234 \
+		  --build-arg http_proxy=http://<proxy>:<port> \
+		  --build-arg https_proxy=http://<proxy>:<port> \
 		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
 ```
 
@@ -127,8 +127,8 @@ so by using the `-e` option. For example:
 
 ```
 sudo docker run -it -v ~/robotics-workdir:/home/robotics \
-		-e http_proxy=http://127.0.0.1:1234 \
-		-e https_proxy=https://127.0.0.1:1234 \
+		-e http_proxy=http://<proxy>:<port> \
+		-e https_proxy=http://<proxy>:<port> \
 		robotics-sdk
 ```
 
