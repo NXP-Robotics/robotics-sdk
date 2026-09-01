@@ -15,6 +15,25 @@ system, and provides a way to download pre-built artifacts.
 |  MR-ESC-MCXA   |   ❌   |   ❌    |    ❌    |    ✅    |
 |  MR-MCXN-T1    |   ❌   |   ✅    |    ✅    |    ❌    |
 
+# Requirements
+
+The SDK builds inside a Docker container, so the host only needs Docker
+and a few basic tools. It has been tested on the following host machines:
+
+- Ubuntu 22.04
+- Ubuntu 24.04
+
+The host must also provide:
+
+- Docker (see the installation instructions below).
+- `git`, to clone this repository.
+- Around 10 GB of free disk space for the Docker image, plus additional
+  space for the checked-out sources and build outputs.
+- Network access to `github.com`, from which the Dockerfile downloads the
+  Zephyr SDKs while building the image. If a firewall exists please make
+  sure that you are passing the proper host and port to the Docker
+  commands as shown below.
+
 # Quick getting started guide
 
 Given the number of software stacks supported by the SDK, managing all of their
