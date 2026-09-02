@@ -72,7 +72,6 @@ stacks:
       oflo:
         shield_name: mr_mcxn_t1_optical_flow
         examples:
-          - {name: distance_polling,           app: zephyr/samples/sensor/distance_polling}
           - {name: 6dof_motion_drdy,           app: zephyr/samples/sensor/6dof_motion_drdy}
           - {name: 6dof_fifo_stream,           app: zephyr/samples/sensor/6dof_fifo_stream}
           - {name: sensor_shell,               app: zephyr/samples/sensor/sensor_shell}
@@ -124,8 +123,6 @@ download:
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
   # zephyr / oflo
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/distance_polling, dest: zephyr/oflo/distance_polling/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/distance_polling, dest: zephyr/oflo/distance_polling/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy, dest: zephyr/oflo/6dof_motion_drdy/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy, dest: zephyr/oflo/6dof_motion_drdy/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/sensor_shell,     dest: zephyr/oflo/sensor_shell/}
