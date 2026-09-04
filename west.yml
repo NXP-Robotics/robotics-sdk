@@ -31,3 +31,11 @@ manifest:
       revision: 3a1aba513415421301d2cc47b0f502757c5313d9
       path: docs
       groups: [docs]
+    # The MCXN-T1 ROS2-node apps (gnss, io_exp, optical_flow) live here as
+    # the mcxn-t1-ros2-nodes Zephyr module. Pinned so a plain west update
+    # brings them in; the cerebri stack build also imports this repo for the
+    # transitive module set (zros/synapse_pb/zenoh-pico/...).
+    - name: nxp-robotics-apps
+      remote: tars
+      revision: robotics-0.7.0
+      path: nxp-robotics-apps

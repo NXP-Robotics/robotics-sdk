@@ -1,8 +1,10 @@
 # NXP Robotics SDK - Cerebri stack - mr-mcxn-t1 platform (MCXN947 MR-MCXN-T1)
 #
-# Builds the CogniPilot integration apps (optical_flow now; Zenoh GNSS later).
-# Imports the NXP spinali fork, which pins the NXP zephyr fork + zephyr_boards
-# + the zros/synapse/cyecca modules these apps need.
+# Builds the MCXN-T1 ROS2-node apps (gnss, io_exp, optical_flow). Imports the
+# nxp-robotics-apps repo, whose mcxn-t1-ros2-nodes module west.yml pins the NXP
+# zephyr fork (zephyr-rtos @ devel, incl. the sensor 3-axis alignment and rtio
+# timeout additions) plus zros / synapse_pb / zros_drivers / zenoh-pico /
+# microcdr.
 manifest:
   version: "1.0"
 
@@ -15,8 +17,8 @@ manifest:
       url-base: ssh://git@bitbucket.sw.nxp.com/tars
 
   projects:
-    - name: spinali
+    - name: nxp-robotics-apps
       remote: nxp
-      revision: 5139f83
-      path: spinali
-      import: true
+      revision: robotics-0.7.0
+      path: nxp-robotics-apps
+      import: mcxn-t1-ros2-nodes/west.yml

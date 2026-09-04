@@ -90,8 +90,9 @@ stacks:
     boards:
       - mr_mcxn_t1/mcxn947/cpu0
     apps:
-      - {name: optical_flow, app: spinali/app/optical_flow, shield: oflo}
-      - {name: gnss, app: spinali/app/gnss, shield: gnss}
+      - {name: optical_flow, app: nxp-robotics-apps/mcxn-t1-ros2-nodes/app/optical_flow, shield: oflo}
+      - {name: gnss,         app: nxp-robotics-apps/mcxn-t1-ros2-nodes/app/gnss,         shield: f9p}
+      - {name: io_exp,       app: nxp-robotics-apps/mcxn-t1-ros2-nodes/app/io_exp,       shield: io_exp}
 
 # Prebuilt artifacts for `west sdk download`. Source and versions come from the
 # root versions.yml; entries reference the mcu class (Robotics_Firmware) and
@@ -133,6 +134,9 @@ download:
   # cerebri / oflo
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow,    dest: cerebri/oflo/optical_flow/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/oflo/optical_flow,    dest: cerebri/oflo/optical_flow/}
-  # cerebri / gnss
-  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss,            dest: cerebri/gnss/gnss/}
-  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/gnss/gnss,            dest: cerebri/gnss/gnss/}
+  # cerebri / f9p
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/f9p/gnss,             dest: cerebri/f9p/gnss/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/f9p/gnss,             dest: cerebri/f9p/gnss/}
+  # cerebri / io_exp
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/io_exp/io_exp,        dest: cerebri/io_exp/io_exp/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/io_exp/io_exp,        dest: cerebri/io_exp/io_exp/}

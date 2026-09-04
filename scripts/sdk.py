@@ -1265,7 +1265,7 @@ class Sdk(WestCommand):
                           shield_name=None,
                           sysbuild=False, sysbuild_args=None,
                           platform=None, stack=None, collect_dir=None,
-                          image_name=None):
+                          image_name=None, extra_modules=None):
         bslug = board.replace("/", "_")
         sub = name or bslug
         if group is not None and platform is not None:
@@ -1292,6 +1292,16 @@ class Sdk(WestCommand):
              # Use the Zephyr shield mechanism (-DSHIELD=) so that both the
              # shield's .overlay and .conf files are automatically applied.
             extra.append(f"-DSHIELD={shield_name}")
+        if extra_modules:
+            # Register an out-of-tree Zephyr module whose module.yml is NOT at
+            # the west project root (e.g. the mcxn-t1-ros2-nodes module nested
+            # in the nxp-robotics-apps monorepo). Scoped to this build only, so
+            # other apps in the same repo are unaffected.
+            mods = extra_modules if isinstance(extra_modules, (list, tuple)) \
+                else [extra_modules]
+            abs_mods = [m if os.path.isabs(m) else os.path.join(self.topdir, m)
+                        for m in mods]
+            extra.append("-DEXTRA_ZEPHYR_MODULES=" + ";".join(abs_mods))
         if sysbuild and sysbuild_args:
             # Absolutize workspace-relative file paths in -D...FILE= args so
             # CMake resolves them against the workspace, not the app source dir.
@@ -1574,11 +1584,20 @@ class Sdk(WestCommand):
             for a in builds:
                 shield = a.get("shield")
                 overlay = self._shield_overlay(pdata, shield) if shield else None
+                # The app repo may ship its Zephyr module in a subdirectory
+                # (module.yml not at the west project root), so Zephyr will not
+                # auto-discover it. Derive the module dir from the app path
+                # (everything before "/app/") and register it explicitly.
+                app_path = a.get("app") or ""
+                extra_modules = None
+                if "/app/" in app_path:
+                    extra_modules = app_path.split("/app/", 1)[0]
                 ok = self._zephyr_build_one(board, a.get("name"), a.get("app"),
                                             overlay, shield or "cerebri",
                                             sysbuild=cfg.get("sysbuild", False),
                                             sysbuild_args=cfg.get("sysbuild_args"),
-                                            platform=platform, stack="cerebri")
+                                            platform=platform, stack="cerebri",
+                                            extra_modules=extra_modules)
                 results.append((f"{shield or 'cerebri'}/{a.get('name')}", ok))
         self._summarize(results)
 
