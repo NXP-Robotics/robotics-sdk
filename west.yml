@@ -28,7 +28,7 @@ manifest:
   projects:
     - name: nxp-robotics-docs
       remote: tars
-      revision: 3a1aba513415421301d2cc47b0f502757c5313d9
+      revision: e4090cf3436a5c6e0341b8057f185e156144f7dd
       path: docs
       groups: [docs]
     # The MCXN-T1 ROS2-node apps (gnss, io_exp, optical_flow) live here as
@@ -37,5 +37,5 @@ manifest:
     # transitive module set (zros/synapse_pb/zenoh-pico/...).
     - name: nxp-robotics-apps
       remote: tars
-      revision: robotics-0.7.0
+      revision: f1d13db254e988c04d67a9d9cd4b7e6d0eb77c09
       path: nxp-robotics-apps

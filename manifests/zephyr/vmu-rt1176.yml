@@ -26,5 +26,5 @@ manifest:
 
     - name: nxp-robotics-apps
       remote: nxp
-      revision: 09f97d283cd6448db33e4413e94cd996b04d131d
+      revision: f1d13db254e988c04d67a9d9cd4b7e6d0eb77c09
       path: nxp-robotics-apps

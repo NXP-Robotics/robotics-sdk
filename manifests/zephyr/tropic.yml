@@ -13,6 +13,6 @@ manifest:
   projects:
     - name: zephyr-rtos
       remote: nxp
-      revision: 6bd85d06ee1935f3b4decb115882c6073cba830f
+      revision: 1633f342171ec5c1c2b430115069d1d7307e118b
       path: zephyr
       import: true
