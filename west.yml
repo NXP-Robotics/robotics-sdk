@@ -10,17 +10,27 @@
 #
 # URLs are the OFFICIAL (external) GitHub URLs. Internal developers use the
 # bifrost mechanism to transparently redirect these GitHub URLs to their
-# internal Bitbucket mirrors (see the nxp-robotics-bifrost repo); external
-# users resolve them directly on GitHub.
+# internal Bitbucket mirrors; external users resolve them directly on GitHub.
+# (Internal developers bootstrap from the bifrost repo's internal manifest,
+# which imports this file - see that repo for details.)
 #
-# The only project declared here is the documentation repo
-# (nxp-robotics-docs). It lives in the 'docs' group, which is ENABLED by
-# default, so a plain 'west init -l' + 'west update' brings the docs in.
-# External / upstream releases strip the docs (delivered pre-compiled as HTML,
-# out of tree) by disabling the group:
-#   west update --group-filter -docs
+# Groups:
+#   docs     - documentation repo. ENABLED by default (internal work). Upstream
+#              releases strip it (delivered as pre-built HTML out of tree):
+#                west update --group-filter -docs
+#   bifrost  - reserved for the internal-only bifrost workflow. DISABLED by
+#              default. No project is declared for it here: bifrost is the
+#              manifest repo internal developers bootstrap from, so it is never
+#              a project of this public manifest.
+#   internal - reserved for future internal-only content. DISABLED by default.
+#              Internal-only projects are declared in the bifrost repo's
+#              internal manifest, never here, so their names never reach the
+#              public (upstreamed) manifest.
 manifest:
   version: "1.0"
+
+  # bifrost + internal are opt-in (internal developers only); docs is on.
+  group-filter: [-bifrost, -internal]
 
   self:
     path: nxp-robotics-sdk
@@ -36,6 +46,7 @@ manifest:
       revision: e4090cf3436a5c6e0341b8057f185e156144f7dd
       path: docs
       groups: [docs]
+
     # The MCXN-T1 ROS2-node apps (gnss, io_exp, optical_flow) live here as
     # the mcxn-t1-ros2-nodes Zephyr module. Pinned so a plain west update
     # brings them in; the cerebri stack build also imports this repo for the
