@@ -1,4 +1,7 @@
 # NXP Robotics SDK - plain Zephyr stack - tropic platform
+#
+# URLs are the official GitHub URLs; internal developers get the internal
+# Bitbucket mirror transparently via bifrost.
 manifest:
   version: "1.0"
 
@@ -8,7 +11,7 @@ manifest:
 
   remotes:
     - name: nxp
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
     - name: zephyr-rtos

@@ -1,6 +1,8 @@
 # NXP Robotics SDK - PX4 stack - vmu-rt1176 platform (CogniPilot VMU on RT1176)
 #
 # Pins the exact PX4-Autopilot revision used to build the vmu-rt1176 artifacts.
+# URLs are the official GitHub URLs; internal developers get the internal
+# Bitbucket mirror transparently via bifrost.
 manifest:
   version: "1.0"
 
@@ -10,12 +12,12 @@ manifest:
 
   remotes:
     - name: px4
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
-    - name: PX4-Autopilot
+    - name: PX4-Autopilot-NXP
       remote: px4
-      repo-path: px4-autopilot-nxp.git
+      repo-path: PX4-Autopilot-NXP
       # Pinned to the SHA of PX4 validated for this SDK release.
       revision: 82cb672cd75fee462691ebcf63520fb174f79c27
       submodules: true

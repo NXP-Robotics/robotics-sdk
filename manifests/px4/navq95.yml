@@ -1,8 +1,8 @@
 # NXP Robotics SDK - PX4 stack - navq95 platform (NavQ95, i.MX95 M7)
 #
-# NavQ95 PX4 support lives on NXP's public PX4 fork
-# (NXP-Robotics/PX4-Autopilot) as the `imx95` board. This manifest pins the
-# exact fork remote + revision validated for this SDK release.
+# NavQ95 PX4 support lives on NXP's PX4 fork (PX4-Autopilot-NXP) as the
+# `imx95` board. URLs are the official GitHub URLs; internal developers get
+# the internal Bitbucket mirror transparently via bifrost.
 #
 manifest:
   version: "1.0"
@@ -13,12 +13,12 @@ manifest:
 
   remotes:
     - name: px4
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
-    - name: px4-autopilot-nxp
+    - name: PX4-Autopilot-NXP
       remote: px4
-      repo-path: px4-autopilot-nxp.git
+      repo-path: PX4-Autopilot-NXP
       # Pinned to the validated NavQ95 (imx95) commit on branch
       # pr-nuttx-12-12-0-imx95.
       revision: d09136b174db99e598095ce9255c52d203e668df

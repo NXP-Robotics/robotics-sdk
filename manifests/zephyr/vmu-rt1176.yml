@@ -4,6 +4,10 @@
 # configurator passthrough) for the MR-VMU-RT1176 board on generic Zephyr.
 # The app source lives in nxp-robotics-apps; the FlexIO-UART transport is
 # carried app-privately (no shared driver module).
+#
+# The nxp-robotics-apps URL is the official GitHub URL; internal developers get
+# the internal Bitbucket mirror transparently via bifrost. Upstream Zephyr is
+# fetched directly from zephyrproject-rtos.
 manifest:
   version: "1.0"
 
@@ -15,7 +19,7 @@ manifest:
     - name: zephyr
       url-base: https://github.com/zephyrproject-rtos
     - name: nxp
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
     - name: zephyr

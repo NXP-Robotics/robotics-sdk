@@ -8,11 +8,16 @@
 # manifests/<stack>/<platform>.yml (which DO import upstream) and then runs
 # 'west update'.
 #
-# The only project declared here is the internal documentation repo
+# URLs are the OFFICIAL (external) GitHub URLs. Internal developers use the
+# bifrost mechanism to transparently redirect these GitHub URLs to their
+# internal Bitbucket mirrors (see the nxp-robotics-bifrost repo); external
+# users resolve them directly on GitHub.
+#
+# The only project declared here is the documentation repo
 # (nxp-robotics-docs). It lives in the 'docs' group, which is ENABLED by
-# default, so a plain 'west init -l' + 'west update' brings the docs in for
-# internal work. External / upstream releases strip the docs (delivered
-# pre-compiled as HTML, out of tree) by disabling the group:
+# default, so a plain 'west init -l' + 'west update' brings the docs in.
+# External / upstream releases strip the docs (delivered pre-compiled as HTML,
+# out of tree) by disabling the group:
 #   west update --group-filter -docs
 manifest:
   version: "1.0"
@@ -22,12 +27,12 @@ manifest:
     west-commands: scripts/west-commands.yml
 
   remotes:
-    - name: tars
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+    - name: nxp-mobilerobotics
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
     - name: nxp-robotics-docs
-      remote: tars
+      remote: nxp-mobilerobotics
       revision: e4090cf3436a5c6e0341b8057f185e156144f7dd
       path: docs
       groups: [docs]
@@ -36,6 +41,6 @@ manifest:
     # brings them in; the cerebri stack build also imports this repo for the
     # transitive module set (zros/synapse_pb/zenoh-pico/...).
     - name: nxp-robotics-apps
-      remote: tars
+      remote: nxp-mobilerobotics
       revision: f1d13db254e988c04d67a9d9cd4b7e6d0eb77c09
       path: nxp-robotics-apps

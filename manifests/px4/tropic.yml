@@ -3,6 +3,8 @@
 # Pins the exact PX4-Autopilot revision used to build the tropic artifacts.
 # PX4 is cloned as a standalone west project (with submodules) and built via
 # its own make system, dispatched by `west sdk build` (see scripts/sdk.py).
+# URLs are the official GitHub URLs; internal developers get the internal
+# Bitbucket mirror transparently via bifrost.
 manifest:
   version: "1.0"
 
@@ -12,12 +14,12 @@ manifest:
 
   remotes:
     - name: px4
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
-    - name: px4-autopilot-nxp
+    - name: PX4-Autopilot-NXP
       remote: px4
-      repo-path: px4-autopilot-nxp.git
+      repo-path: PX4-Autopilot-NXP
       # Pinned to the SHA of PX4 validated for this SDK release.
       revision: 82cb672cd75fee462691ebcf63520fb174f79c27
       submodules: true

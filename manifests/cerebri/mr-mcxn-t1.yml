@@ -5,6 +5,9 @@
 # zephyr fork (zephyr-rtos @ devel, incl. the sensor 3-axis alignment and rtio
 # timeout additions) plus zros / synapse_pb / zros_drivers / zenoh-pico /
 # microcdr.
+#
+# The nxp-robotics-apps URL is the official GitHub URL; internal developers get
+# the internal Bitbucket mirror transparently via bifrost.
 manifest:
   version: "1.0"
 
@@ -14,7 +17,7 @@ manifest:
 
   remotes:
     - name: nxp
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
+      url-base: https://github.com/nxp-mobilerobotics
 
   projects:
     - name: nxp-robotics-apps

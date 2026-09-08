@@ -4,6 +4,10 @@
 # it for NXP MCXA targets (currently the FRDM-MCXA153 board -> make target
 # FRDM_A153), together with the matching AM32 bootloader.
 #
+# AM32 is currently a 1:1 copy of upstream (no NXP patches), so both the
+# firmware and the bootloader are fetched directly from the upstream
+# am32-firmware GitHub org -- no internal mirror, no bifrost translation.
+#
 # NOTE: intentionally NOT pinned yet -- we track upstream directly for
 # development. Pin to an exact tag/SHA at release time (replace 'revision').
 manifest:
@@ -15,14 +19,12 @@ manifest:
 
   remotes:
     - name: am32-firmware
-      url-base: ssh://git@bitbucket.sw.nxp.com/tars
-    - name: am32-github
       url-base: https://github.com/am32-firmware
 
   projects:
     - name: AM32
       remote: am32-firmware
-      repo-path: am32.git
+      repo-path: AM32.git
       # Floating on upstream default branch (no release pin yet).
       revision: 85626b55341816661cb6d5c9402fcf39bcbeb2f6
       # AM32 pulls its MCU HAL/CMSIS via git submodules.
@@ -33,7 +35,7 @@ manifest:
     # development (pin to an exact tag/SHA at release time). No submodules --
     # the A153 HAL/CMSIS is vendored in-tree.
     - name: AM32-bootloader
-      remote: am32-github
+      remote: am32-firmware
       repo-path: AM32-bootloader
       revision: 8a53777b4bb57231e364bd23c893b4c156020579
       path: AM32-bootloader
