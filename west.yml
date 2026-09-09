@@ -53,5 +53,5 @@ manifest:
     # transitive module set (zros/synapse_pb/zenoh-pico/...).
     - name: nxp-robotics-apps
       remote: nxp-mobilerobotics
-      revision: f1d13db254e988c04d67a9d9cd4b7e6d0eb77c09
+      revision: 44e07c4f55f07fe5c10595b747710e4fa46954b3
       path: nxp-robotics-apps
