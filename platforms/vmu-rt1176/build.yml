@@ -1,29 +1,13 @@
 # Build + artifact definition for the vmu-rt1176 platform (CogniPilot VMU, RT1176).
 
 platform: vmu-rt1176
-default_stack: px4
+default_stack: zephyr
 build_all: True
 
 # Firmware artifacts go directly under bin/<platform>/ (no realtime subdir).
 realtime_subdir: ""
 
 stacks:
-  px4:
-    kind: px4
-    # NXP MR-VMU-RT1176 is upstream PX4's FMUv6X-RT reference design board
-    # (px4_fmu-v6xrt). See
-    # https://docs.px4.io/main/en/flight_controller/nxp_mr_vmu_rt1176.
-    # App first, bootloader next.
-    targets:
-      - px4_fmu-v6xrt_default
-      - px4_fmu-v6xrt_bootloader
-    artifacts:
-      - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.elf
-      - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.bin
-      - px4_fmu-v6xrt_default/px4_fmu-v6xrt_default.px4
-      - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.elf
-      - px4_fmu-v6xrt_bootloader/px4_fmu-v6xrt_bootloader.bin
-
   # esc_passthrough (AM32/BLHeli ESC configurator passthrough) is built here,
   # collated with the RT1176 board build, but its binaries are collected under
   # the AM32/ESC bin tree via collect_dir (build on this platform, collect
@@ -36,11 +20,3 @@ stacks:
     collect_dir: mr-esc-mcxa/passthrough/vmu-rt1176
     # Rename the collected app image and also collect the ELF alongside it.
     image_name: esc_vmu_rt1176_passthrough
-
-download:
-  # 'dest' relative to bin/vmu-rt1176/ ("" == the platform root).
-  - {name: px4_fmu-v6xrt_default.elf,    class: mcu, subpath: vmu-rt1176, dest: ""}
-  - {name: px4_fmu-v6xrt_default.bin,    class: mcu, subpath: vmu-rt1176, dest: ""}
-  - {name: px4_fmu-v6xrt_default.px4,    class: mcu, subpath: vmu-rt1176, dest: ""}
-  - {name: px4_fmu-v6xrt_bootloader.elf, class: mcu, subpath: vmu-rt1176, dest: ""}
-  - {name: px4_fmu-v6xrt_bootloader.bin, class: mcu, subpath: vmu-rt1176, dest: ""}
