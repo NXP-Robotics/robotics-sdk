@@ -69,6 +69,7 @@ stacks:
           - {name: qdec,                      app: zephyr/samples/sensor/qdec}
           - {name: watchdog,                  app: zephyr/samples/drivers/watchdog}
           - {name: rtc,                       app: zephyr/samples/drivers/rtc}
+          - {name: zms,                       app: zephyr/samples/subsys/kvss/zms}
       oflo:
         shield_name: mr_mcxn_t1_optical_flow
         examples:
@@ -122,6 +123,8 @@ download:
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/watchdog,           dest: zephyr/t1/watchdog/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/rtc,                dest: zephyr/t1/rtc/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/zms,                dest: zephyr/t1/zms/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/zms,                dest: zephyr/t1/zms/}
   # zephyr / oflo
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy, dest: zephyr/oflo/6dof_motion_drdy/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/oflo/6dof_motion_drdy, dest: zephyr/oflo/6dof_motion_drdy/}
