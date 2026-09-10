@@ -62,6 +62,7 @@ stacks:
           - {name: hello_world,               app: zephyr/samples/hello_world}
           - {name: dhcpv4_client,             app: zephyr/samples/net/dhcpv4_client}
           - {name: accel_polling,             app: zephyr/samples/sensor/accel_polling}
+          - {name: pwm_shell,                 app: zephyr/samples/subsys/shell/shell_module}
           - {name: can_counter,               app: zephyr/samples/drivers/can/counter}
           - {name: led_strip,                 app: zephyr/samples/drivers/led/led_strip}
           - {name: cdc_acm,                   app: zephyr/samples/subsys/usb/cdc_acm}
@@ -109,6 +110,8 @@ download:
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/dhcpv4_client,      dest: zephyr/t1/dhcpv4_client/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/accel_polling,      dest: zephyr/t1/accel_polling/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/accel_polling,      dest: zephyr/t1/accel_polling/}
+  - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/pwm_shell,          dest: zephyr/t1/pwm_shell/}
+  - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/pwm_shell,          dest: zephyr/t1/pwm_shell/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/can_counter,        dest: zephyr/t1/can_counter/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/zephyr/t1/can_counter,        dest: zephyr/t1/can_counter/}
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/zephyr/t1/led_strip,          dest: zephyr/t1/led_strip/}
