@@ -476,6 +476,8 @@ class Sdk(WestCommand):
             for sname, scfg in (pdata.get("stacks") or {}).items():
                 scfg = scfg or {}
                 shields = scfg.get("shields")
+                examples = scfg.get("examples")
+                apps = scfg.get("app")
                 if shields:
                     default_shield = pdata.get("default_shield")
                     for shield, sh in shields.items():
@@ -489,13 +491,12 @@ class Sdk(WestCommand):
                             else:
                                 m = ""
                             log.inf(f"      {ex.get('name')}{m}")
-                elif scfg.get("apps"):
-                    for app in scfg["apps"]:
-                        shd = app.get("shield")
-                        dfl = "" if app.get("default", True) else "  [not default]"
-                        st = f"  (shield: {shd})" if shd else ""
-                        log.inf(f"  [{sname}] {app.get('name')}{st}{dfl}")
-
+                if examples:
+                    log.inf(f"  [{sname}]")
+                    for ex in examples:
+                        log.inf(f"      {ex.get('name')}")
+                if apps:
+                        log.inf(f"  [{sname}]\n      {apps}")
     # ------------------------------------------------------------------ #
     # download
     # ------------------------------------------------------------------ #
