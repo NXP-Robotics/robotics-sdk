@@ -19,12 +19,12 @@ system, and provides a way to download pre-built artifacts.
 
 ## Supported platforms and stacks
 
-|  Platform      |  PX4   | Cerebri |  Zephyr  |   AM32   |
-|:--------------:|:------:|:-------:|:--------:|:--------:|
-|  MR-NAVQ95     |   ✅   |   ❌    |    ❌    |    ❌    |
-|  MR-VMU-TROPIC |   ✅   |   ❌    |    ✅    |    ❌    |
-|  MR-ESC-MCXA   |   ❌   |   ❌    |    ❌    |    ✅    |
-|  MR-MCXN-T1    |   ❌   |   ✅    |    ✅    |    ❌    |
+|  Platform            |  PX4   | Cerebri |  Zephyr  |   AM32   |
+|:--------------------:|:------:|:-------:|:--------:|:--------:|
+|  MR-NAVQ95           |   ✅   |   ❌    |    ❌    |    ❌    |
+|  MR-VMU-TROPIC       |   ✅   |   ❌    |    ✅    |    ❌    |
+|  MR-ESC-AM32-MCXA133 |   ❌   |   ❌    |    ❌    |    ✅    |
+|  MR-MCXN-T1          |   ❌   |   ✅    |    ✅    |    ❌    |
 
 **📝 Note:** The exact platform *names* accepted by the tooling (the value you
 pass to `-p/--platform`) are the ones printed by `west sdk list`. Run
