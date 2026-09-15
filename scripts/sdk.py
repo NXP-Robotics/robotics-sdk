@@ -8,7 +8,7 @@ Uniform, stack-agnostic interface:
 
 ``build`` fetches sources automatically only when they are missing, so local
 edits survive rebuilds; pass ``--update`` to force a refetch (which resets
-sources to the manifest revision and discards local changes).
+sources to the manifest revision).
 
 Switching platforms is DESTRUCTIVE: all PX4 platforms share the same
 ``PX4-Autopilot/`` workspace dir, so if the currently-checked-out sources
@@ -420,10 +420,9 @@ class Sdk(WestCommand):
         bd.add_argument("--update", action="store_true",
                         help="Force a 'west update' before building, even when "
                              "sources are already present. This resets sources "
-                             "to the manifest revision and OVERWRITES local "
-                             "changes. By default sources are fetched only when "
-                             "missing, so local edits are preserved across "
-                             "rebuilds.")
+                             "to the manifest revision. By default sources are "
+                             "fetched only when missing, so local edits are "
+                             "preserved across rebuilds.")
         bd.add_argument("--skip-preflight", action="store_true",
                         help="Skip the toolchain/dependency preflight checks.")
         bd.add_argument("--no-venv", dest="use_venv", action="store_false",
