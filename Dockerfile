@@ -51,7 +51,7 @@ RUN set -eux; \
 			lldb lld pkg-config \
 			screen texinfo u-boot-tools \
 			util-linux vim-common gcc-arm-none-eabi \
-			unzip; \
+			unzip ccache; \
 	pip install --break-system-packages \
 			argcomplete cerberus coverage \
 			"empy>=3.3,<4" future "jinja2>=2.8" \
