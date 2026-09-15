@@ -15,6 +15,7 @@ system, and provides a way to download pre-built artifacts.
   - [Corporate network: proxy and CA certificates](#corporate-network-proxy-and-ca-certificates)
 - [Quick getting started guide](#quick-getting-started-guide)
 - [Command reference guide](#command-reference-guide)
+- [Warnings and environment-specific notes](#warnings-and-environment-specific-notes)
 - [Troubleshooting / FAQ](#troubleshooting--faq)
 
 ## Supported platforms and stacks
@@ -89,14 +90,11 @@ everything went smoothly with the installation, you can try to run the
 sudo docker run hello-world
 ```
 
+[Possible pitfall](#markdown-header-warning-hello-world-on-a-corporate-network)
+
 **📝 Note:** To allow Docker to be managed by non-root users, you can follow
 [these instructions][2]. Throughout this guide, it is assumed that `sudo` is
 required.
-
-**⚠️ Warning:** On a corporate network, `docker run hello-world` pulls the image
-from Docker Hub and will fail unless Docker can reach the registry through your
-proxy. Configure the Docker daemon proxy (see the
-[Docker documentation][4]) before running the validation step.
 
 Apart from Docker, a few system packages are required. These can be installed by
 running:
@@ -139,8 +137,7 @@ git clone -b <tag> https://github.com/nxp-mobilerobotics/nxp-robotics-sdk.git
 **📝 Note:** Release tags are listed on the repository's releases/tags page; use
 the tag that matches the release you want.
 
-**⚠️ Warning:** Doing a checkout on a tag will put your repository in a detached HEAD state.
-You can run `git switch -c <branch>` to create a branch.
+[Possible pitfall](#markdown-header-warning-detached-head-after-a-tag-checkout)
 
 The next step is to build the Docker image:
 
@@ -150,31 +147,9 @@ sudo docker build --build-arg UID=$(id -u) \
 		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
 ```
 
-**⚠️ Warning:** If you're sitting behind a corporate firewall, you may also need
-to specify the proxies to the build command. You can do so by using the `--build-arg`
-option. Replace `<proxy>` and `<port>` with your own site's values (see
-[Corporate network](#corporate-network-proxy-and-ca-certificates)):
+[Possible pitfall](#markdown-header-warning-docker-build-proxy-on-a-corporate-network)
 
-```
-sudo docker build --build-arg UID=$(id -u) \
-		  --build-arg GID=$(id -g) \
-		  --build-arg http_proxy=http://<proxy>:<port> \
-		  --build-arg https_proxy=http://<proxy>:<port> \
-		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
-```
-
-**⚠️ Warning (WSL2):** When building on **WSL2**, the Docker container may lose
-DNS resolution for external hosts (e.g. `github.com`), causing the Zephyr SDK
-download to fail with `Temporary failure in name resolution`. Add
-`--network=host` to the build command so the container shares the WSL2 network
-stack directly (see [Troubleshooting](#troubleshooting--faq)):
-
-```
-sudo docker build --network=host \
-		  --build-arg UID=$(id -u) \
-		  --build-arg GID=$(id -g) \
-		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
-```
+[Possible pitfall](#markdown-header-warning-wsl2-dns-resolution-during-docker-build)
 
 Now everything should be ready to go. To start the container, run:
 
@@ -182,16 +157,7 @@ Now everything should be ready to go. To start the container, run:
 sudo docker run -it -v ~/robotics-workdir:/home/robotics robotics-sdk
 ```
 
-**⚠️ Warning:** If you're sitting behind a corporate firewall, you may also need
-to pass the proxy-related environment variables to the `run` command. You can do
-so by using the `-e` option (again, substitute your own `<proxy>`/`<port>`):
-
-```
-sudo docker run -it -v ~/robotics-workdir:/home/robotics \
-		-e http_proxy=http://<proxy>:<port> \
-		-e https_proxy=http://<proxy>:<port> \
-		robotics-sdk
-```
+[Possible pitfall](#markdown-header-warning-docker-run-proxy-on-a-corporate-network)
 
 After starting the container, you should now initialize `west` by running:
 
@@ -292,6 +258,67 @@ For example, to build the PX4 stack for the MR-NAVQ95 platform:
 
 ```
 west sdk build -p navq95 --stack px4
+```
+
+## Warnings and environment-specific notes
+
+The warnings below only apply in specific situations (corporate networks, WSL2,
+tag checkouts). They are collected here so that the step-by-step flow above stays
+easy to follow — consult the relevant one only if it applies to your setup.
+
+### Warning: hello-world on a corporate network
+
+On a corporate network, `docker run hello-world` pulls the image from Docker Hub
+and will fail unless Docker can reach the registry through your proxy. Configure
+the Docker daemon proxy (see the [Docker documentation][4]) before running the
+validation step.
+
+### Warning: detached HEAD after a tag checkout
+
+Doing a checkout on a tag will put your repository in a detached HEAD state. You
+can run `git switch -c <branch>` to create a branch.
+
+### Warning: docker build proxy on a corporate network
+
+If you're sitting behind a corporate firewall, you may also need to specify the
+proxies to the build command. You can do so by using the `--build-arg` option.
+Replace `<proxy>` and `<port>` with your own site's values (see
+[Corporate network](#corporate-network-proxy-and-ca-certificates)):
+
+```
+sudo docker build --build-arg UID=$(id -u) \
+		  --build-arg GID=$(id -g) \
+		  --build-arg http_proxy=http://<proxy>:<port> \
+		  --build-arg https_proxy=http://<proxy>:<port> \
+		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+```
+
+### Warning: WSL2 DNS resolution during docker build
+
+When building on **WSL2**, the Docker container may lose DNS resolution for
+external hosts (e.g. `github.com`), causing the Zephyr SDK download to fail with
+`Temporary failure in name resolution`. Add `--network=host` to the build command
+so the container shares the WSL2 network stack directly (see
+[Troubleshooting](#troubleshooting--faq)):
+
+```
+sudo docker build --network=host \
+		  --build-arg UID=$(id -u) \
+		  --build-arg GID=$(id -g) \
+		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+```
+
+### Warning: docker run proxy on a corporate network
+
+If you're sitting behind a corporate firewall, you may also need to pass the
+proxy-related environment variables to the `run` command. You can do so by using
+the `-e` option (again, substitute your own `<proxy>`/`<port>`):
+
+```
+sudo docker run -it -v ~/robotics-workdir:/home/robotics \
+		-e http_proxy=http://<proxy>:<port> \
+		-e https_proxy=http://<proxy>:<port> \
+		robotics-sdk
 ```
 
 ## Troubleshooting / FAQ
