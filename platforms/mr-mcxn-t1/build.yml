@@ -91,9 +91,9 @@ stacks:
     boards:
       - mr_mcxn_t1/mcxn947/cpu0
     apps:
-      - {name: optical_flow, app: nxp-robotics-apps/mcxn-t1-ros2-nodes/app/optical_flow, shield: oflo}
-      - {name: gnss,         app: nxp-robotics-apps/mcxn-t1-ros2-nodes/app/gnss,         shield: f9p}
-      - {name: io_exp,       app: nxp-robotics-apps/mcxn-t1-ros2-nodes/app/io_exp,       shield: io_exp}
+      - {name: optical_flow, app: robotics-apps/mcxn-t1-ros2-nodes/app/optical_flow, shield: oflo}
+      - {name: gnss,         app: robotics-apps/mcxn-t1-ros2-nodes/app/gnss,         shield: f9p}
+      - {name: io_exp,       app: robotics-apps/mcxn-t1-ros2-nodes/app/io_exp,       shield: io_exp}
 
 # Prebuilt artifacts for `west sdk download`. Source and versions come from the
 # root versions.yml; entries reference the mcu class (Robotics_Firmware) and

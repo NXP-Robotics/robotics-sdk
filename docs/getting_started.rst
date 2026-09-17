@@ -22,7 +22,7 @@ Common (all stacks)
 
 * **Python 3.10+** and ``west`` (``pip install west pyyaml``)
 * **Git** (all manifests pin public remotes cloned over HTTPS, e.g. the
-  NavQ95 PX4 fork ``https://github.com/NXP-Robotics/PX4-Autopilot.git``)
+  NavQ95 PX4 fork ``https://github.com/nxp-robotics/robotics-PX4-Autopilot.git``)
 * **CMake** (>= 3.20) and **Ninja**
 
 PX4 targets (NuttX firmware)
@@ -75,7 +75,7 @@ repository, so you must run ``west init`` **once** before using them:
 
 .. code-block:: console
 
-   west init -m <URL-of-nxp-robotics-sdk> ws
+   west init -m <URL-of-robotics-sdk> ws
    cd ws
 
 .. note::

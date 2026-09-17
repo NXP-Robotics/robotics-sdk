@@ -6,22 +6,22 @@
 # timeout additions) plus zros / synapse_pb / zros_drivers / zenoh-pico /
 # microcdr.
 #
-# The nxp-robotics-apps URL is the official GitHub URL; internal developers get
+# The robotics-apps URL is the official GitHub URL; internal developers get
 # the internal Bitbucket mirror transparently via bifrost.
 manifest:
   version: "1.0"
 
   self:
-    path: nxp-robotics-sdk
+    path: robotics-sdk
     west-commands: scripts/west-commands.yml
 
   remotes:
     - name: nxp
-      url-base: https://github.com/nxp-mobilerobotics
+      url-base: https://github.com/nxp-robotics
 
   projects:
-    - name: nxp-robotics-apps
+    - name: robotics-apps
       remote: nxp
       revision: 26b0a8d971aa73f3a2463e3ed9888fa143d6aa0f
-      path: nxp-robotics-apps
+      path: robotics-apps
       import: mcxn-t1-ros2-nodes/west.yml

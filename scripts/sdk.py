@@ -17,7 +17,7 @@ purged and re-cloned for the requested platform. This prevents building one
 platform against another's tree (e.g. vmu-rt1176 on the NavQ95 fork, where the
 make target does not exist).
 
-Both require an initialized west workspace (run ``west init -l nxp-robotics-sdk``
+Both require an initialized west workspace (run ``west init -l robotics-sdk``
 once) because west only discovers extension commands after init.
 
 sdk.py contains NO platform-specific knowledge. Each platform owns a single
@@ -47,7 +47,7 @@ except ImportError:  # pragma: no cover
 # --------------------------------------------------------------------------- #
 # Generic platform discovery. Each platform owns platforms/<platform>/build.yml.
 # --------------------------------------------------------------------------- #
-SDK_REPO = "nxp-robotics-sdk"
+SDK_REPO = "robotics-sdk"
 
 # Authoritative artifact source + pinned versions live in this root file.
 VERSIONS_FILE = "versions.yml"
@@ -1296,7 +1296,7 @@ class Sdk(WestCommand):
         if extra_modules:
             # Register an out-of-tree Zephyr module whose module.yml is NOT at
             # the west project root (e.g. the mcxn-t1-ros2-nodes module nested
-            # in the nxp-robotics-apps monorepo). Scoped to this build only, so
+            # in the robotics-apps monorepo). Scoped to this build only, so
             # other apps in the same repo are unaffected.
             mods = extra_modules if isinstance(extra_modules, (list, tuple)) \
                 else [extra_modules]

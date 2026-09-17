@@ -6,7 +6,7 @@ ARG UID
 RUN set -eux; \
 	apt-get -y update && apt-get -y upgrade; \
 	\
-	# required by nxp-robotics-sdk \
+	# required by robotics-sdk \
 	DEBIAN_FRONTEND=noninteractive apt-get install -y \
 			python3 python3-pip git; \
 	pip install --break-system-packages west; \

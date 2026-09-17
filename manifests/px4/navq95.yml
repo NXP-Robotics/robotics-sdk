@@ -8,19 +8,19 @@ manifest:
   version: "1.0"
 
   self:
-    path: nxp-robotics-sdk
+    path: robotics-sdk
     west-commands: scripts/west-commands.yml
 
   remotes:
     - name: px4
-      url-base: https://github.com/nxp-mobilerobotics
+      url-base: https://github.com/nxp-robotics
 
   projects:
-    - name: PX4-Autopilot-NXP
+    - name: robotics-PX4-Autopilot
       remote: px4
-      repo-path: PX4-Autopilot-NXP
+      repo-path: robotics-PX4-Autopilot
       # Pinned to the validated NavQ95 (imx95) commit on branch
       # pr-nuttx-12-12-0-imx95.
       revision: 526e401b1ee037c783f267efe06717ba37044587
       submodules: true
-      path: PX4-Autopilot
+      path: robotics-PX4-Autopilot

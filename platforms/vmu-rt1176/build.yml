@@ -16,7 +16,7 @@ stacks:
     kind: zephyr
     boards:
       - vmu_rt1170/mimxrt1176/cm7
-    app: nxp-robotics-apps/esc_passthrough
+    app: robotics-apps/esc_passthrough
     collect_dir: mr-esc-mcxa/passthrough/vmu-rt1176
     # Rename the collected app image and also collect the ELF alongside it.
     image_name: esc_vmu_rt1176_passthrough

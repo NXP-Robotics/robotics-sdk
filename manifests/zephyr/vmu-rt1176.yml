@@ -2,24 +2,21 @@
 #
 # Builds the out-of-tree esc_passthrough application (AM32/BLHeli ESC
 # configurator passthrough) for the MR-VMU-RT1176 board on generic Zephyr.
-# The app source lives in nxp-robotics-apps; the FlexIO-UART transport is
+# The app source lives in robotics-apps; the FlexIO-UART transport is
 # carried app-privately (no shared driver module).
 #
-# The nxp-robotics-apps URL is the official GitHub URL; internal developers get
-# the internal Bitbucket mirror transparently via bifrost. Upstream Zephyr is
-# fetched directly from zephyrproject-rtos.
 manifest:
   version: "1.0"
 
   self:
-    path: nxp-robotics-sdk
+    path: robotics-sdk
     west-commands: scripts/west-commands.yml
 
   remotes:
     - name: zephyr
       url-base: https://github.com/zephyrproject-rtos
     - name: nxp
-      url-base: https://github.com/nxp-mobilerobotics
+      url-base: https://github.com/nxp-robotics
 
   projects:
     - name: zephyr
@@ -28,7 +25,7 @@ manifest:
       path: zephyr
       import: true
 
-    - name: nxp-robotics-apps
+    - name: robotics-apps
       remote: nxp
       revision: 26b0a8d971aa73f3a2463e3ed9888fa143d6aa0f
-      path: nxp-robotics-apps
+      path: robotics-apps

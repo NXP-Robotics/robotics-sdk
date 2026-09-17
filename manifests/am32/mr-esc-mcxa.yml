@@ -14,7 +14,7 @@ manifest:
   version: "1.0"
 
   self:
-    path: nxp-robotics-sdk
+    path: robotics-sdk
     west-commands: scripts/west-commands.yml
 
   remotes:

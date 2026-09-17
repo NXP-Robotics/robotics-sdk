@@ -33,7 +33,7 @@ repository by running:
 
    mkdir robotics-workdir && cd robotics-workdir
 
-   git clone -b <release_branch> ssh://git@bitbucket.sw.nxp.com/tars/nxp-robotics-sdk.git
+   git clone -b <release_branch> https://github.com/nxp-robotics/robotics-sdk.git
 
 .. note::
 
@@ -45,7 +45,7 @@ The next step is to build the `Docker`_ image:
 .. code-block:: bash
 
    sudo docker build --build-arg UID=$(id -u) --build-arg GID=$(id -u) \
-                     -f nxp-robotics-sdk/Dockerfile .
+                     -f robotics-sdk/Dockerfile .
 
 .. note::
 
@@ -64,7 +64,7 @@ The next step is to build the `Docker`_ image:
       sudo docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) \
                         --build-arg http_proxy=http://127.0.0.1:1234 \
                         --build-arg https_proxy=https://127.0.0.1:1234 \
-                        -f nxp-robotics-sdk/Dockerfile .
+                        -f robotics-sdk/Dockerfile .
 
 Now everything should be ready to go. To start the container, run:
 
@@ -89,7 +89,7 @@ You can now initialize ``west`` by running:
 
 .. code-block::
 
-   west init -l nxp-robotics-sdk/
+   west init -l robotics-sdk/
 
 If everything went well, you should be able to list all of the available platforms
 by running:

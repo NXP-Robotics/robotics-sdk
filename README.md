@@ -1,6 +1,6 @@
-# NXP Robotics SDK
+# Robotics SDK
 
-**nxp-robotics-sdk** is a glue layer that unifies multiple robotics platforms
+**robotics-sdk** is a glue layer that unifies multiple robotics platforms
 across all of the supported software stacks (e.g. PX4, Zephyr, AM32, etc...).
 This project owns no firmware source on its own; instead it pins the exact
 upstream revisions (via west manifests), dispatches builds to the right build
@@ -78,7 +78,7 @@ package indexes, etc.) succeed inside the Docker build.
 
 Given the number of software stacks supported by the SDK, managing all of their
 package dependencies on your build machine can become tedious. Because of this,
-**nxp-robotics-sdk** provides a Dockerfile, which can be used to build a Docker
+**robotics-sdk** provides a Dockerfile, which can be used to build a Docker
 image with all of the package dependencies included in it.
 
 To get started, please make sure Docker is installed on your machine. For an
@@ -104,13 +104,13 @@ sudo apt-get update
 sudo apt-get install -y git
 ```
 
-To prepare the development environment, first clone the **nxp-robotics-sdk**
+To prepare the development environment, first clone the **robotics-sdk**
 repository by running:
 
 ```
 mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 
-git clone -b <branch> https://github.com/nxp-mobilerobotics/nxp-robotics-sdk.git
+git clone -b <branch> https://github.com/nxp-robotics/robotics-sdk.git
 ```
 
 **📝 Note:** `branch` is the name of the branch or tag you want to use. We
@@ -122,7 +122,7 @@ For example, to clone the **robotics-0.7.0** branch:
 ```
 mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 
-git clone -b robotics-0.7.0 https://github.com/nxp-mobilerobotics/nxp-robotics-sdk.git
+git clone -b robotics-0.7.0 https://github.com/nxp-robotics/nxp-robotics-sdk.git
 ```
 
 You can also pass a **tag** to the `-b` option to check out a specific release.
@@ -131,7 +131,7 @@ For example, to check out the `<tag>` tag:
 ```
 mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 
-git clone -b <tag> https://github.com/nxp-mobilerobotics/nxp-robotics-sdk.git
+git clone -b <tag> https://github.com/nxp-robotics/robotics-sdk.git
 ```
 
 **📝 Note:** Release tags are listed on the repository's releases/tags page; use
@@ -144,7 +144,7 @@ The next step is to build the Docker image:
 ```
 sudo docker build --build-arg UID=$(id -u) \
 		  --build-arg GID=$(id -g) \
-		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+		  -t robotics-sdk -f robotics-sdk/Dockerfile .
 ```
 
 [Possible pitfall](#markdown-header-warning-docker-build-proxy-on-a-corporate-network)
@@ -162,7 +162,7 @@ sudo docker run -it -v ~/robotics-workdir:/home/robotics robotics-sdk
 After starting the container, you should now initialize `west` by running:
 
 ```
-west init -l nxp-robotics-sdk/
+west init -l robotics-sdk/
 ```
 
 If everything went well, you should be able to list all of the available
@@ -174,10 +174,10 @@ west sdk list
 
 ## Command reference guide
 
-**nxp-robotics-sdk** uses [west][3] to manage all of its components (e.g. building
+**robotics-sdk** uses [west][3] to manage all of its components (e.g. building
 firmware images, downloading pre-built binaries, updating git revisions, etc...).
 The documentation found below provides an overview of what you can achieve using
-`west` and **nxp-robotics-sdk**.
+`west` and **robotics-sdk**.
 
 **📝 Note:** For all commands requiring a platform name as argument (e.g. `west
 sdk build -p <platform>`), you'll have to use one of the supported platform names
@@ -290,7 +290,7 @@ sudo docker build --build-arg UID=$(id -u) \
 		  --build-arg GID=$(id -g) \
 		  --build-arg http_proxy=http://<proxy>:<port> \
 		  --build-arg https_proxy=http://<proxy>:<port> \
-		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+		  -t robotics-sdk -f robotics-sdk/Dockerfile .
 ```
 
 ### Warning: WSL2 DNS resolution during docker build
@@ -305,7 +305,7 @@ so the container shares the WSL2 network stack directly (see
 sudo docker build --network=host \
 		  --build-arg UID=$(id -u) \
 		  --build-arg GID=$(id -g) \
-		  -t robotics-sdk -f nxp-robotics-sdk/Dockerfile .
+		  -t robotics-sdk -f robotics-sdk/Dockerfile .
 ```
 
 ### Warning: docker run proxy on a corporate network

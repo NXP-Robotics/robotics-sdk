@@ -9,18 +9,18 @@ manifest:
   version: "1.0"
 
   self:
-    path: nxp-robotics-sdk
+    path: robotics-sdk
     west-commands: scripts/west-commands.yml
 
   remotes:
     - name: px4
-      url-base: https://github.com/nxp-mobilerobotics
+      url-base: https://github.com/nxp-robotics
 
   projects:
-    - name: PX4-Autopilot-NXP
+    - name: robotics-PX4-Autopilot
       remote: px4
-      repo-path: PX4-Autopilot-NXP
+      repo-path: robotics-PX4-Autopilot
       # Pinned to the SHA of PX4 validated for this SDK release.
       revision: adb2f12bca6d7436b9288334748317d93b1fffa8
       submodules: true
-      path: PX4-Autopilot
+      path: robotics-PX4-Autopilot
