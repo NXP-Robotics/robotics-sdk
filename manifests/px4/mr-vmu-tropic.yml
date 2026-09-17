@@ -21,6 +21,6 @@ manifest:
       remote: px4
       repo-path: robotics-PX4-Autopilot
       # Pinned to the SHA of PX4 validated for this SDK release.
-      revision: adb2f12bca6d7436b9288334748317d93b1fffa8
+      revision: 3e24773c4d82858d2e9cedca72407219d2c67c7a
       submodules: true
       path: PX4-Autopilot
