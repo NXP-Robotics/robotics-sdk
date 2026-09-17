@@ -23,4 +23,4 @@ manifest:
       # Pinned to the SHA of PX4 validated for this SDK release.
       revision: adb2f12bca6d7436b9288334748317d93b1fffa8
       submodules: true
-      path: robotics-PX4-Autopilot
+      path: PX4-Autopilot

@@ -23,4 +23,4 @@ manifest:
       # pr-nuttx-12-12-0-imx95.
       revision: 526e401b1ee037c783f267efe06717ba37044587
       submodules: true
-      path: robotics-PX4-Autopilot
+      path: PX4-Autopilot
