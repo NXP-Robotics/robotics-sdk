@@ -1,0 +1,35 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2026-09-18T12:06:31Z",
+    "creators": [
+      "Organization: NXP"
+    ],
+    "licenseListVersion": "3.28"
+  },
+  "name": "robotics-sdk-0.7.0",
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://nxp.com/spdx/56e00509-66a3-4430-851d-9ce78d9c23fc",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-package-56e00509-66a3-4430-851d-9ce78d9c23fc",
+      "name": "robotics-sdk",
+      "versionInfo": "0.7.0",
+      "licenseConcluded": "(Apache-2.0)",
+      "licenseDeclared": "(Apache-2.0)",
+      "downloadLocation": "https://github.com/nxp-robotics/robotics-sdk",
+      "originator": "Organization: NXP",
+      "supplier": "NOASSERTION",
+      "externalRefs": [],
+      "filesAnalyzed": false
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-package-56e00509-66a3-4430-851d-9ce78d9c23fc"
+    }
+  ]
+}
