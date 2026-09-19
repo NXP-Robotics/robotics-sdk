@@ -69,5 +69,5 @@ download:
 
   # A-core Linux image (timestamped name -> glob); keep .wic.zst compressed
   # and fetch the matching .wic.bmap for bmaptool.
-  - {name: navq95.wic.zst,  class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-mr-imx95-navq.rootfs-*.wic.zst",  dest: ubuntu/}
-  - {name: navq95.wic.bmap, class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-mr-imx95-navq.rootfs-*.wic.bmap", dest: ubuntu/}
+  - {name: navq95.wic.zst,  class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-robotics-imx95-navq.rootfs-*.wic.zst",  dest: ubuntu/}
+  - {name: navq95.wic.bmap, class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-robotics-imx95-navq.rootfs-*.wic.bmap", dest: ubuntu/}
