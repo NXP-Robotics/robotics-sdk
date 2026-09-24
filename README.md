@@ -122,7 +122,7 @@ For example, to clone the **robotics-0.7.0** branch:
 ```
 mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 
-git clone -b robotics-0.7.0 https://github.com/nxp-robotics/nxp-robotics-sdk.git
+git clone -b robotics-0.7.0 https://github.com/nxp-robotics/robotics-sdk.git
 ```
 
 You can also pass a **tag** to the `-b` option to check out a specific release.
