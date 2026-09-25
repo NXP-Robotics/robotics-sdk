@@ -18,6 +18,8 @@ system, and provides a way to download pre-built artifacts.
 - [Warnings and environment-specific notes](#warnings-and-environment-specific-notes)
 - [Troubleshooting / FAQ](#troubleshooting--faq)
 
+---
+
 ## Supported platforms and stacks
 
 |  Platform            |  PX4   | Cerebri |  Zephyr  |   AM32   |
@@ -31,6 +33,8 @@ system, and provides a way to download pre-built artifacts.
 pass to `-p/--platform`) are the ones printed by `west sdk list`. Run
 `west sdk list -v` to also see the supported stacks, shields and examples for
 each platform.
+
+---
 
 ## Requirements
 
@@ -50,6 +54,8 @@ and a few basic tools. The host must provide:
 - **Network access to `github.com`**, from which the Dockerfile downloads the
   Zephyr SDKs while building the image. If you are behind a firewall, make sure
   you pass the proper proxy host and port to the Docker commands as shown below.
+
+---
 
 ## Prerequisites and configuration
 
@@ -79,6 +85,8 @@ package indexes, etc.) succeed inside the Docker build.
   (`/usr/local/share/ca-certificates/` + `update-ca-certificates`), or by
   configuring the CA on the host Docker daemon. Consult your local IT
   documentation for the exact certificate file and installation method.
+
+---
 
 ## Quick getting started guide
 
@@ -182,6 +190,8 @@ platforms by running:
 west sdk list
 ```
 
+---
+
 ## Command reference guide
 
 **robotics-sdk** uses [west][3] to manage all of its components (e.g. building
@@ -269,6 +279,8 @@ For example, to build the PX4 stack for the MR-NAVQ95 platform:
 ```
 west sdk build -p navq95 --stack px4
 ```
+
+---
 
 ## Warnings and environment-specific notes
 
@@ -389,6 +401,8 @@ git config --global url."git@github.com:".insteadOf "https://github.com/"
 This needs outbound SSH (port 22) to `github.com`; if your network blocks it,
 use a GitHub personal access token over HTTPS instead (see
 [Troubleshooting](#troubleshooting--faq)).
+
+---
 
 ## Troubleshooting / FAQ
 
