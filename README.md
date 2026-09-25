@@ -96,7 +96,7 @@ everything went smoothly with the installation, you can try to run the
 sudo docker run hello-world
 ```
 
-[Possible pitfall](#markdown-header-warning-hello-world-on-a-corporate-network)
+[Possible pitfall](#markdown-header-warning-hello-world-on-a-corporate-network) (hello-world)
 
 **📝 Note:** To allow Docker to be managed by non-root users, you can follow
 [these instructions][2]. Throughout this guide, it is assumed that `sudo` is
@@ -143,7 +143,7 @@ git clone -b <tag> https://github.com/nxp-robotics/robotics-sdk.git
 **📝 Note:** Release tags are listed on the repository's releases/tags page; use
 the tag that matches the release you want.
 
-[Possible pitfall](#markdown-header-warning-detached-head-after-a-tag-checkout)
+[Possible pitfall](#markdown-header-warning-detached-head-after-a-tag-checkout) (detached HEAD)
 
 The next step is to build the Docker image:
 
@@ -153,11 +153,11 @@ sudo docker build --build-arg UID=$(id -u) \
 		  -t robotics-sdk -f robotics-sdk/Dockerfile .
 ```
 
-[Possible pitfall](#markdown-header-warning-docker-build-proxy-on-a-corporate-network)
+[Possible pitfall](#markdown-header-warning-docker-build-proxy-on-a-corporate-network) (docker build proxy)
 
-[Possible pitfall](#markdown-header-warning-wsl2-dns-resolution-during-docker-build)
+[Possible pitfall](#markdown-header-warning-wsl2-dns-resolution-during-docker-build) (WSL2)
 
-[Possible pitfall](#markdown-header-warning-no-space-left-on-device-during-docker-build)
+[Possible pitfall](#markdown-header-warning-no-space-left-on-device-during-docker-build) (disk space)
 
 Now everything should be ready to go. To start the container, run:
 
@@ -165,7 +165,7 @@ Now everything should be ready to go. To start the container, run:
 sudo docker run -it -v ~/robotics-workdir:/home/robotics robotics-sdk
 ```
 
-[Possible pitfall](#markdown-header-warning-docker-run-proxy-on-a-corporate-network)
+[Possible pitfall](#markdown-header-warning-docker-run-proxy-on-a-corporate-network) (docker run proxy)
 
 After starting the container, you should now initialize `west` by running:
 
@@ -173,7 +173,7 @@ After starting the container, you should now initialize `west` by running:
 west init -l robotics-sdk/
 ```
 
-[Possible pitfall](#markdown-header-warning-repeated-username-and-password-prompts-inside-the-container)
+[Possible pitfall](#markdown-header-warning-repeated-username-and-password-prompts-inside-the-container) (git auth)
 
 If everything went well, you should be able to list all of the available
 platforms by running:
