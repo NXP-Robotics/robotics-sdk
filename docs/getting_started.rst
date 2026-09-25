@@ -31,7 +31,7 @@ PX4 targets (NuttX firmware)
 Preflight checks for: ``arm-none-eabi-gcc``, ``cmake``, ``ninja``, ``make``,
 ``git``.
 
-The simplest way to install everything PX4 needs on Ubuntu is PX4's own setup
+The simplest way to install everything PX4 needs is by PX4's own setup
 script (run once, after the sources are cloned):
 
 .. code-block:: console
@@ -87,7 +87,7 @@ repository, so you must run ``west init`` **once** before using them:
 Download Prebuilt Binaries
 --------------------------
 
-Pull NXP prebuilt firmware (and, for NavQ95, the Ubuntu image) from Nexus:
+Pull NXP prebuilt firmware (and, for NavQ95, the Linux image):
 
 .. code-block:: console
 
@@ -98,7 +98,7 @@ Pull NXP prebuilt firmware (and, for NavQ95, the Ubuntu image) from Nexus:
 
 Artifacts land under ``bin/<platform>/``: firmware directly in
 ``bin/<platform>/`` for mr-vmu-tropic, mr-vmu-rt1176 and mr-esc-am32-mcxa133,
-and in ``bin/mr-navq95/realtime/`` (plus the Ubuntu WIC in 
+and in ``bin/mr-navq95/realtime/`` (plus the Linux WIC in 
 ``bin/mr-navq95/linux/``) for NavQ95. 
 
 Build From Source

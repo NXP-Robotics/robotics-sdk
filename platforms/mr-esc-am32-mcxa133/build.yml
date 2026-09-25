@@ -48,19 +48,19 @@ stacks:
           - "obj/AM32_A153_BOOTLOADER_PB2_*.bin"
           - "obj/AM32_A153_BOOTLOADER_PB2_*.hex"
 
-# Prebuilt artifacts for `west sdk download`. The '*' in 'src' resolves against
-# the listing (newest wins) and the real basename is kept. 'dest' relative to
-# bin/mr-esc-mcxa/ ("" == the platform root).
+# Prebuilt artifacts for `west sdk download`. Files are fetched directly by
+# fixed name (no listing). 'dest' relative to bin/mr-esc-am32-mcxa133/
+# ("" == the platform root).
 download:
-  - {name: AM32_FRDM_A153.elf, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.elf", dest: ""}
-  - {name: AM32_FRDM_A153.bin, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.bin", dest: ""}
-  - {name: AM32_FRDM_A153.hex, class: mcu, subpath: mr-esc-mcxa, src: "AM32_FRDM_A153_*.hex", dest: ""}
-  - {name: AM32_A153_BOOTLOADER_PB2.elf, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.elf", dest: ""}
-  - {name: AM32_A153_BOOTLOADER_PB2.bin, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.bin", dest: ""}
-  - {name: AM32_A153_BOOTLOADER_PB2.hex, class: mcu, subpath: mr-esc-mcxa, src: "AM32_A153_BOOTLOADER_PB2_*.hex", dest: ""}
+  - {name: AM32_FRDM_A153_2.20.elf, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: AM32_FRDM_A153_2.20.bin, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: AM32_FRDM_A153_2.20.hex, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2_V18.elf, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2_V18.bin, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2_V18.hex, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
 
-  # esc_passthrough (built on the vmu-rt1176 platform, collected here under
+  # esc_passthrough (built on the mr-vmu-rt1176 platform, collected here under
   # passthrough/<platform>/ via that stack's collect_dir + image_name).
   # Non-sysbuild Zephyr build -> renamed .bin + .elf per board.
-  - {name: esc_vmu_rt1176_passthrough.bin, class: mcu, subpath: mr-esc-mcxa/passthrough/vmu-rt1176, dest: passthrough/vmu-rt1176/}
-  - {name: esc_vmu_rt1176_passthrough.elf, class: mcu, subpath: mr-esc-mcxa/passthrough/vmu-rt1176, dest: passthrough/vmu-rt1176/}
+  - {name: esc_mr_vmu_rt1176_passthrough.bin, class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176, dest: passthrough/mr-vmu-rt1176/}
+  - {name: esc_mr_vmu_rt1176_passthrough.elf, class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176, dest: passthrough/mr-vmu-rt1176/}

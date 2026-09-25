@@ -20,8 +20,8 @@ Build
    west sdk build --platform mr-navq95                 # PX4 (default)
    west sdk build --platform mr-navq95 --stack zephyr  # plain Zephyr
 
-PX4 artifacts (collected into ``bin/navq95/realtime/``; the Ubuntu WIC
-downloads to ``bin/navq95/ubuntu/``):
+PX4 artifacts (collected into ``bin/mr-navq95/realtime/``; the Ubuntu WIC
+downloads to ``bin/mr-navq95/linux/``):
 
 * ``nxp_imx95_default.elf`` / ``nxp_imx95_default.bin``  -- M7 image (NOR Flash)
 * ``nxp_imx95_ddr.elf`` / ``nxp_imx95_ddr.bin``          -- M7 image from DDR
@@ -61,6 +61,6 @@ Download prebuilt
 
 .. code-block:: console
 
-   west sdk download --platform navq95   # firmware (raw + signed) + ubuntu .wic
+   west sdk download --platform mr-navq95   # firmware (raw + signed) + linux .wic
 
 See :doc:`getting_started` for the required one-time ``west init`` bootstrap.

@@ -8,7 +8,7 @@ platform: mr-navq95
 default_stack: px4
 
 # NavQ95 keeps a realtime/ sub-dir because it also ships an Ubuntu WIC image
-# under bin/navq95/ubuntu/; the M7 firmware lives in bin/navq95/realtime/.
+# under bin/mr-navq95/linux/; the M7 firmware lives in bin/mr-navq95/realtime/.
 realtime_subdir: realtime
 
 stacks:
@@ -60,14 +60,14 @@ stacks:
 # subset. 'dest' is relative to bin/mr-navq95/.
 download:
   # M7 real-time firmware.
-  - {name: nxp_imx95_default.elf,         class: mcu, subpath: navq95/realtime, dest: realtime/}
-  - {name: nxp_imx95_default.bin,         class: mcu, subpath: navq95/realtime, dest: realtime/}
-  - {name: nxp_imx95_default.mcuboot.bin, class: mcu, subpath: navq95/realtime, dest: realtime/}
-  - {name: nxp_imx95_default.mcuboot.px4, class: mcu, subpath: navq95/realtime, dest: realtime/}
-  - {name: nxp_imx95_ddr.elf,             class: mcu, subpath: navq95/realtime, dest: realtime/}
-  - {name: nxp_imx95_ddr.bin,             class: mcu, subpath: navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.elf,         class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.bin,         class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.mcuboot.bin, class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_default.mcuboot.px4, class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_ddr.elf,             class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: nxp_imx95_ddr.bin,             class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
 
-  # A-core Linux image (timestamped name -> glob); keep .wic.zst compressed
-  # and fetch the matching .wic.bmap for bmaptool.
-  - {name: navq95.wic.zst,  class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-robotics-imx95-navq.rootfs-*.wic.zst",  dest: ubuntu/}
-  - {name: navq95.wic.bmap, class: mpu, subpath: imx-desktop-xwayland, src: "imx-image-robotics-imx95-navq.rootfs-*.wic.bmap", dest: ubuntu/}
+  # A-core Linux image (fixed name); keep .wic.zst compressed and fetch
+  # the matching .wic.bmap for bmaptool. Lands in bin/mr-navq95/linux/.
+  - {name: imx-image-robotics-imx95-navq.rootfs.wic.zst,  class: mpu, dest: linux/}
+  - {name: imx-image-robotics-imx95-navq.rootfs.wic.bmap, class: mpu, dest: linux/}
