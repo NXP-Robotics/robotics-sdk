@@ -127,10 +127,7 @@ def load_versions(topdir):
 # Artifact fetcher for `west sdk download`.
 #
 # Fetches a known URL to a local file over HTTPS -- no listing, index or
-# REST call. Swapping the publish location (e.g. an internal Nexus vs the
-# public site) is a matter of changing the base URLs in versions.yml.
-# Self-contained (stdlib + requests) so it works in a plain customer
-# checkout. Credentials, where a host needs them, come from ~/.netrc
+# REST call. Credentials, where a host needs them, come from ~/.netrc
 # automatically (no prompt); the token is never logged or echoed.
 # --------------------------------------------------------------------------- #
 class _StoreError(Exception):
@@ -144,8 +141,6 @@ class _ArtifactStore:
     files to fetch per platform (platforms/*/build.yml `download:` catalogs),
     so each artifact is fetched directly from
         <class base_url>/<subpath>/<filename>
-    The internal Nexus and the public site are both plain static hosts; the
-    only thing that changes between them is the base URL in versions.yml.
     ``requests`` reads ~/.netrc automatically, so hosts that require a token
     keep working with no interactive prompt.
     """
@@ -167,7 +162,7 @@ class _ArtifactStore:
         if self._session is None:
             requests = self._requests()
             self._session = requests.Session()
-            # Internal Nexus uses an internal CA; SSL verification is disabled
+            # SSL verification is disabled
             # to match the rest of the SDK's internal tooling.
             self._session.verify = False
             try:
@@ -223,7 +218,7 @@ class Sdk(WestCommand):
         super().__init__(
             "sdk",
             "NXP Robotics SDK: download prebuilt artifacts or build from source",
-            "Download prebuilt binaries from Nexus, or build firmware from "
+            "Download prebuilt binaries, or build firmware from "
             "pinned sources, for a supported platform.",
         )
 

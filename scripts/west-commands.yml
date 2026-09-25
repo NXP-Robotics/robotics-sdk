@@ -6,5 +6,5 @@ west-commands:
       - name: sdk
         class: Sdk
         help: >
-          NXP Robotics SDK: download prebuilt artifacts from Nexus, or build
+          NXP Robotics SDK: download prebuilt artifacts, or build
           firmware from pinned sources, for a supported platform.

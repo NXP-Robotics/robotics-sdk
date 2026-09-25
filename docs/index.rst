@@ -4,7 +4,7 @@ NXP Robotics SDK
 The NXP Robotics SDK is a thin superproject that unifies multiple robotics
 platforms across the **PX4**, **CogniPilot Cerebri**, **Zephyr**, and **AM32**
 stacks. It pins exact upstream revisions, dispatches builds to the right build
-system, and provides prebuilt artifacts through Nexus.
+system, and provides prebuilt artifacts.
 
 .. toctree::
    :maxdepth: 2
