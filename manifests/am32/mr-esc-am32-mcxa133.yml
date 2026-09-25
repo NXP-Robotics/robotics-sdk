@@ -1,4 +1,4 @@
-# NXP Robotics SDK - AM32 stack - mr-esc-mcxa platform
+# NXP Robotics SDK - AM32 stack - mr-esc-am32-mcxa133 platform
 #
 # AM32 is an open-source ESC / motor-controller firmware. This platform builds
 # it for NXP MCXA targets (currently the FRDM-MCXA153 board -> make target

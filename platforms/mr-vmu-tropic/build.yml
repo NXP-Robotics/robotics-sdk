@@ -1,4 +1,4 @@
-# Build + artifact definition for the tropic platform (mr-tropic).
+# Build + artifact definition for the mr-vmu-tropic platform
 
 platform: mr-vmu-tropic
 default_stack: px4

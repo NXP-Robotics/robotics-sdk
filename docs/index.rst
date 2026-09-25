@@ -12,10 +12,10 @@ system, and provides prebuilt artifacts through Nexus.
 
    getting_started
    building_with_docker
-   boards/navq95
-   boards/tropic
-   boards/vmu-rt1176
-   boards/mr-esc-mcxa
+   boards/mr-navq95
+   boards/mr-vmu-tropic
+   boards/mr-vmu-rt1176
+   boards/mr-esc-am32-mcxa133
    boards/mr-mcxn-t1
    prebuilt_binaries
    release_notes
@@ -31,22 +31,22 @@ Supported platforms and stacks
      - Cerebri
      - Zephyr
      - AM32
-   * - ``navq95``
+   * - ``mr-navq95``
      - yes
      -
      - yes
      -
-   * - ``tropic``
+   * - ``mr-vmu-tropic``
      - yes
      -
      - yes
      -
-   * - ``vmu-rt1176``
+   * - ``mr-vmu-rt1176``
      - yes
      - yes
      - yes
      -
-   * - ``mr-esc-mcxa``
+   * - ``mr-esc-am32-mcxa133``
      -
      -
      -

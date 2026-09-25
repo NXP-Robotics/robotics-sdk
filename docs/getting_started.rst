@@ -91,15 +91,15 @@ Pull NXP prebuilt firmware (and, for NavQ95, the Ubuntu image) from Nexus:
 
 .. code-block:: console
 
-   west sdk download --platform navq95    # firmware + ubuntu .wic
-   west sdk download --platform tropic       # firmware only
-   west sdk download --platform vmu-rt1176   # firmware only
-   west sdk download --platform all          # everything
+   west sdk download --platform mr-navq95     # firmware + linux .wic
+   west sdk download --platform mr-vmu-tropic # firmware only
+   west sdk download --platform mr-vmu-rt1176 # firmware only
+   west sdk download --platform all           # everything
 
 Artifacts land under ``bin/<platform>/``: firmware directly in
-``bin/<platform>/`` for tropic, vmu-rt1176 and mr-esc-mcxa, and in
-``bin/navq95/realtime/`` (plus the Ubuntu WIC in ``bin/navq95/ubuntu/``)
-for NavQ95. Checksums are verified automatically.
+``bin/<platform>/`` for mr-vmu-tropic, mr-vmu-rt1176 and mr-esc-am32-mcxa133,
+and in ``bin/mr-navq95/realtime/`` (plus the Ubuntu WIC in 
+``bin/mr-navq95/linux/``) for NavQ95. 
 
 Build From Source
 -----------------
@@ -109,10 +109,10 @@ PX4 / Zephyr / Cerebri sources when needed, then builds the artifacts:
 
 .. code-block:: console
 
-   west sdk build --platform tropic                    # PX4 (default stack)
-   west sdk build --platform navq95                 # PX4 (default stack)
-   west sdk build --platform navq95 --stack zephyr  # plain Zephyr
-   west sdk build --platform vmu-rt1176 --stack cerebri
+   west sdk build --platform mr-vmu-tropic             # PX4 (default stack)
+   west sdk build --platform mr-navq95                 # PX4 (default stack)
+   west sdk build --platform mr-navq95 --stack zephyr  # plain Zephyr
+   west sdk build --platform mr-vmu-rt1176 --stack cerebri
 
 ``--stack`` is optional; each platform has a sensible default.
 
@@ -122,38 +122,38 @@ A toolchain **preflight check** runs first (see :ref:`Prerequisites`); pass
 Fetching sources (smart auto-fetch)
 -----------------------------------
 
-``west sdk build`` fetches sources with a **smart-fetch** policy so that your
-local edits survive rebuilds:
+``west sdk build`` fetches sources with a **smart-fetch** policy so that
+your local edits survive rebuilds:
 
 * If the manifest's project directories are **missing**, ``build`` runs
   ``west update`` automatically to clone them.
-* If the sources are **already present**, ``build`` **skips** ``west update``
-  and compiles the working tree as-is -- so any local changes you made are
-  built, not discarded.
-* Pass ``--update`` to **force** a refetch. This runs ``west update`` even when
-  sources exist, resetting each project to its manifest revision and
+* If the sources are **already present**, ``build`` **skips** 
+  ``west update`` and compiles the working tree as-is -- so any local
+  changes you made are built, not discarded.
+* Pass ``--update`` to **force** a refetch. This runs ``west update`` even
+  when sources exist, resetting each project to its manifest revision and
   **overwriting local changes**.
 
 To fetch (or refresh) sources without building, use the dedicated verb:
 
 .. code-block:: console
 
-   west sdk update --platform tropic          # clone/update sources only
+   west sdk update --platform mr-vmu-tropic   # clone/update sources only
 
 Typical edit-and-rebuild loop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console
 
-   west sdk build --platform tropic           # first build: auto-clones sources
+   west sdk build --platform mr-vmu-tropic   # first build: auto-clones sources
    # ... edit files under <workspace>/PX4-Autopilot ...
-   west sdk build --platform tropic           # rebuilds YOUR edits (no reset)
+   west sdk build --platform mr-vmu-tropic   # rebuilds YOUR edits edits (no reset)
 
-   west sdk build --platform tropic --update  # discard edits, rebuild pinned rev
+   west sdk build --platform mr-vmu-tropic --update # discard edits, rebuild pinned rev
 
 .. note::
 
-   For platforms whose manifest is **unpinned** (e.g. ``mr-esc-mcxa`` tracks
+   For platforms whose manifest is **unpinned** (e.g. ``mr-esc-am32-mcxa133`` tracks
    AM32 ``main``), a plain ``build`` will *not* silently pull new upstream
    commits once sources are present; pass ``--update`` to pull the latest
    revision.

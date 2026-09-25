@@ -1,4 +1,4 @@
-# NXP Robotics SDK - PX4 stack - navq95 platform (NavQ95, i.MX95 M7)
+# NXP Robotics SDK - PX4 stack - mr-navq95 platform (NavQ95, i.MX95 M7)
 #
 # NavQ95 PX4 support lives on NXP's PX4 fork (PX4-Autopilot-NXP) as the
 # `imx95` board. URLs are the official GitHub URLs; internal developers get

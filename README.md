@@ -249,7 +249,7 @@ west sdk download -p <platform>
 For example, to download the pre-built binaries for the MR-NAVQ95 platform:
 
 ```
-west sdk download -p navq95
+west sdk download -p mr-navq95
 ```
 
 4. **Build binaries from source**
@@ -263,7 +263,7 @@ west sdk build -p <platform>
 For example, to build all of the available binaries for the MR-NAVQ95 platform:
 
 ```
-west sdk build -p navq95
+west sdk build -p mr-navq95
 ```
 
 The aformentioned command builds **all** of the available binaries for the target
@@ -277,7 +277,7 @@ west sdk build -p <platform> --stack <stack>
 For example, to build the PX4 stack for the MR-NAVQ95 platform:
 
 ```
-west sdk build -p navq95 --stack px4
+west sdk build -p mr-navq95 --stack px4
 ```
 
 ---

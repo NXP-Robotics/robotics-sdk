@@ -1,6 +1,6 @@
-# Build + artifact definition for the vmu-rt1176 platform (CogniPilot VMU, RT1176).
+# Build + artifact definition for the mr-vmu-rt1176 platform (CogniPilot VMU, RT1176).
 
-platform: vmu-rt1176
+platform: mr-vmu-rt1176
 default_stack: zephyr
 build_all: True
 
@@ -11,12 +11,12 @@ stacks:
   # esc_passthrough (AM32/BLHeli ESC configurator passthrough) is built here,
   # collated with the RT1176 board build, but its binaries are collected under
   # the AM32/ESC bin tree via collect_dir (build on this platform, collect
-  # under bin/mr-esc-mcxa/passthrough/vmu-rt1176/).
+  # under bin/mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176/).
   zephyr:
     kind: zephyr
     boards:
       - vmu_rt1170/mimxrt1176/cm7
     app: robotics-apps/esc_passthrough
-    collect_dir: mr-esc-mcxa/passthrough/vmu-rt1176
+    collect_dir: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176
     # Rename the collected app image and also collect the ELF alongside it.
-    image_name: esc_vmu_rt1176_passthrough
+    image_name: esc_mr_vmu_rt1176_passthrough

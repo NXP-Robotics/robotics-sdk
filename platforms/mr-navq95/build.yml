@@ -1,10 +1,10 @@
-# Build + artifact definition for the navq95 platform (NavQ95, i.MX95 M7).
+# Build + artifact definition for the mr-navq95 platform (NavQ95, i.MX95 M7).
 #
 # This file is the single source of truth for how each stack builds this
 # platform and what artifacts it produces. `west sdk build` / `west sdk
 # download` read it generically; sdk.py contains no platform-specific logic.
 
-platform: navq95
+platform: mr-navq95
 default_stack: px4
 
 # NavQ95 keeps a realtime/ sub-dir because it also ships an Ubuntu WIC image
@@ -13,14 +13,14 @@ realtime_subdir: realtime
 
 stacks:
   # NavQ95 PX4 support is NOT public: it lives on NXP's private PX4 fork as the
-  # `imx95` board (see manifests/px4/navq95.yml for the pinned remote/SHA).
+  # `imx95` board (see manifests/px4/mr-navq95.yml for the pinned remote/SHA).
   px4:
     kind: px4
     targets:
       - nxp_imx95_default
       - nxp_imx95_ddr
     # Built outputs (relative to PX4-Autopilot/build/) collected into
-    # bin/navq95/realtime/. Filenames preserved as-is (rename upstream in PX4).
+    # bin/mr-navq95/realtime/. Filenames preserved as-is (rename upstream in PX4).
     artifacts:
       - nxp_imx95_default/nxp_imx95_default.elf
       - nxp_imx95_default/nxp_imx95_default.bin
@@ -29,9 +29,9 @@ stacks:
 
     # NavQ95-only post-build step: sign the collected .bin images with
     # MCUboot's imgtool (shipped inside the PX4 tree at scripts/imgtool.py).
-    # Runs after artifacts land in bin/navq95/realtime/; 'in'/'out' are basenames
+    # Runs after artifacts land in bin/mr-navq95/realtime/; 'in'/'out' are basenames
     # within that directory. Producing <name>.mcuboot.bin alongside the raw
-    # .bin. Because this key exists only for navq95, signing is applied to
+    # .bin. Because this key exists only for mr-navq95, signing is applied to
     # this platform only -- sdk.py stays generic.
     # NOTE: only the default (TCM) image is signed; the DDR image is NOT.
     sign:
@@ -57,7 +57,7 @@ stacks:
 
 # Prebuilt artifacts for `west sdk download`. Source and versions come from the
 # root versions.yml; entries reference an artifact class (mcu/mpu) and select a
-# subset. 'dest' is relative to bin/navq95/.
+# subset. 'dest' is relative to bin/mr-navq95/.
 download:
   # M7 real-time firmware.
   - {name: nxp_imx95_default.elf,         class: mcu, subpath: navq95/realtime, dest: realtime/}

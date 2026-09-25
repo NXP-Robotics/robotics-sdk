@@ -1,4 +1,4 @@
-navq95 (i.MX95 M7)
+mr-navq95 (i.MX95 M7)
 ==================
 
 The NavQ95 (MR-NavQ95B) realtime domain runs on the i.MX95 Cortex-M7. It
@@ -9,7 +9,7 @@ Ubuntu image is delivered separately as a WIC (see :doc:`../prebuilt_binaries`).
 
    NavQ95 PX4 support is built from NXP's public PX4 fork
    (``NXP-Robotics/robotics-PX4-Autopilot``, board ``imx95``), cloned over HTTPS with no
-   credentials required. See ``manifests/px4/navq95.yml`` for the pinned
+   credentials required. See ``manifests/px4/mr-navq95.yml`` for the pinned
    remote and revision.
 
 Build
@@ -17,8 +17,8 @@ Build
 
 .. code-block:: console
 
-   west sdk build --platform navq95                 # PX4 (default)
-   west sdk build --platform navq95 --stack zephyr  # plain Zephyr
+   west sdk build --platform mr-navq95                 # PX4 (default)
+   west sdk build --platform mr-navq95 --stack zephyr  # plain Zephyr
 
 PX4 artifacts (collected into ``bin/navq95/realtime/``; the Ubuntu WIC
 downloads to ``bin/navq95/ubuntu/``):
@@ -41,7 +41,7 @@ producing a ``.mcuboot.bin`` alongside the raw ``.bin``:
    (``nxp_imx95_ddr.bin``) is intentionally **not** signed.
 
 The signing parameters live in the ``sign:`` block of
-``platforms/navq95/build.yml`` and are applied automatically -- equivalent
+``platforms/mr-navq95/build.yml`` and are applied automatically -- equivalent
 to:
 
 .. code-block:: console
@@ -52,9 +52,9 @@ to:
 
 This step is **NavQ95-only**: it is driven entirely by the ``sign:`` key in the
 platform's ``build.yml`` (absent for other platforms), so no signing is applied
-to ``tropic`` or ``vmu-rt1176``. The SDK installs imgtool's Python dependencies
-(``click``, ``cryptography``, ``intelhex``, ``pyyaml``, ``cbor2``) into the
-per-workspace venv automatically.
+to ``mr-vmu-tropic`` or ``mr-vmu-rt1176``. The SDK installs imgtool's Python 
+dependencies (``click``, ``cryptography``, ``intelhex``, ``pyyaml``, ``cbor2``)
+into the per-workspace venv automatically.
 
 Download prebuilt
 -----------------

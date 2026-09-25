@@ -1,10 +1,9 @@
-# NXP Robotics SDK - PX4 stack - mr-tropic platform
+# NXP Robotics SDK - PX4 stack - mr-vmu-tropic platform
 #
-# Pins the exact PX4-Autopilot revision used to build the tropic artifacts.
-# PX4 is cloned as a standalone west project (with submodules) and built via
-# its own make system, dispatched by `west sdk build` (see scripts/sdk.py).
-# URLs are the official GitHub URLs; internal developers get the internal
-# Bitbucket mirror transparently via bifrost.
+# Pins the exact PX4-Autopilot revision used to build the mr-vmu-tropic
+# artifacts. PX4 is cloned as a standalone west project (with submodules)
+# and built via its own make system, dispatched by `west sdk build` 
+# (see scripts/sdk.py). 
 manifest:
   version: "1.0"
 

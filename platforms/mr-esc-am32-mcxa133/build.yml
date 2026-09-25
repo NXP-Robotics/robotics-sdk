@@ -1,11 +1,11 @@
-# Build + artifact definition for the mr-esc-mcxa platform.
+# Build + artifact definition for the mr-esc-am32-mcxa133 platform.
 #
 # AM32 open-source ESC / motor-controller firmware built for NXP MCXA targets,
 # plus the matching AM32 bootloader. This file is the single source of truth
 # for how the platform builds and what artifacts it produces; sdk.py contains
 # no platform-specific logic.
 
-platform: mr-esc-mcxa
+platform: mr-esc-am32-mcxa133
 default_stack: am32
 
 # Firmware artifacts go directly under bin/<platform>/ (no realtime subdir).
