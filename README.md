@@ -39,8 +39,14 @@ and a few basic tools. The host must provide:
 
 - **Docker** (see the installation instructions below).
 - **`git`**, to clone this repository.
-- Around **10 GB** of free disk space for the Docker image, plus additional
-  space for the checked-out sources and build outputs.
+- At least **25 GB of free disk space on the filesystem that backs Docker's
+  storage** (`/var/lib/docker` by default). The **final image is around 10 GB**,
+  but the build **temporarily needs more** for downloaded `.deb` packages, the
+  Zephyr SDKs, and intermediate layers, plus additional space for the
+  checked-out sources and build outputs. If the volume holding `/var/lib/docker`
+  is small (a common cause of build failures), point Docker's data-root at a
+  larger disk — see
+  [Warning: "No space left on device" during docker build](#markdown-header-warning-no-space-left-on-device-during-docker-build).
 - **Network access to `github.com`**, from which the Dockerfile downloads the
   Zephyr SDKs while building the image. If you are behind a firewall, make sure
   you pass the proper proxy host and port to the Docker commands as shown below.
@@ -151,6 +157,8 @@ sudo docker build --build-arg UID=$(id -u) \
 
 [Possible pitfall](#markdown-header-warning-wsl2-dns-resolution-during-docker-build)
 
+[Possible pitfall](#markdown-header-warning-no-space-left-on-device-during-docker-build)
+
 Now everything should be ready to go. To start the container, run:
 
 ```
@@ -164,6 +172,8 @@ After starting the container, you should now initialize `west` by running:
 ```
 west init -l robotics-sdk/
 ```
+
+[Possible pitfall](#markdown-header-warning-repeated-username-and-password-prompts-inside-the-container)
 
 If everything went well, you should be able to list all of the available
 platforms by running:
@@ -308,18 +318,77 @@ sudo docker build --network=host \
 		  -t robotics-sdk -f robotics-sdk/Dockerfile .
 ```
 
+### Warning: "No space left on device" during docker build
+
+A build that stops with `No space left on device` (often while unpacking an apt
+package such as `vim-runtime`) means the volume backing Docker's storage
+(`/var/lib/docker` by default) filled up — the named package is not the cause.
+First reclaim space and re-run the build:
+
+```
+df -h                     # which volume (e.g. /var/lib/docker) is full?
+docker system df          # space used by images / build cache
+docker builder prune -f   # drop stale build cache
+docker system prune -af   # remove unused images/containers/networks
+```
+
+If that volume is simply too small and another has room, move Docker's data-root
+there. Stop Docker, copy the existing data across (so your current images are
+kept — skip the copy to start fresh), point Docker at the new path, then restart:
+
+```
+sudo systemctl stop docker
+sudo rsync -aP /var/lib/docker/ /large/volume/docker/
+echo '{ "data-root": "/large/volume/docker" }' | sudo tee /etc/docker/daemon.json
+sudo systemctl start docker
+docker info | grep "Docker Root Dir"   # verify the new path, then rm -rf the old one
+```
+
+On **Docker Desktop / WSL2 / macOS / Windows**, increase the VM's virtual disk
+allocation instead (Docker Desktop → Settings → Resources).
+
 ### Warning: docker run proxy on a corporate network
 
 If you're sitting behind a corporate firewall, you may also need to pass the
-proxy-related environment variables to the `run` command. You can do so by using
-the `-e` option (again, substitute your own `<proxy>`/`<port>`):
+proxy-related environment variables to the `run` command (substitute your own
+`<proxy>`/`<port>`). A full corporate-network invocation typically also uses
+`--network=host` (so a proxy on `127.0.0.1` is reachable), mounts your host CA
+bundle so TLS to external hosts is trusted, and mounts `~/.ssh` for git access:
+
+```
+sudo docker run -it -v $(pwd):/home/robotics \
+		-v ~/.ssh:/home/robotics/.ssh:ro \
+		-e http_proxy=http://<proxy>:<port> \
+		-e https_proxy=http://<proxy>:<port> \
+		-e ftp_proxy=http://<proxy>:<port> \
+		--network=host \
+		-v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro \
+		robotics-sdk
+```
+
+### Warning: repeated username and password prompts inside the container
+
+If `west init` / `west update` keep prompting for a username and password while
+cloning the `github.com/nxp-robotics` repositories over HTTPS, and you have an
+SSH key authorized on the `nxp-robotics` GitHub organization, make `git` use SSH
+instead. Mount your SSH directory when starting the container:
 
 ```
 sudo docker run -it -v ~/robotics-workdir:/home/robotics \
-		-e http_proxy=http://<proxy>:<port> \
-		-e https_proxy=http://<proxy>:<port> \
+		-v ~/.ssh:/home/robotics/.ssh:ro \
 		robotics-sdk
 ```
+
+Then, inside the container, rewrite GitHub HTTPS URLs to SSH before running
+`west init` / `west update`:
+
+```
+git config --global url."git@github.com:".insteadOf "https://github.com/"
+```
+
+This needs outbound SSH (port 22) to `github.com`; if your network blocks it,
+use a GitHub personal access token over HTTPS instead (see
+[Troubleshooting](#troubleshooting--faq)).
 
 ## Troubleshooting / FAQ
 
@@ -330,6 +399,14 @@ whose isolated virtual network can lose DNS resolution for external hosts. Add
 `--network=host` to the `docker build` command so the container shares the WSL2
 network stack directly (see the WSL2 warning under
 [Quick getting started guide](#quick-getting-started-guide)).
+
+**`docker build` fails with `No space left on device` (often while unpacking
+`vim-runtime` or another apt package).**
+The named package is incidental — the volume backing Docker's storage
+(`/var/lib/docker`) ran out of room. Free space with `docker system prune -af`
+(and `docker builder prune -f`), and if the volume is too small, relocate
+Docker's `data-root` to a larger one — see the
+[disk-space warning](#markdown-header-warning-no-space-left-on-device-during-docker-build).
 
 **`docker run hello-world` hangs or fails on the corporate network.**
 Docker cannot reach Docker Hub without a proxy. Configure the Docker daemon
@@ -344,6 +421,18 @@ the image. Install the corporate CA certificate as described in
 The `http://<proxy>:<port>` values are placeholders — substitute the proxy host
 and port for your own site. If you don't need a proxy at all, drop the
 `--build-arg http_proxy=...` / `-e http_proxy=...` arguments.
+
+**`git`/`west` keeps asking for a username and password inside the container.**
+Over HTTPS `git` prompts for credentials on every fetch from
+`github.com/nxp-robotics`. If you have an SSH key authorized on the
+`nxp-robotics` organization, mount `~/.ssh` into the container
+(`-v ~/.ssh:/home/robotics/.ssh:ro`) and rewrite GitHub HTTPS URLs to SSH with
+`git config --global url."git@github.com:".insteadOf "https://github.com/"`
+before running `west init` / `west update` (see the warning under
+[Quick getting started guide](#quick-getting-started-guide)). This needs
+outbound SSH (port 22); if it is blocked, use a GitHub personal access token as
+the password over HTTPS and cache it with
+`git config --global credential.helper 'cache --timeout=36000'`.
 
 [1]: https://docs.docker.com/engine/install/ubuntu/
 [2]: https://docs.docker.com/engine/install/linux-postinstall/
