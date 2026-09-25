@@ -43,7 +43,7 @@ manifest:
   projects:
     - name: robotics-docs
       remote: nxp-robotics
-      revision: e4090cf3436a5c6e0341b8057f185e156144f7dd
+      revision: robotics-0.7.0
       path: docs
       groups: [docs]
 
@@ -53,5 +53,5 @@ manifest:
     # transitive module set (zros/synapse_pb/zenoh-pico/...).
     - name: robotics-apps
       remote: nxp-robotics
-      revision: 44e07c4f55f07fe5c10595b747710e4fa46954b3
+      revision: de5e547d3fd8d8943d592fd4e7dd5e7881c981a9
       path: robotics-apps
