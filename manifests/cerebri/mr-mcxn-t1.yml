@@ -22,6 +22,6 @@ manifest:
   projects:
     - name: robotics-apps
       remote: nxp
-      revision: de5e547d3fd8d8943d592fd4e7dd5e7881c981a9
+      revision: bfe5cf11add1c8195789df8fdf3ed46d5eba8e9f
       path: robotics-apps
       import: mcxn-t1-ros2-nodes/west.yml
