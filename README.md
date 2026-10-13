@@ -1,6 +1,6 @@
 # Robotics SDK
 
-**robotics-sdk** is a glue layer that unifies multiple robotics platforms
+robotics-sdk is a glue layer that unifies multiple robotics platforms
 across all of the supported software stacks (e.g. PX4, Zephyr, AM32, etc...).
 This project owns no firmware source on its own; instead it pins the exact
 upstream revisions (via west manifests), dispatches builds to the right build
@@ -29,8 +29,8 @@ system, and provides a way to download pre-built artifacts.
 |  MR-ESC-AM32-MCXA133 |   ❌   |   ❌    |    ❌    |    ✅    |
 |  MR-MCXN-T1          |   ❌   |   ✅    |    ✅    |    ❌    |
 
-**📝 Note:** The exact platform *names* accepted by the tooling (the value you
-pass to `-p/--platform`) are the ones printed by `west sdk list`. Run
+📝 Note: The exact platform names accepted by the tooling (the value
+passed to `-p/--platform`) are the ones printed by `west sdk list`. Run
 `west sdk list -v` to also see the supported stacks, shields and examples for
 each platform.
 
@@ -41,19 +41,19 @@ each platform.
 The SDK builds inside a Docker container, so the host only needs Docker
 and a few basic tools. The host must provide:
 
-- **Docker** (see the installation instructions below).
-- **`git`**, to clone this repository.
-- At least **25 GB of free disk space on the filesystem that backs Docker's
-  storage** (`/var/lib/docker` by default). The **final image is around 10 GB**,
-  but the build **temporarily needs more** for downloaded `.deb` packages, the
+- Docker (see the installation instructions below).
+- `git`, to clone this repository.
+- At least 25 GB of free disk space on the filesystem that backs Docker's
+  storage (`/var/lib/docker` by default). The final image is around 10 GB,
+  but the build temporarily needs more for downloaded `.deb` packages, the
   Zephyr SDKs, and intermediate layers, plus additional space for the
   checked-out sources and build outputs. If the volume holding `/var/lib/docker`
   is small (a common cause of build failures), point Docker's data-root at a
   larger disk — see
   [Warning: "No space left on device" during docker build](#markdown-header-warning-no-space-left-on-device-during-docker-build).
-- **Network access to `github.com`**, from which the Dockerfile downloads the
-  Zephyr SDKs while building the image. If you are behind a firewall, make sure
-  you pass the proper proxy host and port to the Docker commands as shown below.
+- Network access to `github.com`, from which the Dockerfile downloads the
+  Zephyr SDKs while building the image. Behind a firewall, make sure
+  the proper proxy host and port are passed to the Docker commands as shown below.
 
 ---
 
@@ -61,29 +61,29 @@ and a few basic tools. The host must provide:
 
 ### Host operating system
 
-The Docker-based build flow is validated on **Ubuntu 24.04 LTS**. Use Ubuntu
+The Docker-based build flow is validated on Ubuntu 24.04 LTS. Use Ubuntu
 24.04 as the host OS; older releases (e.g. Ubuntu 22.04) are not currently
 supported and may fail while building the Docker image.
 
 ### Corporate network: proxy and CA certificates
 
-If you build from a corporate network you will typically need **both** a proxy
-and the corporate **CA certificate** so that TLS connections (to `github.com`,
+Building from a corporate network typically requires both a proxy
+and the corporate CA certificate so that TLS connections (to `github.com`,
 package indexes, etc.) succeed inside the Docker build.
 
-- **Proxy.** The `docker build` / `docker run` examples below accept
+- Proxy. The `docker build` / `docker run` examples below accept
   `http_proxy` / `https_proxy` values. These are placeholders of the form
-  `http://<proxy>:<port>` — **replace `<proxy>` and `<port>` with the values
-  that apply to your own machine and site.** Do not copy the examples verbatim;
-  there is no single proxy that works for everyone. If your host does not need a
+  `http://<proxy>:<port>` — replace `<proxy>` and `<port>` with the values
+  that apply to the local machine and site. Do not copy the examples verbatim;
+  there is no single proxy that works for everyone. If the host does not need a
   proxy, omit these arguments entirely.
 
-- **CA certificate.** If your organization performs TLS inspection, downloads
+- CA certificate. If the organization performs TLS inspection, downloads
   inside the image build can fail with certificate-verification errors. Make the
   corporate root CA available during the build, for example by copying the
   `.crt` into the build context and installing it in the image
-  (`/usr/local/share/ca-certificates/` + `update-ca-certificates`), or by
-  configuring the CA on the host Docker daemon. Consult your local IT
+  (`/usr/local/share/ca-certificates/` and running `update-ca-certificates`), or by
+  configuring the CA on the host Docker daemon. Consult the local IT
   documentation for the exact certificate file and installation method.
 
 ---
@@ -91,14 +91,14 @@ package indexes, etc.) succeed inside the Docker build.
 ## Quick getting started guide
 
 Given the number of software stacks supported by the SDK, managing all of their
-package dependencies on your build machine can become tedious. Because of this,
-**robotics-sdk** provides a Dockerfile, which can be used to build a Docker
+package dependencies on the build machine can become tedious. Because of this,
+robotics-sdk provides a Dockerfile, which can be used to build a Docker
 image with all of the package dependencies included in it.
 
-To get started, please make sure Docker is installed on your machine. For an
-Ubuntu-based machine, you can follow [these instructions][1]. To check if
-everything went smoothly with the installation, you can try to run the
-**hello-world** Docker image:
+To get started, make sure Docker is installed on the build machine. For an
+Ubuntu-based machine, follow [these instructions][1]. To check if
+everything went smoothly with the installation, try to run the
+hello-world Docker image:
 
 ```
 sudo docker run hello-world
@@ -106,7 +106,7 @@ sudo docker run hello-world
 
 [Possible pitfall](#markdown-header-warning-hello-world-on-a-corporate-network) (hello-world)
 
-**📝 Note:** To allow Docker to be managed by non-root users, you can follow
+📝 Note: To allow Docker to be managed by non-root users, follow
 [these instructions][2]. Throughout this guide, it is assumed that `sudo` is
 required.
 
@@ -118,7 +118,7 @@ sudo apt-get update
 sudo apt-get install -y git
 ```
 
-To prepare the development environment, first clone the **robotics-sdk**
+To prepare the development environment, first clone the robotics-sdk
 repository by running:
 
 ```
@@ -127,11 +127,11 @@ mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 git clone -b <branch> https://github.com/nxp-robotics/robotics-sdk.git
 ```
 
-**📝 Note:** `branch` is the name of the branch or tag you want to use. We
-recommend always choosing a release branch/tag. For the **ROBOTICS_0.7.0**
-release, the name of the branch would be **robotics-0.7.0**.
+📝 Note: `branch` is the name of the branch or tag to use. We
+recommend always choosing a release branch/tag. For the ROBOTICS_0.7.0
+release, the name of the branch would be robotics-0.7.0.
 
-For example, to clone the **robotics-0.7.0** branch:
+For example, to clone the robotics-0.7.0 branch:
 
 ```
 mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
@@ -139,7 +139,7 @@ mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 git clone -b robotics-0.7.0 https://github.com/nxp-robotics/robotics-sdk.git
 ```
 
-You can also pass a **tag** to the `-b` option to check out a specific release.
+A tag can also be passed to the `-b` option to check out a specific release.
 For example, to check out the `<tag>` tag:
 
 ```
@@ -148,8 +148,8 @@ mkdir -p ~/robotics-workdir && cd ~/robotics-workdir
 git clone -b <tag> https://github.com/nxp-robotics/robotics-sdk.git
 ```
 
-**📝 Note:** Release tags are listed on the repository's releases/tags page; use
-the tag that matches the release you want.
+📝 Note: Release tags are listed on the repository's releases/tags page; use
+the tag that matches the desired release.
 
 [Possible pitfall](#markdown-header-warning-detached-head-after-a-tag-checkout) (detached HEAD)
 
@@ -175,7 +175,7 @@ sudo docker run -it -v ~/robotics-workdir:/home/robotics robotics-sdk
 
 [Possible pitfall](#markdown-header-warning-docker-run-proxy-on-a-corporate-network) (docker run proxy)
 
-After starting the container, you should now initialize `west` by running:
+After starting the container, initialize `west` by running:
 
 ```
 west init -l robotics-sdk/
@@ -183,8 +183,8 @@ west init -l robotics-sdk/
 
 [Possible pitfall](#markdown-header-warning-repeated-username-and-password-prompts-inside-the-container) (git auth)
 
-If everything went well, you should be able to list all of the available
-platforms by running:
+If everything went well, all of the available
+platforms can be listed by running:
 
 ```
 west sdk list
@@ -194,19 +194,19 @@ west sdk list
 
 ## Command reference guide
 
-**robotics-sdk** uses [west][3] to manage all of its components (e.g. building
+robotics-sdk uses [west][3] to manage all of its components (e.g. building
 firmware images, downloading pre-built binaries, updating git revisions, etc...).
-The documentation found below provides an overview of what you can achieve using
-`west` and **robotics-sdk**.
+The documentation found below provides an overview of what can be achieved using
+`west` and robotics-sdk.
 
-**📝 Note:** For all commands requiring a platform name as argument (e.g. `west
-sdk build -p <platform>`), you'll have to use one of the supported platform names
-listed by running `west sdk list`.
+📝 Note: For all commands requiring a platform name as argument (e.g. `west
+sdk build -p <platform>`), one of the supported platform names
+listed by running `west sdk list` must be used.
 
-**📝 Note:** For all build or download commands, all of the binaries will be
+📝 Note: For all build or download commands, all of the binaries will be
 available under `~/robotics-workdir/bin`.
 
-1. **Displaying help information**
+1. Displaying help information
 
 The `--help` option can be used to display additional information regarding a
 command or a sub-command (e.g. documentation, supported options, etc...). This
@@ -225,7 +225,7 @@ west sdk --help
 west sdk build --help
 ```
 
-2. **List available platforms**
+2. List available platforms
 
 To list all of the available platforms:
 
@@ -238,7 +238,7 @@ west sdk list
 west sdk list -v
 ```
 
-3. **Download pre-built binaries**
+3. Download pre-built binaries
 
 To download the pre-built binaries:
 
@@ -252,7 +252,7 @@ For example, to download the pre-built binaries for the MR-NAVQ95 platform:
 west sdk download -p mr-navq95
 ```
 
-4. **Build binaries from source**
+4. Build binaries from source
 
 To build all of the available binaries from source for a given platform:
 
@@ -266,9 +266,9 @@ For example, to build all of the available binaries for the MR-NAVQ95 platform:
 west sdk build -p mr-navq95
 ```
 
-The aformentioned command builds **all** of the available binaries for the target
-platform (i.e. all stacks, all examples, etc...). You can choose to build a specific
-stack by using the `--stack` option:
+The aformentioned command builds all of the available binaries for the target
+platform (i.e. all stacks, all examples, etc...). A specific
+stack can be built by using the `--stack` option:
 
 ```
 west sdk build -p <platform> --stack <stack>
@@ -286,25 +286,25 @@ west sdk build -p mr-navq95 --stack px4
 
 The warnings below only apply in specific situations (corporate networks, WSL2,
 tag checkouts). They are collected here so that the step-by-step flow above stays
-easy to follow — consult the relevant one only if it applies to your setup.
+easy to follow — consult the relevant one only if it applies to the local setup.
 
 ### Warning: hello-world on a corporate network
 
 On a corporate network, `docker run hello-world` pulls the image from Docker Hub
-and will fail unless Docker can reach the registry through your proxy. Configure
+and will fail unless Docker can reach the registry through the configured proxy. Configure
 the Docker daemon proxy (see the [Docker documentation][4]) before running the
 validation step.
 
 ### Warning: detached HEAD after a tag checkout
 
-Doing a checkout on a tag will put your repository in a detached HEAD state. You
-can run `git switch -c <branch>` to create a branch.
+Doing a checkout on a tag will put the repository in a detached HEAD state. Run
+`git switch -c <branch>` to create a branch.
 
 ### Warning: docker build proxy on a corporate network
 
-If you're sitting behind a corporate firewall, you may also need to specify the
-proxies to the build command. You can do so by using the `--build-arg` option.
-Replace `<proxy>` and `<port>` with your own site's values (see
+Behind a corporate firewall, the
+proxies may also need to be specified for the build command, using the `--build-arg` option.
+Replace `<proxy>` and `<port>` with the local site's values (see
 [Corporate network](#corporate-network-proxy-and-ca-certificates)):
 
 ```
@@ -317,7 +317,7 @@ sudo docker build --build-arg UID=$(id -u) \
 
 ### Warning: WSL2 DNS resolution during docker build
 
-When building on **WSL2**, the Docker container may lose DNS resolution for
+When building on WSL2, the Docker container may lose DNS resolution for
 external hosts (e.g. `github.com`), causing the Zephyr SDK download to fail with
 `Temporary failure in name resolution`. Add `--network=host` to the build command
 so the container shares the WSL2 network stack directly (see
@@ -345,7 +345,7 @@ docker system prune -af   # remove unused images/containers/networks
 ```
 
 If that volume is simply too small and another has room, move Docker's data-root
-there. Stop Docker, copy the existing data across (so your current images are
+there. Stop Docker, copy the existing data across (so the current images are
 kept — skip the copy to start fresh), point Docker at the new path, then restart:
 
 ```
@@ -356,15 +356,15 @@ sudo systemctl start docker
 docker info | grep "Docker Root Dir"   # verify the new path, then rm -rf the old one
 ```
 
-On **Docker Desktop / WSL2 / macOS / Windows**, increase the VM's virtual disk
+On Docker Desktop / WSL2 / macOS / Windows, increase the VM's virtual disk
 allocation instead (Docker Desktop → Settings → Resources).
 
 ### Warning: docker run proxy on a corporate network
 
-If you're sitting behind a corporate firewall, you may also need to pass the
-proxy-related environment variables to the `run` command (substitute your own
+Behind a corporate firewall, the
+proxy-related environment variables may also need to be passed to the `run` command (substitute the local
 `<proxy>`/`<port>`). A full corporate-network invocation typically also uses
-`--network=host` (so a proxy on `127.0.0.1` is reachable), mounts your host CA
+`--network=host` (so a proxy on `127.0.0.1` is reachable), mounts the host CA
 bundle so TLS to external hosts is trusted, and mounts `~/.ssh` for git access:
 
 ```
@@ -381,9 +381,9 @@ sudo docker run -it -v $(pwd):/home/robotics \
 ### Warning: repeated username and password prompts inside the container
 
 If `west init` / `west update` keep prompting for a username and password while
-cloning the `github.com/nxp-robotics` repositories over HTTPS, and you have an
-SSH key authorized on the `nxp-robotics` GitHub organization, make `git` use SSH
-instead. Mount your SSH directory when starting the container:
+cloning the `github.com/nxp-robotics` repositories over HTTPS, and an
+SSH key is authorized on the `nxp-robotics` GitHub organization, make `git` use SSH
+instead. Mount the SSH directory when starting the container:
 
 ```
 sudo docker run -it -v ~/robotics-workdir:/home/robotics \
@@ -398,7 +398,7 @@ Then, inside the container, rewrite GitHub HTTPS URLs to SSH before running
 git config --global url."git@github.com:".insteadOf "https://github.com/"
 ```
 
-This needs outbound SSH (port 22) to `github.com`; if your network blocks it,
+This needs outbound SSH (port 22) to `github.com`; if the network blocks it,
 use a GitHub personal access token over HTTPS instead (see
 [Troubleshooting](#troubleshooting--faq)).
 
@@ -406,39 +406,39 @@ use a GitHub personal access token over HTTPS instead (see
 
 ## Troubleshooting / FAQ
 
-**Docker build fails downloading the Zephyr SDK on WSL2 (`Temporary failure in
-name resolution` / `unable to resolve host address 'github.com'`).**
+Docker build fails downloading the Zephyr SDK on WSL2 (`Temporary failure in
+name resolution` / `unable to resolve host address 'github.com'`).
 On WSL2, Docker containers run inside an extra virtualization layer (Hyper-V),
 whose isolated virtual network can lose DNS resolution for external hosts. Add
 `--network=host` to the `docker build` command so the container shares the WSL2
 network stack directly (see the WSL2 warning under
 [Quick getting started guide](#quick-getting-started-guide)).
 
-**`docker build` fails with `No space left on device` (often while unpacking
-`vim-runtime` or another apt package).**
+`docker build` fails with `No space left on device` (often while unpacking
+`vim-runtime` or another apt package).
 The named package is incidental — the volume backing Docker's storage
 (`/var/lib/docker`) ran out of room. Free space with `docker system prune -af`
 (and `docker builder prune -f`), and if the volume is too small, relocate
 Docker's `data-root` to a larger one — see the
 [disk-space warning](#markdown-header-warning-no-space-left-on-device-during-docker-build).
 
-**`docker run hello-world` hangs or fails on the corporate network.**
+`docker run hello-world` hangs or fails on the corporate network.
 Docker cannot reach Docker Hub without a proxy. Configure the Docker daemon
 proxy per the [Docker documentation][4], then retry.
 
-**TLS / certificate-verification errors during `docker build`.**
-Your network performs TLS inspection and the corporate CA is not trusted inside
+TLS / certificate-verification errors during `docker build`.
+The network performs TLS inspection and the corporate CA is not trusted inside
 the image. Install the corporate CA certificate as described in
 [Corporate network](#corporate-network-proxy-and-ca-certificates).
 
-**The proxy example commands don't work for me.**
+The proxy example commands do not work.
 The `http://<proxy>:<port>` values are placeholders — substitute the proxy host
-and port for your own site. If you don't need a proxy at all, drop the
+and port for the local site. If no proxy is needed at all, drop the
 `--build-arg http_proxy=...` / `-e http_proxy=...` arguments.
 
-**`git`/`west` keeps asking for a username and password inside the container.**
+`git`/`west` keeps asking for a username and password inside the container.
 Over HTTPS `git` prompts for credentials on every fetch from
-`github.com/nxp-robotics`. If you have an SSH key authorized on the
+`github.com/nxp-robotics`. If an SSH key is authorized on the
 `nxp-robotics` organization, mount `~/.ssh` into the container
 (`-v ~/.ssh:/home/robotics/.ssh:ro`) and rewrite GitHub HTTPS URLs to SSH with
 `git config --global url."git@github.com:".insteadOf "https://github.com/"`
