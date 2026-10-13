@@ -1,4 +1,4 @@
-# Robotics SDK
+# NXP Robotic Platforms SDK
 
 robotics-sdk is a glue layer that unifies multiple robotics platforms
 across all of the supported software stacks (e.g. PX4, Zephyr, AM32, etc...).
