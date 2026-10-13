@@ -1,4 +1,4 @@
-"""NXP Robotics SDK west extension commands: ``download`` and ``build``.
+"""NXP Robotic Platforms SDK west extension commands: ``download`` and ``build``.
 
 Uniform, stack-agnostic interface:
 
@@ -217,7 +217,7 @@ class Sdk(WestCommand):
     def __init__(self):
         super().__init__(
             "sdk",
-            "NXP Robotics SDK: download prebuilt artifacts or build from source",
+            "NXP Robotic Platforms SDK: download prebuilt artifacts or build from source",
             "Download prebuilt binaries, or build firmware from "
             "pinned sources, for a supported platform.",
         )

@@ -1,4 +1,4 @@
-# NXP Robotics SDK - plain Zephyr stack - mr-vmu-rt1176 platform (RT1176)
+# NXP Robotic Platforms SDK - plain Zephyr stack - mr-vmu-rt1176 platform (RT1176)
 #
 # Builds the out-of-tree esc_passthrough application (AM32/BLHeli ESC
 # configurator passthrough) for the MR-VMU-RT1176 board on generic Zephyr.

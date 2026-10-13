@@ -1,4 +1,4 @@
-# NXP Robotics SDK - PX4 stack - mr-vmu-tropic platform
+# NXP Robotic Platforms SDK - PX4 stack - mr-vmu-tropic platform
 #
 # Pins the exact PX4-Autopilot revision used to build the mr-vmu-tropic
 # artifacts. PX4 is cloned as a standalone west project (with submodules)

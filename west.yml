@@ -1,4 +1,4 @@
-# Bootstrap manifest for the NXP Robotics SDK.
+# Bootstrap manifest for the NXP Robotic Platforms SDK.
 #
 # Intentionally minimal: it registers the 'sdk' west extension command and
 # declares NO buildable projects/imports, so 'west sdk' is available

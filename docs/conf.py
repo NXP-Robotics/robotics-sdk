@@ -1,7 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 # Build with:  sphinx-build -b html docs docs/_build/html
 
-project = "NXP Robotics SDK"
+project = "NXP Robotic Platforms SDK"
 copyright = "2026, NXP"
 author = "NXP"
 release = "2026.07.0"

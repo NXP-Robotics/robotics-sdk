@@ -26,7 +26,7 @@ these by running:
 Preparing the development environment
 -------------------------------------
 
-To prepare the development environment, first clone the robotics SDK
+To prepare the development environment, first clone the Robotic Platforms SDK
 repository by running:
 
 .. code-block:: bash

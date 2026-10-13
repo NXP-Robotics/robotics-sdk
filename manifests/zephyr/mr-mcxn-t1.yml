@@ -1,4 +1,4 @@
-# NXP Robotics SDK - Zephyr stack - mr-mcxn-t1 platform (MCXN947 MR-MCXN-T1)
+# NXP Robotic Platforms SDK - Zephyr stack - mr-mcxn-t1 platform (MCXN947 MR-MCXN-T1)
 #
 # Board/peripheral validation via stock Zephyr samples. Brings in ONLY the
 # NXP Zephyr fork (zephyr-rtos). NO zros/synapse: the cerebri apps build on the

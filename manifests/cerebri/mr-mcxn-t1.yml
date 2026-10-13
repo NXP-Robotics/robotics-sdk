@@ -1,4 +1,4 @@
-# NXP Robotics SDK - Cerebri stack - mr-mcxn-t1 platform (MCXN947 MR-MCXN-T1)
+# NXP Robotic Platforms SDK - Cerebri stack - mr-mcxn-t1 platform (MCXN947 MR-MCXN-T1)
 #
 # Builds the MCXN-T1 ROS2-node apps (gnss, io_exp, optical_flow). Imports the
 # nxp-robotics-apps repo, whose mcxn-t1-ros2-nodes module west.yml pins the NXP
