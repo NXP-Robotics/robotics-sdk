@@ -67,6 +67,8 @@ supported and may fail while building the Docker image.
 
 ### Corporate network: proxy and CA certificates
 
+> Note: This section applies only when the build is performed from a corporate network.
+
 Building from a corporate network typically requires both a proxy
 and the corporate CA certificate so that TLS connections (to `github.com`,
 package indexes, etc.) succeed inside the Docker build.
@@ -91,7 +93,7 @@ package indexes, etc.) succeed inside the Docker build.
 ## Quick getting started guide
 
 Given the number of software stacks supported by the SDK, managing all of their
-package dependencies on the build machine can become tedious. Because of this,
+package dependencies on the build machine may be challenging. Because of this,
 robotics-sdk provides a Dockerfile, which can be used to build a Docker
 image with all of the package dependencies included in it.
 
