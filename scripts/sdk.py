@@ -477,6 +477,32 @@ class Sdk(WestCommand):
             log.err(f"    ERROR downloading: {exc}")
             return False
         log.inf(f"    saved -> {out}")
+        return self._self_extract(out)
+
+    def _self_extract(self, out):
+        """Run a self-extracting licensed installer, if one was fetched.
+
+        Only a *.wic.zst.sh artifact is a self-extractor. It embeds the
+        license and writes the extracted image (same name without .sh)
+        next to itself. On success the installer is removed; a declined
+        or failed run removes it and fails the download.
+        """
+        if not out.endswith(".wic.zst.sh"):
+            return True
+        log.inf(f"    self-extracting image: {out}")
+        try:
+            os.chmod(out, 0o755)
+            rc = subprocess.call([out], cwd=os.path.dirname(out))
+        except OSError as exc:
+            log.err(f"    ERROR running self-extractor: {exc}")
+            _rm_file(out)
+            return False
+        if rc != 0:
+            log.err("    license not accepted; installer removed.")
+            _rm_file(out)
+            return False
+        _rm_file(out)
+        log.inf(f"    extracted -> {out[:-len('.sh')]}")
         return True
 
     # ------------------------------------------------------------------ #

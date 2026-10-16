@@ -67,7 +67,8 @@ download:
   - {name: nxp_imx95_ddr.elf,             class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_ddr.bin,             class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
 
-  # A-core Linux image (fixed name); keep .wic.zst compressed and fetch
-  # the matching .wic.bmap for bmaptool. Lands in bin/mr-navq95/linux/.
-  - {name: imx-image-robotics-imx95-navq.rootfs.wic.zst,  class: mpu, dest: linux/}
+  # A-core Linux image: a self-extracting installer that embeds the
+  # license and extracts imx-image-robotics-imx95-navq.rootfs.wic.zst.
+  # The .wic.bmap for bmaptool is fetched as-is. In bin/mr-navq95/linux/.
+  - {name: imx-image-robotics-imx95-navq.rootfs.wic.zst.sh, class: mpu, dest: linux/}
   - {name: imx-image-robotics-imx95-navq.rootfs.wic.bmap, class: mpu, dest: linux/}
