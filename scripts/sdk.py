@@ -58,6 +58,14 @@ def _sdk_root(topdir):
     return os.path.join(topdir, SDK_REPO)
 
 
+def _rm_file(path):
+    """Best-effort delete; ignore a missing or unremovable path."""
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
 def platforms_dir(topdir):
     return os.path.join(_sdk_root(topdir), "platforms")
 
@@ -196,19 +204,12 @@ class _ArtifactStore:
                         if chunk:
                             f.write(chunk)
         except _StoreError:
-            self._rm(tmp)
+            _rm_file(tmp)
             raise
         except Exception as exc:  # noqa: BLE001
-            self._rm(tmp)
+            _rm_file(tmp)
             raise _StoreError(f"transfer failed: {exc}")
         os.replace(tmp, out_path)
-
-    @staticmethod
-    def _rm(path):
-        try:
-            os.remove(path)
-        except OSError:
-            pass
 
 
 class Sdk(WestCommand):
