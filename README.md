@@ -80,13 +80,13 @@ package indexes, etc.) succeed inside the Docker build.
   there is no single proxy that works for everyone. If the host does not need a
   proxy, omit these arguments entirely.
 
-- CA certificate. If the organization performs TLS inspection, downloads
+- CA certificate. In environments where corporate TLS inspection is enabled, downloads
   inside the image build can fail with certificate-verification errors. Make the
   corporate root CA available during the build, for example by copying the
   `.crt` into the build context and installing it in the image
   (`/usr/local/share/ca-certificates/` and running `update-ca-certificates`), or by
-  configuring the CA on the host Docker daemon. Consult the local IT
-  documentation for the exact certificate file and installation method.
+  configuring the CA on the host Docker daemon. Consult the applicable IT
+  documentation for the appropriate certificate file and installation procedure.
 
 ---
 
