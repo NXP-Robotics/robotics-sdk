@@ -145,3 +145,13 @@ download:
   # cerebri / io_exp
   - {name: zephyr.signed.bin, class: mcu, subpath: mr-mcxn-t1/cerebri/io_exp/io_exp,        dest: cerebri/io_exp/io_exp/}
   - {name: mcuboot.bin,       class: mcu, subpath: mr-mcxn-t1/cerebri/io_exp/io_exp,        dest: cerebri/io_exp/io_exp/}
+  # robotics-apps (cerebri) LICENSE + SBOM for the CogniPilot images.
+  - {name: LICENSE,        class: mcu, subpath: mr-mcxn-t1/cerebri, dest: cerebri/}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-mcxn-t1/cerebri, dest: cerebri/}
+  - {name: Apache-2.0.txt, class: mcu, subpath: mr-mcxn-t1/cerebri/LICENSES, dest: cerebri/LICENSES/}
+  - {name: CC-BY-4.0.txt,  class: mcu, subpath: mr-mcxn-t1/cerebri/LICENSES, dest: cerebri/LICENSES/}
+  # Zephyr LICENSE + SBOM for the MCXN-T1 Zephyr samples.
+  - {name: LICENSE,        class: mcu, subpath: mr-mcxn-t1/zephyr, dest: zephyr/}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-mcxn-t1/zephyr, dest: zephyr/}
+  - {name: Apache-2.0.txt, class: mcu, subpath: mr-mcxn-t1/zephyr/LICENSES, dest: zephyr/LICENSES/}
+  - {name: CC-BY-4.0.txt,  class: mcu, subpath: mr-mcxn-t1/zephyr/LICENSES, dest: zephyr/LICENSES/}

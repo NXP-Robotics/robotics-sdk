@@ -66,6 +66,12 @@ download:
   - {name: nxp_imx95_default.mcuboot.px4, class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_ddr.elf,             class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
   - {name: nxp_imx95_ddr.bin,             class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  # PX4 (NavQ95 pin) LICENSE + SBOM, alongside the firmware.
+  - {name: LICENSE,        class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: LICENSE-NuttX,        class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: SBOM-NuttX.spdx.json, class: mcu, subpath: mr-navq95/realtime, dest: realtime/}
+  - {name: COPYING-BSD-3,        class: mcu, subpath: mr-navq95/realtime/Licenses, dest: realtime/Licenses/}
 
   # A-core Linux image: a self-extracting installer that embeds the
   # license and extracts imx-image-robotics-imx95-navq.rootfs.wic.zst.

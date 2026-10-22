@@ -64,3 +64,16 @@ download:
   # Non-sysbuild Zephyr build -> renamed .bin + .elf per board.
   - {name: esc_mr_vmu_rt1176_passthrough.bin, class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176, dest: passthrough/mr-vmu-rt1176/}
   - {name: esc_mr_vmu_rt1176_passthrough.elf, class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176, dest: passthrough/mr-vmu-rt1176/}
+  - {name: LICENSE,        class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: Apache-2.0.txt,   class: mcu, subpath: mr-esc-am32-mcxa133/Licenses, dest: Licenses/}
+  - {name: BSD-3-Clause.txt, class: mcu, subpath: mr-esc-am32-mcxa133/Licenses, dest: Licenses/}
+  - {name: LICENSE,        class: mcu, subpath: mr-esc-am32-mcxa133/bootloader, dest: bootloader/}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-esc-am32-mcxa133/bootloader, dest: bootloader/}
+  - {name: Apache-2.0.txt,   class: mcu, subpath: mr-esc-am32-mcxa133/bootloader/Licenses, dest: bootloader/Licenses/}
+  - {name: BSD-3-Clause.txt, class: mcu, subpath: mr-esc-am32-mcxa133/bootloader/Licenses, dest: bootloader/Licenses/}
+  # robotics-apps LICENSE + SBOM for the RT1176 passthrough image.
+  - {name: LICENSE,        class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176, dest: passthrough/mr-vmu-rt1176/}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176, dest: passthrough/mr-vmu-rt1176/}
+  - {name: Apache-2.0.txt, class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176/LICENSES, dest: passthrough/mr-vmu-rt1176/LICENSES/}
+  - {name: CC-BY-4.0.txt,  class: mcu, subpath: mr-esc-am32-mcxa133/passthrough/mr-vmu-rt1176/LICENSES, dest: passthrough/mr-vmu-rt1176/LICENSES/}

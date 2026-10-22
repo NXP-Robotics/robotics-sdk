@@ -57,3 +57,14 @@ download:
   - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/usb, dest: zephyr/usb}
   - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/watchdog, dest: zephyr/watchdog}
   - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/rtc, dest: zephyr/rtc}
+  # PX4 (Tropic pin) LICENSE + SBOM at the platform root.
+  - {name: LICENSE,        class: mcu, subpath: mr-vmu-tropic, dest: ""}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-vmu-tropic, dest: ""}
+  - {name: LICENSE-NuttX,        class: mcu, subpath: mr-vmu-tropic, dest: ""}
+  - {name: SBOM-NuttX.spdx.json, class: mcu, subpath: mr-vmu-tropic, dest: ""}
+  - {name: COPYING-BSD-3,        class: mcu, subpath: mr-vmu-tropic/Licenses, dest: Licenses/}
+  # Zephyr LICENSE + SBOM for the Tropic Zephyr samples.
+  - {name: LICENSE,        class: mcu, subpath: mr-vmu-tropic/zephyr, dest: zephyr/}
+  - {name: SBOM.spdx.json, class: mcu, subpath: mr-vmu-tropic/zephyr, dest: zephyr/}
+  - {name: Apache-2.0.txt, class: mcu, subpath: mr-vmu-tropic/zephyr/LICENSES, dest: zephyr/LICENSES/}
+  - {name: CC-BY-4.0.txt,  class: mcu, subpath: mr-vmu-tropic/zephyr/LICENSES, dest: zephyr/LICENSES/}
