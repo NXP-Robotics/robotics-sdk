@@ -44,19 +44,19 @@ download:
   - {name: nxp_mr-tropic_default.px4,    class: mcu, subpath: mr-vmu-tropic, dest: ""}
   - {name: nxp_mr-tropic_bootloader.bin, class: mcu, subpath: mr-vmu-tropic, dest: ""}
   # zephyr samples
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/hello_world, dest: zephyr/hello_world}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/gpio, dest: zephyr/gpio}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/bmi08x, dest: zephyr/bmi08x}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/icm45686, dest: zephyr/icm45686}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/bmm350, dest: zephyr/bmm350}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/bmp390, dest: zephyr/bmp390}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/pwmLED, dest: zephyr/pwmLED}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/can, dest: zephyr/can}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/sdcard, dest: zephyr/sdcard}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/dhcpv4_client, dest: zephyr/dhcpv4_client}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/usb, dest: zephyr/usb}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/watchdog, dest: zephyr/watchdog}
-  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/rtc, dest: zephyr/rtc}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/hello_world, dest: zephyr/build/hello_world}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/gpio, dest: zephyr/build/gpio}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/bmi08x, dest: zephyr/build/bmi08x}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/icm45686, dest: zephyr/build/icm45686}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/bmm350, dest: zephyr/build/bmm350}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/bmp390, dest: zephyr/build/bmp390}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/pwmLED, dest: zephyr/build/pwmLED}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/can, dest: zephyr/build/can}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/sdcard, dest: zephyr/build/sdcard}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/dhcpv4_client, dest: zephyr/build/dhcpv4_client}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/usb, dest: zephyr/build/usb}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/watchdog, dest: zephyr/build/watchdog}
+  - {name: zephyr.bin, class: mcu, subpath: mr-vmu-tropic/zephyr/build/rtc, dest: zephyr/build/rtc}
   # PX4 (Tropic pin) LICENSE + SBOM at the platform root.
   - {name: LICENSE,        class: mcu, subpath: mr-vmu-tropic, dest: ""}
   - {name: SBOM.spdx.json, class: mcu, subpath: mr-vmu-tropic, dest: ""}
