@@ -4,12 +4,12 @@
 # it for NXP MCXA targets (currently the FRDM-MCXA153 board -> make target
 # FRDM_A153), together with the matching AM32 bootloader.
 #
-# AM32 is currently a 1:1 copy of upstream (no NXP patches), so both the
-# firmware and the bootloader are fetched directly from the upstream
-# am32-firmware GitHub org -- no internal mirror, no bifrost translation.
+# Both are internally mirrored (robotics-am32, robotics-am32-bootloader).
+# The manifest uses the nxp-robotics GitHub URLs, which bifrost redirects to
+# the internal Bitbucket mirrors.
 #
-# NOTE: intentionally NOT pinned yet -- we track upstream directly for
-# development. Pin to an exact tag/SHA at release time (replace 'revision').
+# AM32 is pinned to the robotics_0.7.0-rc5 tag; the bootloader is pinned to
+# the robotics-0.7.0 branch top of tree.
 manifest:
   version: "1.0"
 
@@ -18,24 +18,22 @@ manifest:
     west-commands: scripts/west-commands.yml
 
   remotes:
-    - name: am32-firmware
-      url-base: https://github.com/am32-firmware
+    - name: nxp-robotics
+      url-base: https://github.com/nxp-robotics
 
   projects:
-    - name: AM32
-      remote: am32-firmware
-      repo-path: AM32.git
-      # Floating on upstream default branch (no release pin yet).
-      revision: 85626b55341816661cb6d5c9402fcf39bcbeb2f6
+    - name: robotics-am32
+      remote: nxp-robotics
+      repo-path: robotics-am32
+      revision: robotics_0.7.0-rc5
       # AM32 pulls its MCU HAL/CMSIS via git submodules.
       submodules: true
       path: AM32
 
-    # AM32 open-source ESC bootloader, tracked on upstream 'master' during
-    # development (pin to an exact tag/SHA at release time). No submodules --
-    # the A153 HAL/CMSIS is vendored in-tree.
-    - name: AM32-bootloader
-      remote: am32-firmware
-      repo-path: AM32-bootloader
-      revision: 8a53777b4bb57231e364bd23c893b4c156020579
+    # AM32 ESC bootloader. No submodules -- the A153 HAL/CMSIS is vendored
+    # in-tree.
+    - name: robotics-am32-bootloader
+      remote: nxp-robotics
+      repo-path: robotics-am32-bootloader
+      revision: ddea91164a6e04dd8b539b91557d886ae37169e3
       path: AM32-bootloader
