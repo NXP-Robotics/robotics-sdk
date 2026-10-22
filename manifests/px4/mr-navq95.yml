@@ -21,6 +21,6 @@ manifest:
       repo-path: robotics-PX4-Autopilot
       # Pinned to the validated NavQ95 (imx95) commit on branch
       # pr-nuttx-12-12-0-imx95.
-      revision: 887242ae8623517121c9a65d620807078d7cd60a
+      revision: c3ec371c9c885146f2fe01b785ed128b4c6e2e64
       submodules: true
       path: PX4-Autopilot
