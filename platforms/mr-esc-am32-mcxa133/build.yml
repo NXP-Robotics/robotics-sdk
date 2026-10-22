@@ -41,6 +41,7 @@ stacks:
       # Target AM32_A153_BOOTLOADER_PB2 -> obj/AM32_A153_BOOTLOADER_PB2_V<ver>.{elf,bin,hex}.
       - src: AM32-bootloader
         toolchain_from: AM32
+        dest: bootloader
         targets:
           - AM32_A153_BOOTLOADER_PB2
         artifacts:
@@ -55,9 +56,9 @@ download:
   - {name: AM32_FRDM_A153_2.20.elf, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
   - {name: AM32_FRDM_A153_2.20.bin, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
   - {name: AM32_FRDM_A153_2.20.hex, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
-  - {name: AM32_A153_BOOTLOADER_PB2_V18.elf, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
-  - {name: AM32_A153_BOOTLOADER_PB2_V18.bin, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
-  - {name: AM32_A153_BOOTLOADER_PB2_V18.hex, class: mcu, subpath: mr-esc-am32-mcxa133, dest: ""}
+  - {name: AM32_A153_BOOTLOADER_PB2_V18.elf, class: mcu, subpath: mr-esc-am32-mcxa133/bootloader, dest: bootloader/}
+  - {name: AM32_A153_BOOTLOADER_PB2_V18.bin, class: mcu, subpath: mr-esc-am32-mcxa133/bootloader, dest: bootloader/}
+  - {name: AM32_A153_BOOTLOADER_PB2_V18.hex, class: mcu, subpath: mr-esc-am32-mcxa133/bootloader, dest: bootloader/}
 
   # esc_passthrough (built on the mr-vmu-rt1176 platform, collected here under
   # passthrough/<platform>/ via that stack's collect_dir + image_name).

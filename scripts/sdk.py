@@ -1520,8 +1520,9 @@ class Sdk(WestCommand):
                           cwd=am32_src)
 
             # AM32 emits versioned files into obj/; collect as-is (globs ok).
-            self._collect_artifacts(am32_src, unit.get("artifacts", []) or [],
-                                    out_dir)
+            self._collect_artifacts(
+                am32_src, unit.get("artifacts", []) or [],
+                os.path.join(out_dir, unit.get("dest", "")))
 
     # ------------------------------------------------------------------ #
     # preflight: fail fast on a clean system with a clear, actionable msg
