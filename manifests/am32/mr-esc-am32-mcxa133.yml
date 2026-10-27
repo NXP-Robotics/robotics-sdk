@@ -25,7 +25,7 @@ manifest:
     - name: robotics-am32
       remote: nxp-robotics
       repo-path: robotics-am32
-      revision: robotics_0.7.0-rc5
+      revision: robotics_0.7.0
       # AM32 pulls its MCU HAL/CMSIS via git submodules.
       submodules: true
       path: AM32
@@ -35,5 +35,5 @@ manifest:
     - name: robotics-am32-bootloader
       remote: nxp-robotics
       repo-path: robotics-am32-bootloader
-      revision: ddea91164a6e04dd8b539b91557d886ae37169e3
+      revision: robotics_0.7.0
       path: AM32-bootloader
